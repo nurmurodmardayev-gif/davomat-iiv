@@ -440,6 +440,16 @@ function aTab(name){
     const m=document.getElementById('kech-month');
     if(!m.value){const n=new Date();m.value=n.getFullYear()+'-'+pad(n.getMonth()+1);}
   }
+  if(name==='sozlama'){
+    setTimeout(()=>{
+      const c=getCfg();
+      const lat=parseFloat(c.lat)||DEFAULT_LAT;
+      const lon=parseFloat(c.lon)||DEFAULT_LON;
+      const r=parseFloat(c.radius)||40;
+      if(!map) initMap(lat, lon, r);
+      else map.invalidateSize();
+    }, 80);
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -961,22 +971,6 @@ function centerMap(){
   const lon=parseFloat(document.getElementById('cfg-lon').value);
   if(!isNaN(lat)&&!isNaN(lon)&&map) map.setView([lat, lon], 17);
   else if(map) map.setView([DEFAULT_LAT, DEFAULT_LON], 14);
-}
-
-// Override aTab to init map when sozlama opened
-const _origATab=aTab;
-function aTab(name){
-  _origATab.call(this, name);
-  if(name==='sozlama'){
-    setTimeout(()=>{
-      const c=getCfg();
-      const lat=parseFloat(c.lat)||DEFAULT_LAT;
-      const lon=parseFloat(c.lon)||DEFAULT_LON;
-      const r=parseFloat(c.radius)||40;
-      if(!map) initMap(lat, lon, r);
-      else{ map.invalidateSize(); }
-    }, 80);
-  }
 }
 
 // ══════════════════════════════════════════════
