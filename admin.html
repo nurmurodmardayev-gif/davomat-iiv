@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — IIV Surxondaryo Akademik Litsey</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{
+  --bg:#070d18;--surf:#0e1825;--surf2:#162030;--border:#1b3050;
+  --accent:#00ccff;--green:#00ff88;--red:#ff4455;--amber:#ffaa00;
+  --text:#ddeeff;--text2:#5a85aa;--text3:#2a4a6a;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;
+  background-image:radial-gradient(ellipse at 50% 0%,#001a3322 0%,transparent 60%)}
+.hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;background:#0a1220ee;position:sticky;top:0;z-index:10}
+.hdr-title{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:1.5px}
+.hdr-sub{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1px;margin-top:2px}
+.link-btn{font-family:var(--mono);font-size:10px;padding:5px 12px;border:1px solid var(--accent);
+  color:var(--accent);border-radius:3px;cursor:pointer;text-decoration:none;letter-spacing:1px}
+
+/* TABS */
+.nav-tabs{display:flex;border-bottom:1px solid var(--border);background:#0a1220;overflow-x:auto}
+.nav-tab{flex:1;min-width:70px;padding:12px 6px;text-align:center;font-family:var(--mono);
+  font-size:10px;letter-spacing:1px;color:var(--text2);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase;white-space:nowrap}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-body{display:none}.tab-body.active{display:block}
+.wrap{max-width:700px;margin:0 auto;padding:24px 20px}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+@media(max-width:500px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stat-box{background:var(--surf);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+.stat-num{font-family:var(--mono);font-size:26px;font-weight:700}
+.stat-num.c-green{color:var(--green)}.stat-num.c-red{color:var(--red)}
+.stat-num.c-accent{color:var(--accent)}.stat-num.c-amber{color:var(--amber)}
+.stat-lbl{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+
+/* FORMS */
+.sec-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--accent);
+  text-transform:uppercase;margin-bottom:14px}
+.field{margin-bottom:14px}
+.field label{display:block;font-family:var(--mono);font-size:10px;color:var(--text2);
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.field input,.field select{width:100%;background:var(--surf);border:1px solid var(--border);
+  color:var(--text);padding:11px 14px;border-radius:6px;font-family:var(--sans);font-size:14px;
+  outline:none;transition:border-color .2s;-webkit-appearance:none}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.field select option{background:var(--surf)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+/* BUTTONS */
+.btn{width:100%;padding:12px;border-radius:8px;border:none;font-family:var(--mono);font-size:12px;
+  font-weight:600;letter-spacing:2px;cursor:pointer;transition:all .2s;text-transform:uppercase;margin-top:4px}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#00aadd}
+.btn-primary:disabled{background:var(--border);color:var(--text2);cursor:not-allowed}
+.btn-secondary{background:var(--surf2);color:var(--text2);border:1px solid var(--border)}
+.btn-danger{background:transparent;color:var(--red);border:1px solid var(--red)}
+.btn-sm{padding:5px 12px;border-radius:4px;border:none;font-family:var(--mono);font-size:10px;
+  font-weight:600;cursor:pointer;letter-spacing:1px}
+.btn-red{background:#ff445520;color:var(--red);border:1px solid #ff444440}
+.btn-blue{background:#00ccff20;color:var(--accent);border:1px solid #00ccff40}
+
+/* STAFF LIST */
+.staff-item{display:flex;align-items:center;gap:12px;padding:13px;background:var(--surf);
+  border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
+.s-avatar{width:42px;height:42px;border-radius:50%;background:var(--surf2);
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:17px;
+  color:var(--text2);flex-shrink:0;border:1px solid var(--border)}
+.s-info{flex:1;min-width:0}
+.s-name{font-size:14px;font-weight:500}
+.s-pos{font-size:11px;color:var(--text2);font-family:var(--mono);margin-top:1px}
+.s-pin{display:inline-block;margin-top:4px;font-family:var(--mono);font-size:10px;
+  background:var(--surf2);border:1px solid var(--border);padding:1px 8px;border-radius:3px;
+  color:var(--accent);letter-spacing:2px}
+.s-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* INFO BOX */
+.info-box{background:#00ccff08;border:1px solid #00ccff20;border-radius:8px;padding:14px;
+  font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.9;margin-bottom:16px}
+.info-box strong{color:var(--text)}
+
+/* DIVIDER */
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+/* GPS */
+.gps-box{background:var(--surf);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:14px}
+.gps-coords{font-family:var(--mono);font-size:13px;color:var(--accent);margin-top:8px;word-break:break-all}
+
+/* ═══ REPORT ═══ */
+.report-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+.report-filters .field{margin-bottom:0;flex:1;min-width:130px}
+.report-filters .btn{width:auto;padding:11px 18px;margin-top:0}
+
+/* TABLE */
+.report-table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
+.report-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+.report-table th{background:var(--surf2);color:var(--text2);padding:9px 12px;
+  text-align:left;letter-spacing:1px;text-transform:uppercase;font-size:9px;
+  border-bottom:1px solid var(--border);white-space:nowrap}
+.report-table td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.report-table tr:last-child td{border-bottom:none}
+.report-table tr:hover td{background:#00ccff06}
+.tc-ok{color:var(--green)}.tc-late{color:var(--red)}.tc-none{color:var(--text3)}
+.tc-name{color:var(--text);font-weight:500}
+
+/* JADVAL */
+.jadval-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
+.jadval{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:10px}
+.jadval th{background:var(--surf2);color:var(--text2);padding:7px 8px;
+  text-align:center;letter-spacing:.5px;font-size:9px;border-bottom:1px solid var(--border);white-space:nowrap}
+.jadval th.name-col{text-align:left;padding-left:12px}
+.jadval td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:center;border-right:1px solid var(--border)}
+.jadval td:last-child{border-right:none}
+.jadval tr:last-child td{border-bottom:none}
+.jadval .name-cell{text-align:left;padding-left:12px;color:var(--text);font-size:11px;white-space:nowrap}
+.j-ok{background:#00ff8815;color:var(--green)}
+.j-late{background:#ff445515;color:var(--red)}
+.j-absent{color:var(--text3)}
+.j-early{background:#ffaa0015;color:var(--amber)}
+
+/* LATE STATS */
+.late-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surf);
+  border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
+.late-rank{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text3);
+  width:28px;flex-shrink:0;text-align:center}
+.late-bar-wrap{flex:1}
+.late-name{font-size:13px;font-weight:500;margin-bottom:4px}
+.late-pos{font-size:10px;color:var(--text2);font-family:var(--mono)}
+.late-bar{height:4px;border-radius:2px;background:var(--border);margin-top:6px;overflow:hidden}
+.late-fill{height:100%;border-radius:2px;background:var(--red)}
+.late-count{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--red);flex-shrink:0}
+
+/* PIN MODAL */
+.modal-bg{position:fixed;inset:0;background:#000000cc;z-index:100;
+  display:none;align-items:center;justify-content:center;padding:16px}
+.modal-bg.active{display:flex}
+.modal-card{background:var(--surf);border:1px solid var(--border);border-radius:16px;
+  padding:24px;width:100%;max-width:340px}
+.modal-title{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:18px}
+.modal-close{float:right;background:none;border:none;color:var(--text2);
+  font-size:18px;cursor:pointer;font-family:var(--mono)}
+
+/* SERVER STATUS */
+.srv-status{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px}
+.s-dot-anim{width:8px;height:8px;border-radius:50%;animation:blink 1.5s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--green);color:#000;padding:11px 22px;border-radius:6px;
+  font-family:var(--mono);font-size:12px;opacity:0;transition:all .3s;
+  z-index:999;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.err{background:var(--red);color:#fff}
+
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #00ccff44;
+  border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:1px 6px;
+  border-radius:2px;letter-spacing:1px;margin-left:4px}
+.badge-ok{background:#00ff8820;color:var(--green);border:1px solid #00ff8840}
+.badge-late{background:#ff445520;color:var(--red);border:1px solid #ff444440}
+.badge-neutral{background:#00ccff15;color:var(--accent);border:1px solid #00ccff30}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-title">ADMIN PANEL</div>
+    <div class="hdr-sub">IIV SURXONDARYO · AKADEMIK LITSEY</div>
+  </div>
+  <a class="link-btn" href="davomat.html">→ DAVOMAT</a>
+</div>
+
+<div class="nav-tabs">
+  <div class="nav-tab active" onclick="aTab('xodimlar')">Xodimlar</div>
+  <div class="nav-tab" onclick="aTab('qoshish')">+ Qo'shish</div>
+  <div class="nav-tab" onclick="aTab('hisobot')">Hisobot</div>
+  <div class="nav-tab" onclick="aTab('kech')">Kechikish</div>
+  <div class="nav-tab" onclick="aTab('sozlama')">Sozlama</div>
+</div>
+
+<!-- ══════════ TAB: Xodimlar ══════════ -->
+<div class="tab-body active" id="atab-xodimlar">
+  <div class="wrap">
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num c-accent" id="st-t">—</div>
+        <div class="stat-lbl">Jami xodim</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num c-green" id="st-today">—</div>
+        <div class="stat-lbl">Bugun keldi</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num c-red" id="st-late">—</div>
+        <div class="stat-lbl">Kech keldi</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num c-amber" id="st-absent">—</div>
+        <div class="stat-lbl">Kelmagan</div>
+      </div>
+    </div>
+    <div class="sec-title">Xodimlar ro'yxati</div>
+    <div id="staff-list">
+      <div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:32px">Yuklanmoqda...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB: Qo'shish ══════════ -->
+<div class="tab-body" id="atab-qoshish">
+  <div class="wrap">
+    <div class="sec-title">Yangi xodim ro'yxatga olish</div>
+    <div class="field">
+      <label>Familiya va Ism Sharif</label>
+      <input type="text" id="f-name" placeholder="Karimov Akbar Hamidovich">
+    </div>
+    <div class="field">
+      <label>Lavozim</label>
+      <input type="text" id="f-pos" placeholder="Kimyo o'qituvchisi">
+    </div>
+    <div class="field">
+      <label>4 xonali PIN kod</label>
+      <input type="number" id="f-pin" placeholder="1234" maxlength="4"
+        oninput="this.value=this.value.slice(0,4)" min="1000" max="9999">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:5px">
+        Xodim faqat o'z telefonidan kirishi uchun unikal kod bering
+      </div>
+    </div>
+    <button class="btn btn-primary" id="add-btn" onclick="addStaff()">✓ QO'SHISH</button>
+    <div id="add-status" style="margin-top:10px;font-family:var(--mono);font-size:12px;text-align:center;color:var(--text2)"></div>
+  </div>
+</div>
+
+<!-- ══════════ TAB: Hisobot ══════════ -->
+<div class="tab-body" id="atab-hisobot">
+  <div class="wrap">
+    <div class="sec-title">Davomat hisoboti</div>
+
+    <!-- Filters -->
+    <div class="report-filters">
+      <div class="field">
+        <label>Xodim</label>
+        <select id="rpt-staff">
+          <option value="">Barcha xodimlar</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Sana</label>
+        <input type="date" id="rpt-date">
+      </div>
+      <div class="field">
+        <label>Ko'rinish</label>
+        <select id="rpt-view">
+          <option value="list">Ro'yxat</option>
+          <option value="jadval">Jadval (oy)</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="renderReport()" style="white-space:nowrap">▶ KO'RISH</button>
+    </div>
+
+    <div id="report-output">
+      <div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:32px">
+        Filtr tanlang va KO'RISH tugmasini bosing
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB: Kechikish statistikasi ══════════ -->
+<div class="tab-body" id="atab-kech">
+  <div class="wrap">
+    <div class="sec-title">Kechikish statistikasi</div>
+    <div class="report-filters" style="margin-bottom:14px">
+      <div class="field">
+        <label>Oy</label>
+        <input type="month" id="kech-month">
+      </div>
+      <button class="btn btn-primary" onclick="renderLateStats()" style="white-space:nowrap">▶ KO'RISH</button>
+    </div>
+    <div id="late-output">
+      <div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:32px">
+        Oy tanlang
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB: Sozlama ══════════ -->
+<div class="tab-body" id="atab-sozlama">
+  <div class="wrap">
+    <div class="sec-title">Server sozlamalari</div>
+    <div class="info-box">
+      <strong>Server URL:</strong> Render.com yoki boshqa backend manzili.<br>
+      Agar server yo'q bo'lsa, ma'lumotlar faqat localStorage da saqlanadi.
+    </div>
+    <div class="field">
+      <label>Server URL</label>
+      <input type="url" id="cfg-server" placeholder="https://yourapp.onrender.com">
+    </div>
+    <button class="btn btn-secondary" onclick="testServer()" style="margin-bottom:8px">⚡ TEST</button>
+    <div id="server-test-result" style="font-family:var(--mono);font-size:11px;text-align:center;margin-bottom:14px;min-height:16px;color:var(--text2)"></div>
+
+    <hr class="divider">
+    <div class="sec-title">Joylashuv (GPS)</div>
+
+    <div class="info-box" style="margin-bottom:12px">
+      <strong>Xaritada ishlash tartibi:</strong><br>
+      ① 📍 <strong>GPS ANIQLASH</strong> — qurilma joylashuvini topadi<br>
+      ② Xaritada <strong>marker ni sudrab</strong> aniq nuqtaga olib boring<br>
+      ③ Yashil doira — ruxsat etilgan radius maydonini ko'rsatadi<br>
+      ④ Koordinatalar avtomatik yangilanadi → <strong>SAQLASH</strong>
+    </div>
+
+    <!-- Koordinata ko'rsatkichi -->
+    <div class="gps-box" id="gps-box" style="margin-bottom:10px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Tanlangan nuqta</div>
+      <div class="gps-coords" id="gps-detected">— xaritada nuqta tanlang —</div>
+    </div>
+
+    <!-- Leaflet xarita -->
+    <div id="map-wrap" style="border-radius:10px;overflow:hidden;border:1px solid var(--border);margin-bottom:12px;position:relative">
+      <div id="leaflet-map" style="height:320px;width:100%;background:var(--surf2)"></div>
+      <div id="map-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--surf2);font-family:var(--mono);font-size:12px;color:var(--text2);z-index:5">
+        <span>🗺 Xarita yuklanmoqda...</span>
+      </div>
+    </div>
+
+    <!-- Radius slider -->
+    <div class="field" style="margin-bottom:10px">
+      <label>Radius: <span id="radius-lbl" style="color:var(--accent)">40</span> metr</label>
+      <input type="range" id="cfg-radius-range" min="10" max="500" value="40"
+        oninput="onRadiusChange(this.value)"
+        style="width:100%;accent-color:var(--accent);margin-top:6px;cursor:pointer">
+    </div>
+
+    <div class="row2" style="margin-bottom:10px">
+      <div class="field" style="margin-bottom:0"><label>Kenglik (Lat)</label>
+        <input type="number" id="cfg-lat" placeholder="37.947010" step="any" oninput="onCoordsInput()"></div>
+      <div class="field" style="margin-bottom:0"><label>Uzunlik (Lon)</label>
+        <input type="number" id="cfg-lon" placeholder="67.567710" step="any" oninput="onCoordsInput()"></div>
+    </div>
+    <div class="field" style="display:none">
+      <input type="number" id="cfg-radius" value="40">
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <button class="btn btn-secondary" onclick="detectGPS()" style="flex:1">📍 GPS ANIQLASH</button>
+      <button class="btn btn-secondary" onclick="centerMap()" style="flex:1">🎯 MARKAZLASH</button>
+    </div>
+
+    <hr class="divider">
+    <div class="sec-title">Vaqt chegaralari</div>
+    <div class="info-box">
+      <strong>Kelish oynasi:</strong> Xodim qaysi vaqt oralig'ida kelsa "O'z vaqtida" hisoblanadi.<br>
+      <strong>Ketish oynasi:</strong> Xodim qaysi vaqtda ketsa "O'z vaqtida ketdi" hisoblanadi.
+    </div>
+    <div class="row2">
+      <div class="field"><label>Kelish — boshlanish</label>
+        <input type="time" id="cfg-ws" value="08:00"></div>
+      <div class="field"><label>Kelish — tugash (kech chegarasi)</label>
+        <input type="time" id="cfg-we" value="09:00"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Ketish — boshlanish (erta chegarasi)</label>
+        <input type="time" id="cfg-ls" value="17:00"></div>
+      <div class="field"><label>Ketish — tugash</label>
+        <input type="time" id="cfg-le" value="18:00"></div>
+    </div>
+
+    <hr class="divider">
+    <button class="btn btn-primary" onclick="saveCfg()">✓ SAQLASH</button>
+    <button class="btn btn-danger" onclick="clearAll()" style="margin-top:10px">✗ BARCHA MA'LUMOTLARNI O'CHIRISH</button>
+  </div>
+</div>
+
+<!-- PIN Edit Modal -->
+<div class="modal-bg" id="pin-modal">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closePinModal()">✕</button>
+    <div class="modal-title">PIN O'ZGARTIRISH</div>
+    <div id="pm-staff-name" style="font-size:14px;color:var(--text);margin-bottom:16px"></div>
+    <div class="field">
+      <label>Yangi 4 xonali PIN</label>
+      <input type="number" id="pm-pin" placeholder="1234" maxlength="4"
+        oninput="this.value=this.value.slice(0,4)" min="1000" max="9999">
+    </div>
+    <div class="info-box" style="margin-top:8px">
+      PIN o'zgartirilganda xodimning qurilma bog'lanishi ham sifirlanadi.<br>
+      Xodim yangi qurilmasidan birinchi kirishda yangi qurilma bog'lanadi.
+    </div>
+    <button class="btn btn-primary" onclick="savePinEdit()">✓ SAQLASH</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function getCfg(){return JSON.parse(localStorage.getItem('iiv_cfg')||'{}');}
+function getStaff(){return JSON.parse(localStorage.getItem('iiv_staff')||'[]');}
+function saveStaff(arr){localStorage.setItem('iiv_staff',JSON.stringify(arr));}
+function todayKey(){const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function pad(n){return String(n).padStart(2,'0');}
+
+function getRecord(staffId, dateKey){
+  return JSON.parse(localStorage.getItem('iiv_rec_'+staffId+'_'+dateKey)||'{}');
+}
+function serverUrl(){return (getCfg().serverUrl||'').replace(/\/$/,'');}
+
+function toast(msg,err){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(err?' err':'');
+  setTimeout(()=>t.className='toast',3000);
+}
+
+function aTab(name){
+  document.querySelectorAll('.tab-body').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('atab-'+name).classList.add('active');
+  event.target.classList.add('active');
+  if(name==='xodimlar') loadStaff();
+  if(name==='hisobot') populateReportStaff();
+  if(name==='kech'){
+    const m=document.getElementById('kech-month');
+    if(!m.value){const n=new Date();m.value=n.getFullYear()+'-'+pad(n.getMonth()+1);}
+  }
+}
+
+// ══════════════════════════════════════════════
+//  STAFF LOAD
+// ══════════════════════════════════════════════
+async function loadStaff(){
+  const list=document.getElementById('staff-list');
+  list.innerHTML='<div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:32px">Yuklanmoqda...</div>';
+
+  let staff=[];
+  const url=serverUrl();
+
+  // Try server
+  if(url){
+    try{
+      const res=await fetch(url+'/staff');
+      const data=await res.json();
+      if(data.staff) staff=data.staff;
+      // Sync to local
+      saveStaff(staff);
+    }catch(e){
+      staff=getStaff();
+    }
+  }else{
+    staff=getStaff();
+  }
+
+  document.getElementById('st-t').textContent=staff.length;
+
+  // Today stats
+  const today=todayKey();
+  let cameCount=0, lateCount=0;
+  staff.forEach(s=>{
+    const rec=getRecord(s.id, today);
+    if(rec.kelish) cameCount++;
+    if(rec.kelishStatus==='Kech') lateCount++;
+  });
+  document.getElementById('st-today').textContent=cameCount;
+  document.getElementById('st-late').textContent=lateCount;
+  document.getElementById('st-absent').textContent=staff.length-cameCount;
+
+  if(!staff.length){
+    list.innerHTML='<div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:32px">Hali xodim qo\'shilmagan</div>';
+    return;
+  }
+
+  list.innerHTML=staff.map((s,i)=>{
+    const rec=getRecord(s.id, today);
+    let statusHtml='';
+    if(rec.kelish) statusHtml=`<span class="badge badge-ok">KELDI ${rec.kelish}</span>`;
+    if(rec.kelishStatus==='Kech') statusHtml=`<span class="badge badge-late">KECH ${rec.kelish}</span>`;
+    if(rec.ketish) statusHtml+=`<span class="badge badge-neutral">KETDI ${rec.ketish}</span>`;
+    return `
+    <div class="staff-item">
+      <div class="s-avatar">${(s.name||'?')[0]}</div>
+      <div class="s-info">
+        <div class="s-name">${i+1}. ${s.name}</div>
+        <div class="s-pos">${s.position||'—'}</div>
+        <div><span class="s-pin">PIN: ${s.pin||'—'}</span> ${statusHtml}</div>
+      </div>
+      <div class="s-actions">
+        <button class="btn-sm btn-blue" onclick="openPinModal('${s.id}','${s.name}')">PIN</button>
+        <button class="btn-sm btn-red" onclick="deleteStaff('${s.id}','${s.name}')">O'chir</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+//  ADD STAFF
+// ══════════════════════════════════════════════
+async function addStaff(){
+  const name=document.getElementById('f-name').value.trim();
+  const pos=document.getElementById('f-pos').value.trim();
+  const pin=document.getElementById('f-pin').value.trim();
+
+  if(!name){toast('Ism kiritilmadi!',true);return;}
+  if(!pin||pin.length!==4||isNaN(pin)){toast('4 xonali PIN kiritilmadi!',true);return;}
+
+  // Check PIN uniqueness locally
+  const existing=getStaff();
+  if(existing.find(s=>s.pin===pin)){
+    toast('Bu PIN allaqachon mavjud! Boshqa PIN tanlang.',true);return;
+  }
+
+  const btn=document.getElementById('add-btn');
+  const status=document.getElementById('add-status');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> SAQLANMOQDA...';
+
+  const newStaff={
+    id:'s_'+Date.now(),
+    name, position:pos, pin,
+    createdAt:new Date().toISOString()
+  };
+
+  const url=serverUrl();
+  let saved=false;
+  if(url){
+    try{
+      const res=await fetch(url+'/staff/add',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(newStaff)
+      });
+      const data=await res.json();
+      if(data.ok){ saved=true; if(data.id) newStaff.id=data.id; }
+      else{ status.style.color='var(--red)'; status.textContent='✗ '+data.error; toast(data.error,true); }
+    }catch(e){}
+  }
+
+  // Always save locally too
+  existing.push(newStaff);
+  saveStaff(existing);
+  saved=true;
+
+  if(saved){
+    toast('✓ '+name+' qo\'shildi!');
+    status.style.color='var(--green)';
+    status.textContent='✓ Xodim saqlandi. PIN: '+pin;
+    document.getElementById('f-name').value='';
+    document.getElementById('f-pos').value='';
+    document.getElementById('f-pin').value='';
+  }
+
+  btn.disabled=false; btn.textContent='✓ QO\'SHISH';
+}
+
+// ══════════════════════════════════════════════
+//  DELETE
+// ══════════════════════════════════════════════
+async function deleteStaff(id,name){
+  if(!confirm(name+' ni o\'chirmoqchimisiz?')) return;
+  const url=serverUrl();
+  if(url){
+    try{ await fetch(url+'/staff/delete/'+id,{method:'DELETE'}); }catch(e){}
+  }
+  const arr=getStaff().filter(s=>s.id!==id);
+  saveStaff(arr);
+  toast(name+' o\'chirildi');
+  loadStaff();
+}
+
+// ══════════════════════════════════════════════
+//  PIN MODAL
+// ══════════════════════════════════════════════
+let editingStaffId=null;
+function openPinModal(id,name){
+  editingStaffId=id;
+  document.getElementById('pm-staff-name').textContent=name;
+  document.getElementById('pm-pin').value='';
+  document.getElementById('pin-modal').classList.add('active');
+}
+function closePinModal(){
+  document.getElementById('pin-modal').classList.remove('active');
+  editingStaffId=null;
+}
+function savePinEdit(){
+  const pin=document.getElementById('pm-pin').value.trim();
+  if(!pin||pin.length!==4||isNaN(pin)){toast('4 xonali PIN kiriting!',true);return;}
+  const arr=getStaff();
+  if(arr.find(s=>s.pin===pin && s.id!==editingStaffId)){
+    toast('Bu PIN boshqa xodimda mavjud!',true);return;
+  }
+  const s=arr.find(s=>s.id===editingStaffId);
+  if(!s){toast('Xodim topilmadi!',true);return;}
+  s.pin=pin;
+  // Reset device binding
+  const devKey='iiv_dev_'+pin;
+  localStorage.removeItem(devKey);
+  // Remove old device bindings too (iterate old pin unknown, remove by staff id key)
+  saveStaff(arr);
+  // Server sync
+  const url=serverUrl();
+  if(url){
+    fetch(url+'/staff/update',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:editingStaffId,pin})}).catch(()=>{});
+  }
+  toast('✓ PIN o\'zgartirildi: '+pin);
+  closePinModal();
+  loadStaff();
+}
+
+// ══════════════════════════════════════════════
+//  REPORT
+// ══════════════════════════════════════════════
+function populateReportStaff(){
+  const sel=document.getElementById('rpt-staff');
+  const staff=getStaff();
+  sel.innerHTML='<option value="">Barcha xodimlar</option>'+
+    staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  // Set today as default
+  const td=document.getElementById('rpt-date');
+  if(!td.value) td.value=todayKey();
+}
+
+function renderReport(){
+  const view=document.getElementById('rpt-view').value;
+  const staffId=document.getElementById('rpt-staff').value;
+  const date=document.getElementById('rpt-date').value;
+  const out=document.getElementById('report-output');
+
+  if(view==='list') renderListReport(staffId, date, out);
+  else renderJadvalReport(staffId, date, out);
+}
+
+function renderListReport(staffId, date, out){
+  const staff=staffId ? getStaff().filter(s=>s.id===staffId) : getStaff();
+  const dateKey=date||todayKey();
+
+  if(!staff.length){out.innerHTML='<div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text2)">Xodim topilmadi</div>';return;}
+
+  const rows=staff.map(s=>{
+    const rec=getRecord(s.id, dateKey);
+    return `<tr>
+      <td class="tc-name">${s.name}</td>
+      <td style="color:var(--text2);font-size:10px">${s.position||'—'}</td>
+      <td class="${rec.kelish?'tc-ok':'tc-none'}">${rec.kelish||'—'}</td>
+      <td class="${rec.kelishStatus==='Kech'?'tc-late':rec.kelishStatus?'tc-ok':'tc-none'}">${rec.kelishStatus||'—'}</td>
+      <td class="${rec.ketish?'tc-ok':'tc-none'}">${rec.ketish||'—'}</td>
+      <td class="${rec.ketishStatus==='Erta ketdi'?'tc-late':rec.ketishStatus?'tc-ok':'tc-none'}">${rec.ketishStatus||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  out.innerHTML=`
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase">
+      Sana: ${dateKey} · Jami: ${staff.length} xodim
+    </div>
+    <div class="report-table-wrap">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Xodim</th><th>Lavozim</th>
+            <th>Kelish</th><th>Kelish holati</th>
+            <th>Ketish</th><th>Ketish holati</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderJadvalReport(staffId, date, out){
+  const staff=staffId ? getStaff().filter(s=>s.id===staffId) : getStaff();
+  const baseDate=date ? new Date(date) : new Date();
+  const year=baseDate.getFullYear();
+  const month=baseDate.getMonth();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const days=Array.from({length:daysInMonth},(_, i)=>i+1);
+
+  if(!staff.length){out.innerHTML='<div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text2)">Xodim topilmadi</div>';return;}
+
+  const dayHeaders=days.map(d=>`<th>${d}</th>`).join('');
+  const rows=staff.map(s=>{
+    const cells=days.map(d=>{
+      const dk=year+'-'+pad(month+1)+'-'+pad(d);
+      const rec=getRecord(s.id, dk);
+      if(!rec.kelish) return '<td class="j-absent">—</td>';
+      if(rec.kelishStatus==='Kech') return `<td class="j-late" title="${rec.kelish} Kech">K</td>`;
+      if(rec.ketishStatus==='Erta ketdi') return `<td class="j-early" title="${rec.kelish}">✓E</td>`;
+      return `<td class="j-ok" title="${rec.kelish}">✓</td>`;
+    }).join('');
+    return `<tr><td class="name-cell">${s.name}</td>${cells}</tr>`;
+  }).join('');
+
+  const UZ_MON=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+  out.innerHTML=`
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase">
+      ${UZ_MON[month]} ${year} · Jadval
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:8px">
+      <span style="display:inline-block;width:10px;height:10px;background:#00ff8815;border:1px solid #00ff8840;margin-right:4px;vertical-align:middle"></span>✓ O'z vaqtida &nbsp;
+      <span style="display:inline-block;width:10px;height:10px;background:#ff445515;border:1px solid #ff444440;margin-right:4px;vertical-align:middle"></span>K Kech &nbsp;
+      <span style="display:inline-block;width:10px;height:10px;background:#ffaa0015;border:1px solid #ffaa0040;margin-right:4px;vertical-align:middle"></span>E Erta ketdi &nbsp;
+      <span style="display:inline-block;width:10px;height:10px;background:transparent;margin-right:4px;vertical-align:middle">—</span> Kelmagan
+    </div>
+    <div class="jadval-wrap">
+      <table class="jadval">
+        <thead><tr><th class="name-col">Xodim</th>${dayHeaders}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  LATE STATS
+// ══════════════════════════════════════════════
+function renderLateStats(){
+  const monthVal=document.getElementById('kech-month').value;
+  if(!monthVal){toast('Oy tanlang!',true);return;}
+  const [year,month]=monthVal.split('-').map(Number);
+  const daysInMonth=new Date(year,month,0).getDate();
+  const staff=getStaff();
+  const out=document.getElementById('late-output');
+
+  const stats=staff.map(s=>{
+    let late=0, absent=0, early=0;
+    for(let d=1;d<=daysInMonth;d++){
+      const dk=year+'-'+pad(month)+'-'+pad(d);
+      const rec=getRecord(s.id, dk);
+      if(!rec.kelish) absent++;
+      else if(rec.kelishStatus==='Kech') late++;
+      if(rec.ketishStatus==='Erta ketdi') early++;
+    }
+    return {...s, late, absent, early};
+  }).sort((a,b)=>b.late-a.late);
+
+  const maxLate=Math.max(...stats.map(s=>s.late),1);
+  const totalLate=stats.reduce((a,s)=>a+s.late,0);
+  const totalAbsent=stats.reduce((a,s)=>a+s.absent,0);
+
+  const UZ_MON=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+
+  out.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+      <div class="stat-box"><div class="stat-num c-red" style="font-size:22px">${totalLate}</div><div class="stat-lbl">Jami kechikish</div></div>
+      <div class="stat-box"><div class="stat-num c-amber" style="font-size:22px">${totalAbsent}</div><div class="stat-lbl">Kelmagan kun</div></div>
+      <div class="stat-box"><div class="stat-num c-accent" style="font-size:22px">${staff.length}</div><div class="stat-lbl">Xodimlar</div></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:12px;text-transform:uppercase">
+      ${UZ_MON[month-1]} ${year} — Kechikish reytingi
+    </div>
+    ${stats.map((s,i)=>`
+      <div class="late-item">
+        <div class="late-rank">${i+1}</div>
+        <div class="late-bar-wrap">
+          <div class="late-name">${s.name}</div>
+          <div class="late-pos">${s.position||'—'} · Kelmagan: ${s.absent} kun · Erta ketdi: ${s.early}</div>
+          <div class="late-bar"><div class="late-fill" style="width:${Math.round(s.late/maxLate*100)}%"></div></div>
+        </div>
+        <div class="late-count">${s.late}x</div>
+      </div>`).join('')}
+  `;
+}
+
+// ══════════════════════════════════════════════
+//  SERVER TEST
+// ══════════════════════════════════════════════
+async function testServer(){
+  const url=document.getElementById('cfg-server').value.trim().replace(/\/$/,'');
+  const el=document.getElementById('server-test-result');
+  if(!url){el.style.color='var(--red)';el.textContent='URL kiriting!';return;}
+  el.style.color='var(--text2)'; el.innerHTML='<span class="spinner"></span> Tekshirilmoqda...';
+  try{
+    const res=await fetch(url+'/');
+    const data=await res.json();
+    el.style.color='var(--green)';
+    el.textContent='✓ Server ishlayapti! Xodimlar: '+data.staff_count;
+  }catch(e){
+    el.style.color='var(--red)';
+    el.textContent='✗ Ulanib bo\'lmadi. URL tekshiring.';
+  }
+}
+
+// ══════════════════════════════════════════════
+//  GPS DETECT
+// ══════════════════════════════════════════════
+function detectGPS(){
+  const el=document.getElementById('gps-detected');
+  el.textContent='Aniqlanmoqda...';
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const lat=pos.coords.latitude;
+      const lon=pos.coords.longitude;
+      const r=parseFloat(document.getElementById('cfg-radius-range').value)||40;
+      document.getElementById('cfg-lat').value=lat.toFixed(7);
+      document.getElementById('cfg-lon').value=lon.toFixed(7);
+      el.style.color='var(--green)';
+      updateCoordDisplay(lat, lon, r);
+      if(map){
+        map.setView([lat, lon], 17);
+        marker.setLatLng([lat, lon]);
+        circle.setLatLng([lat, lon]);
+      } else {
+        initMap(lat, lon, r);
+      }
+      toast('✓ GPS aniqlandi: ±'+Math.round(pos.coords.accuracy)+'m');
+    },
+    ()=>{el.textContent='✗ GPS aniqlanmadi.';el.style.color='var(--red)';},
+    {enableHighAccuracy:true,timeout:10000}
+  );
+}
+
+// ══════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════
+function loadCfg(){
+  const c=getCfg();
+  if(c.serverUrl) document.getElementById('cfg-server').value=c.serverUrl;
+  if(c.lat) document.getElementById('cfg-lat').value=c.lat;
+  if(c.lon) document.getElementById('cfg-lon').value=c.lon;
+  if(c.radius){
+    document.getElementById('cfg-radius').value=c.radius;
+    document.getElementById('cfg-radius-range').value=c.radius;
+    document.getElementById('radius-lbl').textContent=c.radius;
+  }
+  if(c.workStart) document.getElementById('cfg-ws').value=c.workStart;
+  if(c.workEnd) document.getElementById('cfg-we').value=c.workEnd;
+  if(c.leaveStart) document.getElementById('cfg-ls').value=c.leaveStart;
+  if(c.leaveEnd) document.getElementById('cfg-le').value=c.leaveEnd;
+}
+
+function saveCfg(){
+  const c={
+    serverUrl: document.getElementById('cfg-server').value.trim(),
+    lat: document.getElementById('cfg-lat').value.trim(),
+    lon: document.getElementById('cfg-lon').value.trim(),
+    radius: document.getElementById('cfg-radius-range').value,
+    workStart: document.getElementById('cfg-ws').value,
+    workEnd: document.getElementById('cfg-we').value,
+    leaveStart: document.getElementById('cfg-ls').value,
+    leaveEnd: document.getElementById('cfg-le').value,
+  };
+  localStorage.setItem('iiv_cfg',JSON.stringify(c));
+  toast('✓ Sozlamalar saqlandi!');
+}
+
+function clearAll(){
+  if(!confirm('Barcha sozlamalar va ma\'lumotlar o\'chadi!')) return;
+  localStorage.clear(); location.reload();
+}
+
+// ══════════════════════════════════════════════
+//  LEAFLET MAP
+// ══════════════════════════════════════════════
+let map=null, marker=null, circle=null;
+const DEFAULT_LAT=41.2995, DEFAULT_LON=69.2401; // Toshkent
+
+function initMap(lat, lon, radius){
+  lat=lat||DEFAULT_LAT; lon=lon||DEFAULT_LON; radius=radius||40;
+
+  document.getElementById('map-loading').style.display='none';
+
+  if(map){ map.remove(); map=null; }
+
+  // Dark tile layer
+  map = L.map('leaflet-map', {
+    center:[lat, lon], zoom:17,
+    zoomControl:true, attributionControl:false
+  });
+
+  // OpenStreetMap tile
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19, opacity:0.85
+  }).addTo(map);
+
+  // Custom marker icon
+  const icon = L.divIcon({
+    className:'',
+    html:`<div style="
+      width:22px;height:22px;border-radius:50%;
+      background:#00ccff;border:3px solid #fff;
+      box-shadow:0 0 0 2px #00ccff,0 2px 8px #000a;
+      cursor:grab;
+    "></div>`,
+    iconSize:[22,22], iconAnchor:[11,11]
+  });
+
+  // Draggable marker
+  marker = L.marker([lat, lon], {icon, draggable:true}).addTo(map);
+
+  // Radius circle
+  circle = L.circle([lat, lon], {
+    radius: radius,
+    color:'#00ccff', fillColor:'#00ccff',
+    fillOpacity:0.12, weight:2, dashArray:'6,4'
+  }).addTo(map);
+
+  // On marker drag
+  marker.on('dragend', function(e){
+    const p=e.target.getLatLng();
+    setMapCoords(p.lat, p.lng);
+  });
+
+  // On map click — move marker
+  map.on('click', function(e){
+    marker.setLatLng(e.latlng);
+    circle.setLatLng(e.latlng);
+    setMapCoords(e.latlng.lat, e.latlng.lng);
+  });
+
+  updateCoordDisplay(lat, lon, radius);
+}
+
+function setMapCoords(lat, lon){
+  const radius=parseFloat(document.getElementById('cfg-radius-range').value)||40;
+  circle.setLatLng([lat, lon]);
+  document.getElementById('cfg-lat').value=lat.toFixed(7);
+  document.getElementById('cfg-lon').value=lon.toFixed(7);
+  document.getElementById('cfg-radius').value=radius;
+  updateCoordDisplay(lat, lon, radius);
+}
+
+function updateCoordDisplay(lat, lon, radius){
+  document.getElementById('gps-detected').textContent=
+    lat.toFixed(6)+', '+lon.toFixed(6)+'  ·  radius: '+radius+'m';
+}
+
+function onRadiusChange(val){
+  document.getElementById('radius-lbl').textContent=val;
+  document.getElementById('cfg-radius').value=val;
+  if(circle) circle.setRadius(parseFloat(val));
+  const lat=parseFloat(document.getElementById('cfg-lat').value)||DEFAULT_LAT;
+  const lon=parseFloat(document.getElementById('cfg-lon').value)||DEFAULT_LON;
+  updateCoordDisplay(lat, lon, val);
+}
+
+function onCoordsInput(){
+  const lat=parseFloat(document.getElementById('cfg-lat').value);
+  const lon=parseFloat(document.getElementById('cfg-lon').value);
+  if(isNaN(lat)||isNaN(lon)) return;
+  if(marker) marker.setLatLng([lat, lon]);
+  if(circle) circle.setLatLng([lat, lon]);
+  if(map) map.setView([lat, lon], map.getZoom());
+  const r=parseFloat(document.getElementById('cfg-radius-range').value)||40;
+  updateCoordDisplay(lat, lon, r);
+}
+
+function centerMap(){
+  const lat=parseFloat(document.getElementById('cfg-lat').value);
+  const lon=parseFloat(document.getElementById('cfg-lon').value);
+  if(!isNaN(lat)&&!isNaN(lon)&&map) map.setView([lat, lon], 17);
+  else if(map) map.setView([DEFAULT_LAT, DEFAULT_LON], 14);
+}
+
+// Override aTab to init map when sozlama opened
+const _origATab=aTab;
+function aTab(name){
+  _origATab.call(this, name);
+  if(name==='sozlama'){
+    setTimeout(()=>{
+      const c=getCfg();
+      const lat=parseFloat(c.lat)||DEFAULT_LAT;
+      const lon=parseFloat(c.lon)||DEFAULT_LON;
+      const r=parseFloat(c.radius)||40;
+      if(!map) initMap(lat, lon, r);
+      else{ map.invalidateSize(); }
+    }, 80);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+loadCfg();
+loadStaff();
+</script>
+</body>
+</html>
