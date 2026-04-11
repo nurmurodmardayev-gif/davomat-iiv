@@ -81,38 +81,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 .sdot-a{background:var(--amber)}
 
 .action-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-.act-btn{padding:22px 12px;border-radius:14px;font-family:var(--mono);
-  font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;
-  transition:all .15s;text-align:center;line-height:1.4;text-transform:uppercase;
-  /* 3D sariq tugma */
-  background:linear-gradient(160deg,#ffe066 0%,#ffcc00 45%,#e6a800 100%);
-  color:#3a2800;
-  border:none;
-  border-top:2px solid #fff176;
-  border-left:2px solid #ffe566;
-  border-right:3px solid #b87800;
-  border-bottom:5px solid #9a6200;
-  box-shadow:0 6px 16px #ffaa0055, 0 2px 4px #0008, inset 0 1px 0 #fff9;
-  position:relative;
-  top:0;
-}
-.act-btn:not(:disabled):hover{
-  background:linear-gradient(160deg,#ffee88 0%,#ffd800 45%,#f0b800 100%);
-  box-shadow:0 8px 20px #ffaa0077, 0 2px 4px #0008, inset 0 1px 0 #fff9;
-}
-.act-btn:not(:disabled):active{
-  top:3px;
-  border-bottom:2px solid #9a6200;
-  box-shadow:0 3px 8px #ffaa0033, inset 0 1px 0 #fff5;
-  transform:scale(.98);
-}
-.act-btn:disabled{
-  opacity:.4;cursor:not-allowed;
-  background:linear-gradient(160deg,#ffe06688,#ffcc0066,#e6a80066);
-  box-shadow:none;
-}
+.act-btn{padding:22px 12px;border-radius:14px;border:none;font-family:var(--mono);
+  font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;
+  transition:all .2s;text-align:center;line-height:1.4;text-transform:uppercase}
+.act-btn:active{transform:scale(.96)}
+.act-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-kelish{background:linear-gradient(135deg,#00ff8822,#00ff8808);
+  color:var(--green);border:1px solid #00ff8840}
+.btn-kelish:not(:disabled):hover{background:linear-gradient(135deg,#00ff8840,#00ff8815);border-color:#00ff8880}
+.btn-ketish{background:linear-gradient(135deg,#ff445522,#ff445508);
+  color:var(--red);border:1px solid #ff444440}
+.btn-ketish:not(:disabled):hover{background:linear-gradient(135deg,#ff445540,#ff444415);border-color:#ff444480}
 .act-btn .act-icon{font-size:28px;display:block;margin-bottom:6px}
-.act-btn .act-time{font-size:9px;color:#7a5200;letter-spacing:1px;margin-top:4px;font-weight:500}
+.act-btn .act-time{font-size:9px;color:var(--text2);letter-spacing:1px;margin-top:4px;font-weight:400}
 
 .today-log{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px}
 .log-sec-title{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:2px;
@@ -297,12 +278,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
     </div>
 
     <div class="action-btns">
-      <button class="act-btn" id="btn-kelish" onclick="doAction('kelish')">
+      <button class="act-btn btn-kelish" id="btn-kelish" onclick="doAction('kelish')">
         <span class="act-icon">→</span>
         KELDIM
         <div class="act-time" id="kelish-time-lbl"></div>
       </button>
-      <button class="act-btn" id="btn-ketish" onclick="doAction('ketish')">
+      <button class="act-btn btn-ketish" id="btn-ketish" onclick="doAction('ketish')">
         <span class="act-icon">←</span>
         KETDIM
         <div class="act-time" id="ketish-time-lbl"></div>
@@ -381,6 +362,7 @@ function startClock(){
     document.getElementById('clk-date').textContent=
       UZ_DAY[now.getDay()]+', '+now.getDate()+' '+UZ_MON[now.getMonth()];
     updateTimePill(now);
+    updateActionBtns();
   }
   tick(); setInterval(tick,1000);
 }
@@ -410,21 +392,42 @@ function updateTimePill(now){
 
   const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
 
-  // KETISH rejimi: kelgan lekin ketmagan
+  // ── KETISH rejimi: kelgan lekin ketmagan ──
   if(rec.kelish && !rec.ketish){
-    if(!cfg.leaveStart){ wrap.style.display='none'; return; }
+    wrap.style.display='block';
+    if(!cfg.leaveStart){
+      card.className='countdown-card phase-done';
+      lblEl.textContent='KETISH VAQTI';
+      timeEl.className='cd-time';
+      const hh=String(now.getHours()).padStart(2,'0');
+      const mm=String(now.getMinutes()).padStart(2,'0');
+      timeEl.textContent=hh+':'+mm;
+      subEl.textContent='Ish vaqti sozlanmagan';
+      winEl.textContent='';
+      return;
+    }
     const [lsh,lsm]=cfg.leaveStart.split(':').map(Number);
     const [leh,lem]=(cfg.leaveEnd||cfg.leaveStart).split(':').map(Number);
     const leaveStartSec=lsh*3600+lsm*60;
     const leaveEndSec=leh*3600+lem*60;
-    const showFrom=leaveStartSec-3600;
-    const showUntil=leaveStartSec+1800;
+    const activeFrom=leaveStartSec-3600;   // 1 soat oldin sanash boshlaydi
+    const activeUntil=leaveStartSec+1800;  // 30 daqiqa keyin to'xtaydi
 
-    if(nowSec < showFrom || nowSec > showUntil){ wrap.style.display='none'; return; }
     wrap.style.display='block';
     winEl.textContent='Ketish oynasi\n'+cfg.leaveStart+' - '+(cfg.leaveEnd||cfg.leaveStart);
 
-    if(nowSec < leaveStartSec){
+    if(nowSec > activeUntil){
+      // 30 daqiqa o'tdi — widget yashiriladi
+      wrap.style.display='none'; return;
+    } else if(nowSec < activeFrom){
+      // Hali 1 soatdan ko'p vaqt bor — oddiy holat ko'rsatish
+      card.className='countdown-card phase-done';
+      lblEl.textContent='KETISH VAQTI';
+      timeEl.className='cd-time';
+      timeEl.textContent=cfg.leaveStart;
+      subEl.textContent='Rejalashtirilgan ketish';
+    } else if(nowSec < leaveStartSec){
+      // 1 soat qoldi — sanash boshladi
       card.className='countdown-card phase-before';
       lblEl.textContent='KETISH VAQTIGACHA';
       timeEl.className='cd-time';
@@ -438,6 +441,7 @@ function updateTimePill(now){
       timeEl.textContent=fmt(diff);
       subEl.textContent=(cfg.leaveEnd||cfg.leaveStart)+' gacha keting';
     } else {
+      // leaveEnd dan keyin, lekin hali activeUntil ichida
       card.className='countdown-card phase-late';
       lblEl.textContent="VAQT O'TDI";
       timeEl.className='cd-time cd-pulse';
@@ -447,22 +451,46 @@ function updateTimePill(now){
     return;
   }
 
-  // KELISH rejimi: hali kelmagan
+  // ── KELISH rejimi: hali kelmagan ──
   if(rec.kelish){ wrap.style.display='none'; return; }
-  if(!cfg.workStart){ wrap.style.display='none'; return; }
+
+  wrap.style.display='block';
+
+  if(!cfg.workStart){
+    // Config yo'q — faqat joriy vaqtni ko'rsat
+    card.className='countdown-card phase-done';
+    lblEl.textContent='KELISH VAQTI';
+    timeEl.className='cd-time';
+    const hh=String(now.getHours()).padStart(2,'0');
+    const mm=String(now.getMinutes()).padStart(2,'0');
+    timeEl.textContent=hh+':'+mm;
+    subEl.textContent='Ish vaqti sozlanmagan';
+    winEl.textContent='';
+    return;
+  }
 
   const [sh,sm]=cfg.workStart.split(':').map(Number);
   const [eh,em]=(cfg.workEnd||cfg.workStart).split(':').map(Number);
   const startSec=sh*3600+sm*60;
   const endSec=eh*3600+em*60;
-  const showFrom=startSec-3600;
-  const showUntil=startSec+1800;
+  const activeFrom=startSec-3600;   // 1 soat oldin sanash boshlaydi
+  const activeUntil=startSec+1800;  // 30 daqiqa keyin to'xtaydi
 
-  if(nowSec < showFrom || nowSec > showUntil){ wrap.style.display='none'; return; }
   wrap.style.display='block';
   winEl.textContent='Kelish oynasi\n'+cfg.workStart+' - '+(cfg.workEnd||cfg.workStart);
 
-  if(nowSec < startSec){
+  if(nowSec > activeUntil){
+    // 30 daqiqa o'tdi — widget yashiriladi
+    wrap.style.display='none'; return;
+  } else if(nowSec < activeFrom){
+    // Hali 1 soatdan ko'p vaqt bor — oddiy holat ko'rsatish
+    card.className='countdown-card phase-done';
+    lblEl.textContent='KELISH VAQTI';
+    timeEl.className='cd-time';
+    timeEl.textContent=cfg.workStart;
+    subEl.textContent='Rejalashtirilgan kelish';
+  } else if(nowSec < startSec){
+    // 1 soat qoldi — sanash boshladi
     card.className='countdown-card phase-before';
     lblEl.textContent='KELISH VAQTIGACHA';
     timeEl.className='cd-time';
@@ -476,6 +504,7 @@ function updateTimePill(now){
     timeEl.textContent=fmt(diff);
     subEl.textContent=(cfg.workEnd||cfg.workStart)+" gacha o'z vaqtida";
   } else {
+    // endSec dan keyin, lekin hali activeUntil ichida
     card.className='countdown-card phase-late';
     lblEl.textContent='KECHIKISH';
     timeEl.className='cd-time cd-pulse';
@@ -714,8 +743,36 @@ function updateActionBtns(){
     bK.disabled=true; bT.disabled=true; return;
   }
 
-  bK.disabled=!!rec.kelish;
-  bT.disabled=!rec.kelish || !!rec.ketish;
+  const now=new Date();
+  const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+
+  // KELDIM tugmasi: allaqachon bosilgan → disabled
+  if(rec.kelish){
+    bK.disabled=true;
+  } else if(cfg.workStart){
+    // workStart ±30 daqiqa oynasida faol
+    const [sh,sm]=cfg.workStart.split(':').map(Number);
+    const startSec=sh*3600+sm*60;
+    const winFrom=startSec-1800;
+    const winUntil=startSec+1800;
+    bK.disabled=!(nowSec>=winFrom && nowSec<=winUntil);
+  } else {
+    bK.disabled=false; // config yo'q — har doim faol
+  }
+
+  // KETDIM tugmasi: kelish bo'lmasa yoki allaqachon ketgan → disabled
+  if(!rec.kelish || rec.ketish){
+    bT.disabled=true;
+  } else if(cfg.leaveStart){
+    // leaveStart ±30 daqiqa oynasida faol
+    const [lh,lm]=cfg.leaveStart.split(':').map(Number);
+    const leaveSec=lh*3600+lm*60;
+    const winFrom=leaveSec-1800;
+    const winUntil=leaveSec+1800;
+    bT.disabled=!(nowSec>=winFrom && nowSec<=winUntil);
+  } else {
+    bT.disabled=false; // config yo'q — har doim faol
+  }
 }
 
 // ══════════════════════════════════════════════
