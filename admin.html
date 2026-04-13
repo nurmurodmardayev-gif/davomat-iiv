@@ -4,244 +4,521 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — IIV Surxondaryo Akademik Litsey</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<!-- jsPDF for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
 <style>
 :root{
-  --bg:#070d18;--surf:#0e1825;--surf2:#162030;--border:#1b3050;
-  --accent:#00ccff;--green:#00ff88;--red:#ff4455;--amber:#ffaa00;
-  --text:#ddeeff;--text2:#5a85aa;--text3:#2a4a6a;
-  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --bg:#050b14;
+  --surf:#0b1622;
+  --surf2:#111e2e;
+  --surf3:#162438;
+  --border:#1c3454;
+  --border2:#243d5e;
+  --accent:#00d4ff;
+  --accent2:#0099cc;
+  --green:#00e676;
+  --red:#ff3d57;
+  --amber:#ffab00;
+  --purple:#a855f7;
+  --text:#e8f4ff;
+  --text2:#6a96bc;
+  --text3:#2a4a6a;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Sora',sans-serif;
+  --radius:10px;
+  --glow:0 0 20px #00d4ff18;
+  --glow-sm:0 0 10px #00d4ff10;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;
-  background-image:radial-gradient(ellipse at 50% 0%,#001a3322 0%,transparent 60%)}
-.hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;
-  justify-content:space-between;background:#0a1220ee;position:sticky;top:0;z-index:10}
-.hdr-title{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:1.5px}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--sans);
+  min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%,#001e3d30 0%,transparent 70%),
+    radial-gradient(ellipse 40% 30% at 90% 80%,#00d4ff08 0%,transparent 60%);
+}
+
+/* ─── LOGIN ─────────────────────────── */
+#login-screen{
+  position:fixed;inset:0;background:var(--bg);z-index:9999;
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  background-image:radial-gradient(ellipse 80% 60% at 50% 0%,#00264020 0%,transparent 70%);
+}
+.login-card{
+  width:100%;max-width:360px;
+  background:var(--surf);border:1px solid var(--border2);border-radius:20px;
+  padding:36px 28px;text-align:center;
+  box-shadow:0 0 60px #00d4ff0a, 0 24px 48px #00000060;
+}
+.login-logo{
+  font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--accent);
+  text-transform:uppercase;margin-bottom:6px;
+}
+.login-title{
+  font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.2;
+}
+.login-sub{
+  font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:32px;
+}
+.login-label{
+  font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1.5px;
+  text-transform:uppercase;text-align:left;margin-bottom:7px;display:block;
+}
+.login-input{
+  width:100%;background:var(--surf2);border:1.5px solid var(--border2);color:var(--text);
+  padding:14px 16px;border-radius:10px;font-family:var(--sans);font-size:15px;outline:none;
+  transition:border-color .2s, box-shadow .2s;margin-bottom:16px;
+  letter-spacing:4px;text-align:center;
+}
+.login-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #00d4ff15}
+.login-btn{
+  width:100%;padding:15px;border-radius:10px;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#000;font-family:var(--mono);font-size:13px;font-weight:700;
+  letter-spacing:2px;cursor:pointer;transition:all .2s;text-transform:uppercase;
+}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px #00d4ff30}
+.login-btn:active{transform:translateY(0)}
+.login-err{
+  font-family:var(--mono);font-size:11px;color:var(--red);margin-top:12px;min-height:16px;
+}
+.login-attempts{
+  font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:8px;
+}
+
+/* ─── HEADER ─────────────────────────── */
+.hdr{
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:#07101acc;backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:50;
+}
+.hdr-brand{display:flex;align-items:center;gap:12px}
+.hdr-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+.hdr-title{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:2px;font-weight:600}
 .hdr-sub{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1px;margin-top:2px}
-.link-btn{font-family:var(--mono);font-size:10px;padding:5px 12px;border:1px solid var(--accent);
-  color:var(--accent);border-radius:3px;cursor:pointer;text-decoration:none;letter-spacing:1px}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.hdr-time{font-family:var(--mono);font-size:11px;color:var(--text2)}
+.logout-btn{
+  font-family:var(--mono);font-size:10px;padding:6px 14px;
+  border:1px solid var(--border2);color:var(--text2);border-radius:6px;
+  cursor:pointer;background:transparent;transition:all .2s;letter-spacing:1px;
+}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
 
-/* TABS */
-.nav-tabs{display:flex;border-bottom:1px solid var(--border);background:#0a1220;overflow-x:auto}
-.nav-tab{flex:1;min-width:70px;padding:12px 6px;text-align:center;font-family:var(--mono);
-  font-size:10px;letter-spacing:1px;color:var(--text2);cursor:pointer;
-  border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase;white-space:nowrap}
-.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+/* ─── TABS ─────────────────────────── */
+.nav-tabs{
+  display:flex;border-bottom:1px solid var(--border);
+  background:var(--surf);overflow-x:auto;
+  scrollbar-width:none;
+}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{
+  flex:1;min-width:80px;padding:13px 8px;text-align:center;
+  font-family:var(--mono);font-size:10px;letter-spacing:1px;
+  color:var(--text2);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .2s;
+  text-transform:uppercase;white-space:nowrap;
+}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:#00d4ff06}
+.nav-tab:hover:not(.active){color:var(--text);background:#ffffff05}
+
 .tab-body{display:none}.tab-body.active{display:block}
-.wrap{max-width:700px;margin:0 auto;padding:24px 20px}
+.wrap{max-width:720px;margin:0 auto;padding:24px 20px}
 
-/* STATS */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
-@media(max-width:500px){.stats-row{grid-template-columns:repeat(2,1fr)}}
-.stat-box{background:var(--surf);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
-.stat-num{font-family:var(--mono);font-size:26px;font-weight:700}
+/* ─── STATS ─────────────────────────── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+@media(max-width:520px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stat-box{
+  background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 12px;text-align:center;transition:border-color .2s,transform .2s;
+  position:relative;overflow:hidden;
+}
+.stat-box::before{
+  content:'';position:absolute;inset:0;opacity:0;
+  transition:opacity .3s;pointer-events:none;
+}
+.stat-box:hover{transform:translateY(-2px)}
+.stat-box.c-accent-box::before{background:radial-gradient(at 50% 0%,#00d4ff10,transparent 70%)}
+.stat-box.c-green-box::before{background:radial-gradient(at 50% 0%,#00e67610,transparent 70%)}
+.stat-box.c-red-box::before{background:radial-gradient(at 50% 0%,#ff3d5710,transparent 70%)}
+.stat-box.c-amber-box::before{background:radial-gradient(at 50% 0%,#ffab0010,transparent 70%)}
+.stat-box:hover::before{opacity:1}
+.stat-num{font-family:var(--mono);font-size:28px;font-weight:700;line-height:1}
 .stat-num.c-green{color:var(--green)}.stat-num.c-red{color:var(--red)}
 .stat-num.c-accent{color:var(--accent)}.stat-num.c-amber{color:var(--amber)}
-.stat-lbl{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+.stat-lbl{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-top:5px}
 
-/* FORMS */
-.sec-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--accent);
-  text-transform:uppercase;margin-bottom:14px}
-.field{margin-bottom:14px}
-.field label{display:block;font-family:var(--mono);font-size:10px;color:var(--text2);
-  letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
-.field input,.field select{width:100%;background:var(--surf);border:1px solid var(--border);
-  color:var(--text);padding:11px 14px;border-radius:6px;font-family:var(--sans);font-size:14px;
-  outline:none;transition:border-color .2s;-webkit-appearance:none}
-.field input:focus,.field select:focus{border-color:var(--accent)}
-.field select option{background:var(--surf)}
+/* ─── SECTION TITLE ─────────────────────────── */
+.sec-title{
+  font-family:var(--mono);font-size:10px;letter-spacing:2.5px;color:var(--accent);
+  text-transform:uppercase;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.sec-title::after{content:'';flex:1;height:1px;background:linear-gradient(to right,var(--border),transparent)}
+
+/* ─── FORMS ─────────────────────────── */
+.field{margin-bottom:16px}
+.field label{display:block;font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--surf2);border:1.5px solid var(--border);
+  color:var(--text);padding:12px 14px;border-radius:8px;
+  font-family:var(--sans);font-size:14px;outline:none;
+  transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px #00d4ff12
+}
+.field select option{background:var(--surf2)}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 
-/* BUTTONS */
-.btn{width:100%;padding:12px;border-radius:8px;border:none;font-family:var(--mono);font-size:12px;
-  font-weight:600;letter-spacing:2px;cursor:pointer;transition:all .2s;text-transform:uppercase;margin-top:4px}
-.btn-primary{background:var(--accent);color:#000}
-.btn-primary:hover{background:#00aadd}
-.btn-primary:disabled{background:var(--border);color:var(--text2);cursor:not-allowed}
-.btn-secondary{background:var(--surf2);color:var(--text2);border:1px solid var(--border)}
-.btn-danger{background:transparent;color:var(--red);border:1px solid var(--red)}
-.btn-sm{padding:5px 12px;border-radius:4px;border:none;font-family:var(--mono);font-size:10px;
-  font-weight:600;cursor:pointer;letter-spacing:1px}
-.btn-red{background:#ff445520;color:var(--red);border:1px solid #ff444440}
-.btn-blue{background:#00ccff20;color:var(--accent);border:1px solid #00ccff40}
+/* ─── BUTTONS ─────────────────────────── */
+.btn{
+  width:100%;padding:13px;border-radius:10px;border:none;
+  font-family:var(--mono);font-size:12px;font-weight:600;
+  letter-spacing:2px;cursor:pointer;transition:all .2s;
+  text-transform:uppercase;margin-top:4px;
+}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px #00d4ff25}
+.btn-primary:disabled{background:var(--border);color:var(--text3);cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{background:var(--surf2);color:var(--text2);border:1px solid var(--border2)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--text)}
+.btn-danger{background:transparent;color:var(--red);border:1.5px solid var(--red)}
+.btn-danger:hover{background:#ff3d5710}
+.btn-tg{background:linear-gradient(135deg,#229ED9,#1A85B8);color:#fff;border:none}
+.btn-tg:hover{transform:translateY(-1px);box-shadow:0 8px 20px #229ED930}
+.btn-sm{
+  padding:5px 13px;border-radius:5px;border:none;
+  font-family:var(--mono);font-size:10px;font-weight:600;
+  cursor:pointer;letter-spacing:1px;transition:all .15s;
+}
+.btn-red{background:#ff3d5718;color:var(--red);border:1px solid #ff3d5735}
+.btn-red:hover{background:#ff3d5730}
+.btn-blue{background:#00d4ff18;color:var(--accent);border:1px solid #00d4ff30}
+.btn-blue:hover{background:#00d4ff28}
+.btn-amber{background:#ffab0018;color:var(--amber);border:1px solid #ffab0030}
+.btn-amber:hover{background:#ffab0028}
 
-/* STAFF LIST */
-.staff-item{display:flex;align-items:center;gap:12px;padding:13px;background:var(--surf);
-  border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
-.s-avatar{width:42px;height:42px;border-radius:50%;background:var(--surf2);
-  display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:17px;
-  color:var(--text2);flex-shrink:0;border:1px solid var(--border)}
+/* ─── STAFF LIST ─────────────────────────── */
+.staff-item{
+  display:flex;align-items:center;gap:12px;padding:14px;
+  background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:8px;transition:border-color .2s,transform .15s;
+}
+.staff-item:hover{border-color:var(--border2);transform:translateX(2px)}
+.s-avatar{
+  width:44px;height:44px;border-radius:50%;background:var(--surf3);
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+  font-size:18px;color:var(--text2);flex-shrink:0;border:1.5px solid var(--border2);
+  font-weight:700;
+}
 .s-info{flex:1;min-width:0}
-.s-name{font-size:14px;font-weight:500}
-.s-pos{font-size:11px;color:var(--text2);font-family:var(--mono);margin-top:1px}
-.s-pin{display:inline-block;margin-top:4px;font-family:var(--mono);font-size:10px;
-  background:var(--surf2);border:1px solid var(--border);padding:1px 8px;border-radius:3px;
-  color:var(--accent);letter-spacing:2px}
-.s-actions{display:flex;gap:6px;flex-shrink:0}
+.s-name{font-size:14px;font-weight:600;color:var(--text)}
+.s-pos{font-size:11px;color:var(--text2);font-family:var(--mono);margin-top:2px}
+.s-pin-hidden{
+  display:inline-block;margin-top:5px;font-family:var(--mono);font-size:10px;
+  background:var(--surf2);border:1px solid var(--border);padding:2px 9px;
+  border-radius:4px;color:var(--text3);letter-spacing:3px;cursor:pointer;
+  transition:all .2s;user-select:none;
+}
+.s-pin-hidden:hover{color:var(--text2);border-color:var(--border2)}
+.s-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
 
-/* INFO BOX */
-.info-box{background:#00ccff08;border:1px solid #00ccff20;border-radius:8px;padding:14px;
-  font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.9;margin-bottom:16px}
+/* ─── PIN DISPLAY ─────────────────────────── */
+.pin-reveal{
+  display:inline-block;font-family:var(--mono);font-size:10px;
+  background:var(--surf3);border:1px solid var(--border2);padding:2px 9px;
+  border-radius:4px;color:var(--accent);letter-spacing:3px;margin-top:5px;
+}
+
+/* ─── INFO BOX ─────────────────────────── */
+.info-box{
+  background:linear-gradient(135deg,#00d4ff08,#00d4ff04);
+  border:1px solid #00d4ff20;border-radius:var(--radius);padding:14px;
+  font-family:var(--mono);font-size:11px;color:var(--text2);line-height:2;margin-bottom:16px;
+}
 .info-box strong{color:var(--text)}
+.info-box.amber{background:linear-gradient(135deg,#ffab0008,#ffab0004);border-color:#ffab0025}
+.info-box.green{background:linear-gradient(135deg,#00e67608,#00e67604);border-color:#00e67625}
 
-/* DIVIDER */
-.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+/* ─── DIVIDER ─────────────────────────── */
+.divider{border:none;border-top:1px solid var(--border);margin:24px 0}
 
-/* GPS */
-.gps-box{background:var(--surf);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:14px}
+/* ─── GPS ─────────────────────────── */
+.gps-box{
+  background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-bottom:14px;
+}
 .gps-coords{font-family:var(--mono);font-size:13px;color:var(--accent);margin-top:8px;word-break:break-all}
 
-/* ═══ REPORT ═══ */
-.report-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+/* ─── REPORT ─────────────────────────── */
+.report-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px}
 .report-filters .field{margin-bottom:0;flex:1;min-width:130px}
 .report-filters .btn{width:auto;padding:11px 18px;margin-top:0}
 
-/* TABLE */
-.report-table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
+.report-table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
 .report-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
-.report-table th{background:var(--surf2);color:var(--text2);padding:9px 12px;
+.report-table th{
+  background:var(--surf2);color:var(--text2);padding:10px 12px;
   text-align:left;letter-spacing:1px;text-transform:uppercase;font-size:9px;
-  border-bottom:1px solid var(--border);white-space:nowrap}
-.report-table td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+.report-table td{padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
 .report-table tr:last-child td{border-bottom:none}
-.report-table tr:hover td{background:#00ccff06}
+.report-table tr:hover td{background:#00d4ff05}
 .tc-ok{color:var(--green)}.tc-late{color:var(--red)}.tc-none{color:var(--text3)}
-.tc-name{color:var(--text);font-weight:500}
+.tc-name{color:var(--text);font-weight:600}
 
-/* JADVAL */
-.jadval-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
+/* ─── JADVAL ─────────────────────────── */
+.jadval-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
 .jadval{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:10px}
-.jadval th{background:var(--surf2);color:var(--text2);padding:7px 8px;
-  text-align:center;letter-spacing:.5px;font-size:9px;border-bottom:1px solid var(--border);white-space:nowrap}
+.jadval th{
+  background:var(--surf2);color:var(--text2);padding:7px 8px;
+  text-align:center;letter-spacing:.5px;font-size:9px;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
 .jadval th.name-col{text-align:left;padding-left:12px}
-.jadval td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:center;border-right:1px solid var(--border)}
+.jadval td{
+  padding:6px 7px;border-bottom:1px solid var(--border);
+  text-align:center;border-right:1px solid var(--border);
+}
 .jadval td:last-child{border-right:none}
 .jadval tr:last-child td{border-bottom:none}
-.jadval .name-cell{text-align:left;padding-left:12px;color:var(--text);font-size:11px;white-space:nowrap}
-.j-ok{background:#00ff8815;color:var(--green)}
-.j-late{background:#ff445515;color:var(--red)}
+.jadval .name-cell{text-align:left;padding-left:12px;color:var(--text);font-size:11px;white-space:nowrap;font-weight:500}
+.j-ok{background:#00e67612;color:var(--green)}
+.j-late{background:#ff3d5712;color:var(--red);font-weight:700}
 .j-absent{color:var(--text3)}
-.j-early{background:#ffaa0015;color:var(--amber)}
+.j-early{background:#ffab0012;color:var(--amber)}
+.j-weekend{background:#1a2a3a;color:var(--text3)}
 
-/* LATE STATS */
-.late-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surf);
-  border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
-.late-rank{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text3);
-  width:28px;flex-shrink:0;text-align:center}
+/* ─── LATE STATS ─────────────────────────── */
+.late-item{
+  display:flex;align-items:center;gap:12px;padding:14px;
+  background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;
+  transition:transform .15s;
+}
+.late-item:hover{transform:translateX(2px)}
+.late-rank{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text3);width:30px;flex-shrink:0;text-align:center}
+.late-rank.gold{color:#FFD700;text-shadow:0 0 8px #FFD70040}
+.late-rank.silver{color:#C0C0C0}
+.late-rank.bronze{color:#CD7F32}
 .late-bar-wrap{flex:1}
-.late-name{font-size:13px;font-weight:500;margin-bottom:4px}
+.late-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
 .late-pos{font-size:10px;color:var(--text2);font-family:var(--mono)}
-.late-bar{height:4px;border-radius:2px;background:var(--border);margin-top:6px;overflow:hidden}
-.late-fill{height:100%;border-radius:2px;background:var(--red)}
-.late-count{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--red);flex-shrink:0}
+.late-meta{display:flex;gap:12px;margin-top:5px;flex-wrap:wrap}
+.late-tag{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:3px;letter-spacing:1px}
+.late-tag.l-late{background:#ff3d5718;color:var(--red);border:1px solid #ff3d5730}
+.late-tag.l-absent{background:#ffab0018;color:var(--amber);border:1px solid #ffab0030}
+.late-tag.l-early{background:#a855f718;color:var(--purple);border:1px solid #a855f730}
+.late-bar{height:5px;border-radius:3px;background:var(--border);margin-top:8px;overflow:hidden}
+.late-fill{height:100%;border-radius:3px;background:linear-gradient(to right,var(--red),#ff8c57)}
+.late-count{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--red);flex-shrink:0}
 
-/* PIN MODAL */
-.modal-bg{position:fixed;inset:0;background:#000000cc;z-index:100;
-  display:none;align-items:center;justify-content:center;padding:16px}
+/* ─── MODAL ─────────────────────────── */
+.modal-bg{
+  position:fixed;inset:0;background:#000000d0;z-index:200;
+  display:none;align-items:center;justify-content:center;padding:16px;
+  backdrop-filter:blur(4px);
+}
 .modal-bg.active{display:flex}
-.modal-card{background:var(--surf);border:1px solid var(--border);border-radius:16px;
-  padding:24px;width:100%;max-width:340px}
-.modal-title{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:2px;
-  text-transform:uppercase;margin-bottom:18px}
-.modal-close{float:right;background:none;border:none;color:var(--text2);
-  font-size:18px;cursor:pointer;font-family:var(--mono)}
+.modal-card{
+  background:var(--surf);border:1px solid var(--border2);border-radius:16px;
+  padding:26px;width:100%;max-width:360px;
+  box-shadow:0 24px 60px #00000080;
+}
+.modal-title{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:18px}
+.modal-close{float:right;background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;font-family:var(--mono);padding:0;transition:color .2s}
+.modal-close:hover{color:var(--red)}
 
-/* SERVER STATUS */
-.srv-status{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px}
-.s-dot-anim{width:8px;height:8px;border-radius:50%;animation:blink 1.5s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:.4}50%{opacity:1}}
-
-/* TOAST */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
-  background:var(--green);color:#000;padding:11px 22px;border-radius:6px;
-  font-family:var(--mono);font-size:12px;opacity:0;transition:all .3s;
-  z-index:999;white-space:nowrap;max-width:90vw;text-align:center}
+/* ─── TOAST ─────────────────────────── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(70px);
+  background:var(--green);color:#000;padding:12px 24px;border-radius:8px;
+  font-family:var(--mono);font-size:12px;opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  z-index:999;white-space:nowrap;max-width:90vw;text-align:center;font-weight:600;
+}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.err{background:var(--red);color:#fff}
+.toast.info{background:var(--accent);color:#000}
 
-.spinner{display:inline-block;width:14px;height:14px;border:2px solid #00ccff44;
-  border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+/* ─── SPINNER ─────────────────────────── */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #00d4ff30;border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:1px 6px;
-  border-radius:2px;letter-spacing:1px;margin-left:4px}
-.badge-ok{background:#00ff8820;color:var(--green);border:1px solid #00ff8840}
-.badge-late{background:#ff445520;color:var(--red);border:1px solid #ff444440}
-.badge-neutral{background:#00ccff15;color:var(--accent);border:1px solid #00ccff30}
+/* ─── BADGE ─────────────────────────── */
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:3px;letter-spacing:1px;margin-left:4px;font-weight:600}
+.badge-ok{background:#00e67618;color:var(--green);border:1px solid #00e67630}
+.badge-late{background:#ff3d5718;color:var(--red);border:1px solid #ff3d5730}
+.badge-neutral{background:#00d4ff15;color:var(--accent);border:1px solid #00d4ff30}
+
+/* ─── TELEGRAM SECTION ─────────────────────────── */
+.tg-card{
+  background:linear-gradient(135deg,#0d1f31,#0a1a2a);
+  border:1px solid #229ED940;border-radius:var(--radius);padding:18px;margin-bottom:14px;
+}
+.tg-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.tg-icon{
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,#229ED9,#1A85B8);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+}
+.tg-title{font-weight:600;font-size:15px;color:var(--text)}
+.tg-sub{font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:2px}
+
+/* ─── JSONBIN CONFIG ─────────────────────────── */
+.jsonbin-card{
+  background:linear-gradient(135deg,#0f1d0f,#0a140a);
+  border:1px solid #00e67630;border-radius:var(--radius);padding:16px;margin-bottom:14px;
+}
+
+/* ─── SEARCH ─────────────────────────── */
+.search-wrap{position:relative;margin-bottom:16px}
+.search-wrap input{padding-left:38px}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:14px;pointer-events:none}
+
+/* ─── LOADING OVERLAY ─────────────────────────── */
+.loading-text{font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:40px;animation:fade 1s ease-in-out infinite alternate}
+@keyframes fade{from{opacity:.4}to{opacity:1}}
+
+/* ─── CONNECTION STATUS ─────────────────────────── */
+.conn-status{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:4px}
+.conn-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.conn-ok{background:#00e67615;color:var(--green);border:1px solid #00e67630}.conn-ok .conn-dot{background:var(--green)}
+.conn-offline{background:#ffab0015;color:var(--amber);border:1px solid #ffab0030}.conn-offline .conn-dot{background:var(--amber)}
+.conn-err{background:#ff3d5715;color:var(--red);border:1px solid #ff3d5730}.conn-err .conn-dot{background:var(--red)}
+
+/* ─── SCROLLBAR ─────────────────────────── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--surf)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent2)}
+
+/* ─── RANGE INPUT ─────────────────────────── */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  height:4px;border-radius:2px;background:var(--border2);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:var(--accent);cursor:grab;box-shadow:0 0 0 3px #00d4ff20;
+  transition:box-shadow .2s;
+}
+input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;box-shadow:0 0 0 6px #00d4ff20}
 </style>
 </head>
 <body>
 
-<div class="hdr">
-  <div>
-    <div class="hdr-title">ADMIN PANEL</div>
-    <div class="hdr-sub">IIV SURXONDARYO · AKADEMIK LITSEY</div>
+<!-- ════════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">IIV · SURXONDARYO</div>
+    <div class="login-title">Admin Panel</div>
+    <div class="login-sub">Akademik Litsey · Davomat tizimi</div>
+    <label class="login-label">Admin paroli</label>
+    <input type="password" class="login-input" id="login-pass" placeholder="••••••" autocomplete="off"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">KIRISH →</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-attempts" id="login-attempts"></div>
   </div>
-  <a class="link-btn" href="davomat.html">→ DAVOMAT</a>
+</div>
+
+<!-- ════════════════════════════════════
+     MAIN APP
+════════════════════════════════════ -->
+<div id="main-app" style="display:none">
+
+<div class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-dot"></div>
+    <div>
+      <div class="hdr-title">ADMIN PANEL</div>
+      <div class="hdr-sub">IIV SURXONDARYO · AKADEMIK LITSEY</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <span id="hdr-conn" class="conn-status conn-offline"><span class="conn-dot"></span><span id="hdr-conn-txt">OFFLINE</span></span>
+    <div class="hdr-time" id="hdr-time"></div>
+    <button class="logout-btn" onclick="doLogout()">CHIQISH</button>
+  </div>
 </div>
 
 <div class="nav-tabs">
-  <div class="nav-tab active" onclick="aTab('xodimlar')">Xodimlar</div>
-  <div class="nav-tab" onclick="aTab('qoshish')">+ Qo'shish</div>
-  <div class="nav-tab" onclick="aTab('hisobot')">Hisobot</div>
-  <div class="nav-tab" onclick="aTab('kech')">Kechikish</div>
-  <div class="nav-tab" onclick="aTab('sozlama')">Sozlama</div>
+  <div class="nav-tab active" onclick="aTab('xodimlar',event)">👥 Xodimlar</div>
+  <div class="nav-tab" onclick="aTab('qoshish',event)">＋ Qo'shish</div>
+  <div class="nav-tab" onclick="aTab('hisobot',event)">📊 Hisobot</div>
+  <div class="nav-tab" onclick="aTab('kech',event)">⏰ Kechikish</div>
+  <div class="nav-tab" onclick="aTab('telegram',event)">✈️ Telegram</div>
+  <div class="nav-tab" onclick="aTab('sozlama',event)">⚙️ Sozlama</div>
 </div>
 
 <!-- ══════════ TAB: Xodimlar ══════════ -->
 <div class="tab-body active" id="atab-xodimlar">
   <div class="wrap">
     <div class="stats-row">
-      <div class="stat-box">
+      <div class="stat-box c-accent-box">
         <div class="stat-num c-accent" id="st-t">—</div>
         <div class="stat-lbl">Jami xodim</div>
       </div>
-      <div class="stat-box">
+      <div class="stat-box c-green-box">
         <div class="stat-num c-green" id="st-today">—</div>
         <div class="stat-lbl">Bugun keldi</div>
       </div>
-      <div class="stat-box">
+      <div class="stat-box c-red-box">
         <div class="stat-num c-red" id="st-late">—</div>
         <div class="stat-lbl">Kech keldi</div>
       </div>
-      <div class="stat-box">
+      <div class="stat-box c-amber-box">
         <div class="stat-num c-amber" id="st-absent">—</div>
         <div class="stat-lbl">Kelmagan</div>
       </div>
     </div>
+
     <div class="sec-title">Xodimlar ro'yxati</div>
-    <div id="staff-list">
-      <div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:32px">Yuklanmoqda...</div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="staff-search" placeholder="Ism yoki lavozim bo'yicha qidirish..." class="field" style="margin:0;padding:11px 14px 11px 38px;width:100%;background:var(--surf2);border:1.5px solid var(--border);color:var(--text);border-radius:8px;font-family:var(--sans);font-size:14px;outline:none" oninput="filterStaff(this.value)">
     </div>
+    <div id="staff-list"><div class="loading-text">Yuklanmoqda...</div></div>
   </div>
 </div>
 
 <!-- ══════════ TAB: Qo'shish ══════════ -->
 <div class="tab-body" id="atab-qoshish">
   <div class="wrap">
-    <div class="sec-title">Yangi xodim ro'yxatga olish</div>
+    <div class="sec-title">Yangi xodim qo'shish</div>
     <div class="field">
-      <label>Familiya va Ism Sharif</label>
+      <label>Familiya va Ism Sharif *</label>
       <input type="text" id="f-name" placeholder="Karimov Akbar Hamidovich">
     </div>
     <div class="field">
-      <label>Lavozim</label>
+      <label>Lavozim *</label>
       <input type="text" id="f-pos" placeholder="Kimyo o'qituvchisi">
     </div>
     <div class="field">
-      <label>4 xonali PIN kod</label>
+      <label>4 xonali PIN kod *</label>
       <input type="number" id="f-pin" placeholder="1234" maxlength="4"
-        oninput="this.value=this.value.slice(0,4)" min="1000" max="9999">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:5px">
-        Xodim faqat o'z telefonidan kirishi uchun unikal kod bering
+        oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)" min="1000" max="9999">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:6px">
+        ⚠️ PIN — xodim kirishi uchun yagona kalit. Unikal bo'lishi shart.
       </div>
     </div>
     <button class="btn btn-primary" id="add-btn" onclick="addStaff()">✓ QO'SHISH</button>
-    <div id="add-status" style="margin-top:10px;font-family:var(--mono);font-size:12px;text-align:center;color:var(--text2)"></div>
+    <div id="add-status" style="margin-top:12px;font-family:var(--mono);font-size:12px;text-align:center;color:var(--text2)"></div>
   </div>
 </div>
 
@@ -249,8 +526,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 <div class="tab-body" id="atab-hisobot">
   <div class="wrap">
     <div class="sec-title">Davomat hisoboti</div>
-
-    <!-- Filters -->
     <div class="report-filters">
       <div class="field">
         <label>Xodim</label>
@@ -265,86 +540,179 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
       <div class="field">
         <label>Ko'rinish</label>
         <select id="rpt-view">
-          <option value="list">Ro'yxat</option>
+          <option value="list">Ro'yxat (kun)</option>
           <option value="jadval">Jadval (oy)</option>
         </select>
       </div>
       <button class="btn btn-primary" onclick="renderReport()" style="white-space:nowrap">▶ KO'RISH</button>
     </div>
-
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn btn-secondary" onclick="exportReportCSV()" style="flex:1;margin-top:0;font-size:10px">📥 CSV</button>
+      <button class="btn btn-secondary" onclick="exportReportPDF()" style="flex:1;margin-top:0;font-size:10px">📄 PDF</button>
+    </div>
     <div id="report-output">
-      <div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:32px">
+      <div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:40px">
         Filtr tanlang va KO'RISH tugmasini bosing
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ TAB: Kechikish statistikasi ══════════ -->
+<!-- ══════════ TAB: Kechikish ══════════ -->
 <div class="tab-body" id="atab-kech">
   <div class="wrap">
-    <div class="sec-title">Kechikish statistikasi</div>
+    <div class="sec-title">Oylik kechikish tahlili</div>
     <div class="report-filters" style="margin-bottom:14px">
       <div class="field">
         <label>Oy</label>
         <input type="month" id="kech-month">
       </div>
       <button class="btn btn-primary" onclick="renderLateStats()" style="white-space:nowrap">▶ KO'RISH</button>
+      <button class="btn btn-secondary" onclick="exportLateStatsPDF()" style="white-space:nowrap;margin-top:0">📄 PDF</button>
     </div>
     <div id="late-output">
-      <div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:32px">
+      <div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:40px">
         Oy tanlang
       </div>
     </div>
   </div>
 </div>
 
+<!-- ══════════ TAB: Telegram ══════════ -->
+<div class="tab-body" id="atab-telegram">
+  <div class="wrap">
+    <div class="sec-title">Telegram hisobot</div>
+
+    <div class="tg-card">
+      <div class="tg-header">
+        <div class="tg-icon">✈️</div>
+        <div>
+          <div class="tg-title">Telegram Bot sozlamalari</div>
+          <div class="tg-sub">PDF hisobot faylni bevosita yuborish</div>
+        </div>
+      </div>
+      <div class="info-box">
+        <strong>Qanday sozlanadi?</strong><br>
+        ① @BotFather da yangi bot yarating → Token oling<br>
+        ② O'z Telegram profilida <strong>Chat ID</strong> ni toping (@userinfobot orqali)<br>
+        ③ Quyida ma'lumotlarni kiriting va saqlang
+      </div>
+      <div class="field">
+        <label>Bot Token</label>
+        <input type="text" id="tg-token" placeholder="1234567890:AAExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+      </div>
+      <div class="field">
+        <label>Chat ID (siz yoki guruh)</label>
+        <input type="text" id="tg-chatid" placeholder="123456789">
+      </div>
+      <div class="row2">
+        <button class="btn btn-secondary" onclick="saveTgConfig()" style="margin-top:0">💾 SAQLASH</button>
+        <button class="btn btn-secondary" onclick="testTgBot()" style="margin-top:0">🔗 TEST</button>
+      </div>
+      <div id="tg-test-result" style="font-family:var(--mono);font-size:11px;margin-top:10px;min-height:16px;text-align:center"></div>
+    </div>
+
+    <hr class="divider">
+    <div class="sec-title">Hisobot yuborish</div>
+
+    <div class="info-box green">
+      <strong>PDF hisobot:</strong> Tanlangan sana uchun barcha xodimlar davomati PDF shaklda tayyorlanib, Telegram ga fayl sifatida yuboriladi.
+    </div>
+
+    <div class="field">
+      <label>Hisobot sanasi</label>
+      <input type="date" id="tg-date">
+    </div>
+    <div class="field">
+      <label>Hisobot turi</label>
+      <select id="tg-report-type">
+        <option value="daily">Kunlik davomat hisoboti</option>
+        <option value="monthly">Oylik kechikish tahlili</option>
+        <option value="both">Ikkalasi ham</option>
+      </select>
+    </div>
+    <button class="btn btn-tg" onclick="sendTelegramReport()" id="tg-send-btn">
+      ✈️ TELEGRAM GA YUBORISH
+    </button>
+    <div id="tg-send-result" style="font-family:var(--mono);font-size:11px;margin-top:12px;text-align:center;min-height:16px"></div>
+  </div>
+</div>
+
 <!-- ══════════ TAB: Sozlama ══════════ -->
 <div class="tab-body" id="atab-sozlama">
   <div class="wrap">
-    <div class="sec-title">Server sozlamalari</div>
-    <div class="info-box">
-      <strong>Server URL:</strong> Render.com yoki boshqa backend manzili.<br>
-      Agar server yo'q bo'lsa, ma'lumotlar faqat localStorage da saqlanadi.
+    <div class="sec-title">Parol boshqaruvi</div>
+    <div class="info-box amber">
+      <strong>Xavfsizlik:</strong> Admin paroli faqat shu qurilmada saqlanadi.<br>
+      Standart parol: <strong>admin2024</strong> — Iltimos darhol o'zgartiring!
     </div>
-    <div class="field">
-      <label>Server URL</label>
-      <input type="url" id="cfg-server" placeholder="https://yourapp.onrender.com">
+    <div class="row2">
+      <div class="field">
+        <label>Yangi parol</label>
+        <input type="password" id="new-pass" placeholder="Yangi parol">
+      </div>
+      <div class="field">
+        <label>Tasdiqlash</label>
+        <input type="password" id="new-pass2" placeholder="Qayta kiriting">
+      </div>
     </div>
-    <button class="btn btn-secondary" onclick="testServer()" style="margin-bottom:8px">⚡ TEST</button>
-    <div id="server-test-result" style="font-family:var(--mono);font-size:11px;text-align:center;margin-bottom:14px;min-height:16px;color:var(--text2)"></div>
+    <button class="btn btn-secondary" onclick="changePass()" style="margin-bottom:0">🔒 PAROLNI O'ZGARTIRISH</button>
+
+    <hr class="divider">
+    <div class="sec-title">Ma'lumot bazasi (JSONBin.io)</div>
+    <div class="jsonbin-card">
+      <div class="info-box green" style="margin-bottom:12px">
+        <strong>Bepul bulutli saqlash:</strong><br>
+        ① jsonbin.io saytida ro'yxatdan o'ting (BEPUL)<br>
+        ② "New Bin" yarating, ID ni nusxa oling<br>
+        ③ API Key ni profil sozlamalaridan oling<br>
+        ④ Quyida kiriting → Saqlang
+      </div>
+      <div class="field">
+        <label>JSONBin API Key</label>
+        <input type="text" id="jb-key" placeholder="$2a$10$xxxxxxxxxxxxxxxxxxxxxxxxx">
+      </div>
+      <div class="field">
+        <label>Bin ID</label>
+        <input type="text" id="jb-binid" placeholder="64xxxxxxxxxxxxxxxxxxxxxx">
+      </div>
+      <div class="row2">
+        <button class="btn btn-secondary" onclick="saveJBConfig()" style="margin-top:0">💾 SAQLASH</button>
+        <button class="btn btn-secondary" onclick="syncToCloud()" style="margin-top:0">☁️ BULUTGA SINX</button>
+      </div>
+      <div class="row2" style="margin-top:8px">
+        <button class="btn btn-secondary" onclick="fetchFromCloud()" style="margin-top:0">⬇️ BULUTDAN YUKLASH</button>
+        <div id="jb-status" style="display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--text2)"></div>
+      </div>
+    </div>
 
     <hr class="divider">
     <div class="sec-title">Joylashuv (GPS)</div>
 
     <div class="info-box" style="margin-bottom:12px">
       <strong>Xaritada ishlash tartibi:</strong><br>
-      ① 📍 <strong>GPS ANIQLASH</strong> — qurilma joylashuvini topadi<br>
-      ② Xaritada <strong>marker ni sudrab</strong> aniq nuqtaga olib boring<br>
+      ① 📍 GPS ANIQLASH — qurilma joylashuvini topadi<br>
+      ② Xaritada marker ni sudrab aniq nuqtaga olib boring<br>
       ③ Yashil doira — ruxsat etilgan radius maydonini ko'rsatadi<br>
-      ④ Koordinatalar avtomatik yangilanadi → <strong>SAQLASH</strong>
+      ④ Koordinatalar avtomatik yangilanadi → SAQLASH
     </div>
 
-    <!-- Koordinata ko'rsatkichi -->
-    <div class="gps-box" id="gps-box" style="margin-bottom:10px">
+    <div class="gps-box" style="margin-bottom:10px">
       <div style="font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Tanlangan nuqta</div>
       <div class="gps-coords" id="gps-detected">— xaritada nuqta tanlang —</div>
     </div>
 
-    <!-- Leaflet xarita -->
     <div id="map-wrap" style="border-radius:10px;overflow:hidden;border:1px solid var(--border);margin-bottom:12px;position:relative">
-      <div id="leaflet-map" style="height:320px;width:100%;background:var(--surf2)"></div>
+      <div id="leaflet-map" style="height:300px;width:100%;background:var(--surf2)"></div>
       <div id="map-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--surf2);font-family:var(--mono);font-size:12px;color:var(--text2);z-index:5">
-        <span>🗺 Xarita yuklanmoqda...</span>
+        🗺 Xarita yuklanmoqda...
       </div>
     </div>
 
-    <!-- Radius slider -->
     <div class="field" style="margin-bottom:10px">
       <label>Radius: <span id="radius-lbl" style="color:var(--accent)">40</span> metr</label>
       <input type="range" id="cfg-radius-range" min="10" max="500" value="40"
-        oninput="onRadiusChange(this.value)"
-        style="width:100%;accent-color:var(--accent);margin-top:6px;cursor:pointer">
+        oninput="onRadiusChange(this.value)" style="width:100%;margin-top:8px">
     </div>
 
     <div class="row2" style="margin-bottom:10px">
@@ -353,9 +721,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
       <div class="field" style="margin-bottom:0"><label>Uzunlik (Lon)</label>
         <input type="number" id="cfg-lon" placeholder="67.567710" step="any" oninput="onCoordsInput()"></div>
     </div>
-    <div class="field" style="display:none">
-      <input type="number" id="cfg-radius" value="40">
-    </div>
+    <input type="number" id="cfg-radius" value="40" style="display:none">
 
     <div style="display:flex;gap:10px;margin-bottom:14px">
       <button class="btn btn-secondary" onclick="detectGPS()" style="flex:1">📍 GPS ANIQLASH</button>
@@ -363,7 +729,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     </div>
 
     <hr class="divider">
-    <div class="sec-title">Vaqt chegaralari</div>
+    <div class="sec-title">Ish vaqti chegaralari</div>
     <div class="info-box">
       <strong>Kelish oynasi:</strong> Xodim qaysi vaqt oralig'ida kelsa "O'z vaqtida" hisoblanadi.<br>
       <strong>Ketish oynasi:</strong> Xodim qaysi vaqtda ketsa "O'z vaqtida ketdi" hisoblanadi.
@@ -382,27 +748,40 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     </div>
 
     <hr class="divider">
-    <button class="btn btn-primary" onclick="saveCfg()">✓ SAQLASH</button>
+    <button class="btn btn-primary" onclick="saveCfg()">✓ BARCHA SOZLAMALARNI SAQLASH</button>
     <button class="btn btn-danger" onclick="clearAll()" style="margin-top:10px">✗ BARCHA MA'LUMOTLARNI O'CHIRISH</button>
   </div>
 </div>
+
+</div><!-- #main-app -->
 
 <!-- PIN Edit Modal -->
 <div class="modal-bg" id="pin-modal">
   <div class="modal-card">
     <button class="modal-close" onclick="closePinModal()">✕</button>
     <div class="modal-title">PIN O'ZGARTIRISH</div>
-    <div id="pm-staff-name" style="font-size:14px;color:var(--text);margin-bottom:16px"></div>
+    <div id="pm-staff-name" style="font-size:14px;color:var(--text);margin-bottom:16px;font-weight:600"></div>
     <div class="field">
       <label>Yangi 4 xonali PIN</label>
-      <input type="number" id="pm-pin" placeholder="1234" maxlength="4"
-        oninput="this.value=this.value.slice(0,4)" min="1000" max="9999">
+      <input type="number" id="pm-pin" placeholder="1234"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)" min="1000" max="9999">
     </div>
     <div class="info-box" style="margin-top:8px">
-      PIN o'zgartirilganda xodimning qurilma bog'lanishi ham sifirlanadi.<br>
+      PIN o'zgartirilganda xodimning qurilma bog'lanishi sifirlanadi.<br>
       Xodim yangi qurilmasidan birinchi kirishda yangi qurilma bog'lanadi.
     </div>
     <button class="btn btn-primary" onclick="savePinEdit()">✓ SAQLASH</button>
+  </div>
+</div>
+
+<!-- PIN Reveal Modal -->
+<div class="modal-bg" id="pin-reveal-modal">
+  <div class="modal-card">
+    <button class="modal-close" onclick="document.getElementById('pin-reveal-modal').classList.remove('active')">✕</button>
+    <div class="modal-title">PIN KO'RISH</div>
+    <div id="prm-name" style="font-size:14px;color:var(--text);margin-bottom:12px;font-weight:600"></div>
+    <div style="text-align:center;font-family:var(--mono);font-size:36px;color:var(--accent);letter-spacing:8px;padding:20px;background:var(--surf2);border-radius:10px;border:1px solid var(--border2);margin-bottom:14px" id="prm-pin"></div>
+    <div class="info-box" style="margin-bottom:0">Bu PIN maxfiy. Faqat zaruriy hollarda ko'ring.</div>
   </div>
 </div>
 
@@ -410,112 +789,340 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 
 <script>
 // ══════════════════════════════════════════════
+//  CONSTANTS & SECURITY
+// ══════════════════════════════════════════════
+const DEFAULT_PASS = 'admin2024';
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000; // 15 min
+
+function getPass(){ return localStorage.getItem('iiv_admin_pass') || DEFAULT_PASS; }
+function getAttempts(){ return JSON.parse(localStorage.getItem('iiv_attempts')||'{"count":0,"lockUntil":0}'); }
+function saveAttempts(a){ localStorage.setItem('iiv_attempts', JSON.stringify(a)); }
+
+function doLogin(){
+  const a = getAttempts();
+  if(Date.now() < a.lockUntil){
+    const mins = Math.ceil((a.lockUntil - Date.now())/60000);
+    document.getElementById('login-err').textContent = `🔒 ${mins} daqiqa bloklangan`;
+    return;
+  }
+  const pass = document.getElementById('login-pass').value;
+  if(pass === getPass()){
+    a.count = 0; a.lockUntil = 0; saveAttempts(a);
+    sessionStorage.setItem('iiv_authed','1');
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('main-app').style.display='block';
+    initApp();
+  } else {
+    a.count++; 
+    if(a.count >= MAX_ATTEMPTS){
+      a.lockUntil = Date.now() + LOCKOUT_MS;
+      a.count = 0;
+      document.getElementById('login-err').textContent = '🔒 15 daqiqa bloklandi!';
+    } else {
+      document.getElementById('login-err').textContent = `✗ Noto'g'ri parol (${MAX_ATTEMPTS - a.count} urinish qoldi)`;
+    }
+    saveAttempts(a);
+    document.getElementById('login-pass').value='';
+    document.getElementById('login-pass').focus();
+  }
+}
+
+function doLogout(){
+  sessionStorage.removeItem('iiv_authed');
+  location.reload();
+}
+
+function changePass(){
+  const p1 = document.getElementById('new-pass').value;
+  const p2 = document.getElementById('new-pass2').value;
+  if(!p1 || p1.length < 4){ toast('Parol kamida 4 belgi!', true); return; }
+  if(p1 !== p2){ toast('Parollar mos emas!', true); return; }
+  localStorage.setItem('iiv_admin_pass', p1);
+  document.getElementById('new-pass').value='';
+  document.getElementById('new-pass2').value='';
+  toast('✓ Parol o\'zgartirildi!');
+}
+
+// Check session on load
+window.addEventListener('load', ()=>{
+  if(sessionStorage.getItem('iiv_authed')==='1'){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('main-app').style.display='block';
+    initApp();
+  }
+  document.getElementById('login-pass').focus();
+});
+
+// ══════════════════════════════════════════════
 //  HELPERS
 // ══════════════════════════════════════════════
-function getCfg(){return JSON.parse(localStorage.getItem('iiv_cfg')||'{}');}
-function getStaff(){return JSON.parse(localStorage.getItem('iiv_staff')||'[]');}
-function saveStaff(arr){localStorage.setItem('iiv_staff',JSON.stringify(arr));}
-function todayKey(){const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
-function pad(n){return String(n).padStart(2,'0');}
-
-function getRecord(staffId, dateKey){
-  return JSON.parse(localStorage.getItem('iiv_rec_'+staffId+'_'+dateKey)||'{}');
+function getCfg(){ return JSON.parse(localStorage.getItem('iiv_cfg')||'{}'); }
+function getStaff(){ return JSON.parse(localStorage.getItem('iiv_staff')||'[]'); }
+function saveStaff(arr){ localStorage.setItem('iiv_staff', JSON.stringify(arr)); }
+function pad(n){ return String(n).padStart(2,'0'); }
+function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function getRecord(staffId, dateKey){ return JSON.parse(localStorage.getItem('iiv_rec_'+staffId+'_'+dateKey)||'{}'); }
+function getAllRecords(){
+  const keys = Object.keys(localStorage).filter(k=>k.startsWith('iiv_rec_'));
+  const records = {};
+  keys.forEach(k=>{ records[k.replace('iiv_rec_','')]=JSON.parse(localStorage.getItem(k)||'{}'); });
+  return records;
 }
-function serverUrl(){return (getCfg().serverUrl||'').replace(/\/$/,'');}
 
-function toast(msg,err){
+const UZ_MON=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+
+function toast(msg, err, info){
   const t=document.getElementById('toast');
-  t.textContent=msg; t.className='toast show'+(err?' err':'');
-  setTimeout(()=>t.className='toast',3000);
+  t.textContent=msg;
+  t.className='toast show'+(err?' err':info?' info':'');
+  setTimeout(()=>t.className='toast',3500);
 }
 
-function aTab(name){
+// Clock
+function updateClock(){
+  const now = new Date();
+  document.getElementById('hdr-time').textContent =
+    pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+}
+
+// ══════════════════════════════════════════════
+//  JSONBIN.IO — CLOUD BACKEND (BEPUL)
+// ══════════════════════════════════════════════
+function getJBCfg(){ return JSON.parse(localStorage.getItem('iiv_jb')||'{}'); }
+
+function saveJBConfig(){
+  const key = document.getElementById('jb-key').value.trim();
+  const binid = document.getElementById('jb-binid').value.trim();
+  if(!key || !binid){ toast('API Key va Bin ID kiriting!', true); return; }
+  localStorage.setItem('iiv_jb', JSON.stringify({key, binid}));
+  toast('✓ JSONBin sozlamalari saqlandi!');
+  updateConnStatus('ok');
+}
+
+async function syncToCloud(){
+  const cfg = getJBCfg();
+  if(!cfg.key || !cfg.binid){ toast('Avval JSONBin sozlamalarini kiriting!', true); return; }
+  
+  const payload = {
+    staff: getStaff(),
+    records: getAllRecords(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  document.getElementById('jb-status').textContent = '⏳ Yuborilmoqda...';
+  try{
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binid}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': cfg.key
+      },
+      body: JSON.stringify(payload)
+    });
+    if(res.ok){
+      toast('✓ Bulutga saqlandi!');
+      document.getElementById('jb-status').innerHTML='<span style="color:var(--green)">✓ Sinxronlandi</span>';
+      updateConnStatus('ok');
+    } else {
+      throw new Error(res.status);
+    }
+  } catch(e){
+    toast('✗ Xato: '+e.message, true);
+    document.getElementById('jb-status').innerHTML='<span style="color:var(--red)">✗ Xato</span>';
+    updateConnStatus('err');
+  }
+}
+
+async function fetchFromCloud(){
+  const cfg = getJBCfg();
+  if(!cfg.key || !cfg.binid){ toast('Avval JSONBin sozlamalarini kiriting!', true); return; }
+  
+  document.getElementById('jb-status').textContent = '⏳ Yuklanmoqda...';
+  try{
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binid}/latest`, {
+      headers:{ 'X-Master-Key': cfg.key }
+    });
+    if(!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    const rec = data.record;
+    
+    if(rec.staff) saveStaff(rec.staff);
+    if(rec.records){
+      Object.entries(rec.records).forEach(([k,v])=>{
+        localStorage.setItem('iiv_rec_'+k, JSON.stringify(v));
+      });
+    }
+    toast('✓ Bulutdan yuklandi! '+rec.staff.length+' xodim');
+    document.getElementById('jb-status').innerHTML='<span style="color:var(--green)">✓ Yuklandi</span>';
+    updateConnStatus('ok');
+    loadStaff();
+  } catch(e){
+    toast('✗ Xato: '+e.message, true);
+    document.getElementById('jb-status').innerHTML='<span style="color:var(--red)">✗ Xato</span>';
+    updateConnStatus('err');
+  }
+}
+
+function updateConnStatus(status){
+  const el = document.getElementById('hdr-conn');
+  const txt = document.getElementById('hdr-conn-txt');
+  el.className = 'conn-status conn-'+status;
+  txt.textContent = status==='ok'?'CLOUD':status==='err'?'XATO':'OFFLINE';
+}
+
+// Auto sync every 5 min if configured
+setInterval(()=>{
+  const cfg = getJBCfg();
+  if(cfg.key && cfg.binid && sessionStorage.getItem('iiv_authed')==='1') fetchFromCloud();
+}, 5*60*1000);
+
+// ══════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════
+function aTab(name, event){
   document.querySelectorAll('.tab-body').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('atab-'+name).classList.add('active');
-  event.target.classList.add('active');
+  if(event && event.target) event.target.classList.add('active');
   if(name==='xodimlar') loadStaff();
   if(name==='hisobot') populateReportStaff();
   if(name==='kech'){
     const m=document.getElementById('kech-month');
-    if(!m.value){const n=new Date();m.value=n.getFullYear()+'-'+pad(n.getMonth()+1);}
+    if(!m.value){ const n=new Date(); m.value=n.getFullYear()+'-'+pad(n.getMonth()+1); }
   }
+  if(name==='telegram') loadTgConfig();
   if(name==='sozlama'){
+    loadCfg(); loadJBConfig();
     setTimeout(()=>{
       const c=getCfg();
       const lat=parseFloat(c.lat)||DEFAULT_LAT;
       const lon=parseFloat(c.lon)||DEFAULT_LON;
       const r=parseFloat(c.radius)||40;
-      if(!map) initMap(lat, lon, r);
-      else map.invalidateSize();
-    }, 80);
+      if(!map) initMap(lat, lon, r); else map.invalidateSize();
+    }, 100);
   }
 }
 
 // ══════════════════════════════════════════════
-//  STAFF LOAD
+//  STAFF
 // ══════════════════════════════════════════════
+let allStaffData = [];
+
 async function loadStaff(){
   const list=document.getElementById('staff-list');
-  list.innerHTML='<div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:32px">Yuklanmoqda...</div>';
-
-  let staff=[];
-  const url=serverUrl();
-
-  // Try server
-  if(url){
+  list.innerHTML='<div class="loading-text">Yuklanmoqda...</div>';
+  
+  // Try cloud first
+  const cfg = getJBCfg();
+  if(cfg.key && cfg.binid){
     try{
-      const res=await fetch(url+'/staff');
-      const data=await res.json();
-      if(data.staff) staff=data.staff;
-      // Sync to local
-      saveStaff(staff);
-    }catch(e){
-      staff=getStaff();
-    }
-  }else{
-    staff=getStaff();
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binid}/latest`, {
+        headers:{ 'X-Master-Key': cfg.key }
+      });
+      if(res.ok){
+        const data = await res.json();
+        if(data.record.staff) saveStaff(data.record.staff);
+        if(data.record.records){
+          Object.entries(data.record.records).forEach(([k,v])=>{
+            localStorage.setItem('iiv_rec_'+k, JSON.stringify(v));
+          });
+        }
+        updateConnStatus('ok');
+      }
+    } catch(e){ updateConnStatus('offline'); }
   }
+  
+  allStaffData = getStaff();
+  renderStaffList(allStaffData);
+}
 
+function renderStaffList(staff){
+  const list=document.getElementById('staff-list');
+  
   document.getElementById('st-t').textContent=staff.length;
-
-  // Today stats
   const today=todayKey();
   let cameCount=0, lateCount=0;
-  staff.forEach(s=>{
+  const allStaff = getStaff();
+  allStaff.forEach(s=>{
     const rec=getRecord(s.id, today);
     if(rec.kelish) cameCount++;
     if(rec.kelishStatus==='Kech') lateCount++;
   });
   document.getElementById('st-today').textContent=cameCount;
   document.getElementById('st-late').textContent=lateCount;
-  document.getElementById('st-absent').textContent=staff.length-cameCount;
+  document.getElementById('st-absent').textContent=allStaff.length-cameCount;
 
   if(!staff.length){
-    list.innerHTML='<div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:32px">Hali xodim qo\'shilmagan</div>';
+    list.innerHTML='<div style="font-family:var(--mono);font-size:12px;color:var(--text2);text-align:center;padding:40px">Hali xodim qo\'shilmagan</div>';
     return;
   }
 
+  const today2=todayKey();
   list.innerHTML=staff.map((s,i)=>{
-    const rec=getRecord(s.id, today);
+    const rec=getRecord(s.id, today2);
     let statusHtml='';
-    if(rec.kelish) statusHtml=`<span class="badge badge-ok">KELDI ${rec.kelish}</span>`;
-    if(rec.kelishStatus==='Kech') statusHtml=`<span class="badge badge-late">KECH ${rec.kelish}</span>`;
+    if(rec.kelish && rec.kelishStatus!=='Kech') statusHtml+=`<span class="badge badge-ok">KELDI ${rec.kelish}</span>`;
+    if(rec.kelishStatus==='Kech') statusHtml+=`<span class="badge badge-late">KECH ${rec.kelish}</span>`;
     if(rec.ketish) statusHtml+=`<span class="badge badge-neutral">KETDI ${rec.ketish}</span>`;
+    
+    // Count late this month
+    const now=new Date();
+    let lateCount=0;
+    for(let d=1;d<=now.getDate();d++){
+      const dk=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(d);
+      const r=getRecord(s.id, dk);
+      if(r.kelishStatus==='Kech') lateCount++;
+    }
+    const lateTag = lateCount>0?`<span class="badge badge-late">Bu oy: ${lateCount}x kech</span>`:'';
+    
+    const idx = allStaffData.findIndex(x=>x.id===s.id);
     return `
     <div class="staff-item">
-      <div class="s-avatar">${(s.name||'?')[0]}</div>
+      <div class="s-avatar" style="background:${avatarColor(s.name)}">${(s.name||'?')[0].toUpperCase()}</div>
       <div class="s-info">
-        <div class="s-name">${i+1}. ${s.name}</div>
-        <div class="s-pos">${s.position||'—'}</div>
-        <div><span class="s-pin">PIN: ${s.pin||'—'}</span> ${statusHtml}</div>
+        <div class="s-name">${idx+1}. ${escHtml(s.name)}</div>
+        <div class="s-pos">${escHtml(s.position||'—')}</div>
+        <div style="margin-top:4px">
+          <span class="s-pin-hidden" onclick="revealPin('${s.id}','${escHtml(s.name)}')">PIN: ••••</span>
+          ${statusHtml} ${lateTag}
+        </div>
       </div>
       <div class="s-actions">
-        <button class="btn-sm btn-blue" onclick="openPinModal('${s.id}','${s.name}')">PIN</button>
-        <button class="btn-sm btn-red" onclick="deleteStaff('${s.id}','${s.name}')">O'chir</button>
+        <button class="btn-sm btn-blue" onclick="openPinModal('${s.id}','${escHtml(s.name)}')">PIN</button>
+        <button class="btn-sm btn-red" onclick="deleteStaff('${s.id}','${escHtml(s.name)}')">O'chir</button>
       </div>
     </div>`;
   }).join('');
+}
+
+function filterStaff(q){
+  if(!q){ renderStaffList(allStaffData); return; }
+  const filtered = allStaffData.filter(s=>
+    s.name.toLowerCase().includes(q.toLowerCase()) ||
+    (s.position||'').toLowerCase().includes(q.toLowerCase())
+  );
+  renderStaffList(filtered);
+}
+
+function avatarColor(name){
+  const colors=['#1a3a5c','#1a3a2a','#3a1a2a','#2a2a1a','#1a2a3a'];
+  let hash=0; for(let c of (name||'')) hash=(hash<<5)-hash+c.charCodeAt(0);
+  return colors[Math.abs(hash)%colors.length];
+}
+
+function escHtml(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function revealPin(id, name){
+  const s = getStaff().find(x=>x.id===id);
+  if(!s) return;
+  document.getElementById('prm-name').textContent = name;
+  document.getElementById('prm-pin').textContent = s.pin || '—';
+  document.getElementById('pin-reveal-modal').classList.add('active');
+  // Auto hide after 5 sec
+  setTimeout(()=>document.getElementById('pin-reveal-modal').classList.remove('active'), 5000);
 }
 
 // ══════════════════════════════════════════════
@@ -526,67 +1133,65 @@ async function addStaff(){
   const pos=document.getElementById('f-pos').value.trim();
   const pin=document.getElementById('f-pin').value.trim();
 
-  if(!name){toast('Ism kiritilmadi!',true);return;}
-  if(!pin||pin.length!==4||isNaN(pin)){toast('4 xonali PIN kiritilmadi!',true);return;}
+  if(!name){ toast('Ism kiritilmadi!',true); return; }
+  if(!pos){ toast('Lavozim kiritilmadi!',true); return; }
+  if(!pin||pin.length!==4||isNaN(pin)){ toast('4 xonali PIN kiritilmadi!',true); return; }
 
-  // Check PIN uniqueness locally
   const existing=getStaff();
   if(existing.find(s=>s.pin===pin)){
-    toast('Bu PIN allaqachon mavjud! Boshqa PIN tanlang.',true);return;
+    toast('Bu PIN allaqachon mavjud!',true); return;
   }
 
   const btn=document.getElementById('add-btn');
   const status=document.getElementById('add-status');
-  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> SAQLANMOQDA...';
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> SAQLANMOQDA...';
 
-  const newStaff={
-    id:'s_'+Date.now(),
-    name, position:pos, pin,
-    createdAt:new Date().toISOString()
-  };
-
-  const url=serverUrl();
-  let saved=false;
-  if(url){
-    try{
-      const res=await fetch(url+'/staff/add',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(newStaff)
-      });
-      const data=await res.json();
-      if(data.ok){ saved=true; if(data.id) newStaff.id=data.id; }
-      else{ status.style.color='var(--red)'; status.textContent='✗ '+data.error; toast(data.error,true); }
-    }catch(e){}
-  }
-
-  // Always save locally too
+  const newStaff={ id:'s_'+Date.now(), name, position:pos, pin, createdAt:new Date().toISOString() };
   existing.push(newStaff);
   saveStaff(existing);
-  saved=true;
 
-  if(saved){
-    toast('✓ '+name+' qo\'shildi!');
-    status.style.color='var(--green)';
-    status.textContent='✓ Xodim saqlandi. PIN: '+pin;
-    document.getElementById('f-name').value='';
-    document.getElementById('f-pos').value='';
-    document.getElementById('f-pin').value='';
+  // Sync to cloud
+  const cfg = getJBCfg();
+  if(cfg.key && cfg.binid){
+    try{
+      await fetch(`https://api.jsonbin.io/v3/b/${cfg.binid}`, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Master-Key':cfg.key},
+        body: JSON.stringify({staff:existing, records:getAllRecords(), updatedAt:new Date().toISOString()})
+      });
+      updateConnStatus('ok');
+    } catch(e){ updateConnStatus('offline'); }
   }
 
+  toast('✓ '+name+' qo\'shildi!');
+  status.style.color='var(--green)';
+  status.textContent='✓ Xodim saqlandi. PIN: '+pin;
+  document.getElementById('f-name').value='';
+  document.getElementById('f-pos').value='';
+  document.getElementById('f-pin').value='';
   btn.disabled=false; btn.textContent='✓ QO\'SHISH';
 }
 
 // ══════════════════════════════════════════════
 //  DELETE
 // ══════════════════════════════════════════════
-async function deleteStaff(id,name){
+async function deleteStaff(id, name){
   if(!confirm(name+' ni o\'chirmoqchimisiz?')) return;
-  const url=serverUrl();
-  if(url){
-    try{ await fetch(url+'/staff/delete/'+id,{method:'DELETE'}); }catch(e){}
-  }
   const arr=getStaff().filter(s=>s.id!==id);
   saveStaff(arr);
+  
+  const cfg = getJBCfg();
+  if(cfg.key && cfg.binid){
+    try{
+      await fetch(`https://api.jsonbin.io/v3/b/${cfg.binid}`, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Master-Key':cfg.key},
+        body: JSON.stringify({staff:arr, records:getAllRecords(), updatedAt:new Date().toISOString()})
+      });
+    } catch(e){}
+  }
+  
   toast(name+' o\'chirildi');
   loadStaff();
 }
@@ -605,28 +1210,31 @@ function closePinModal(){
   document.getElementById('pin-modal').classList.remove('active');
   editingStaffId=null;
 }
-function savePinEdit(){
+async function savePinEdit(){
   const pin=document.getElementById('pm-pin').value.trim();
-  if(!pin||pin.length!==4||isNaN(pin)){toast('4 xonali PIN kiriting!',true);return;}
+  if(!pin||pin.length!==4||isNaN(pin)){ toast('4 xonali PIN kiriting!',true); return; }
   const arr=getStaff();
   if(arr.find(s=>s.pin===pin && s.id!==editingStaffId)){
-    toast('Bu PIN boshqa xodimda mavjud!',true);return;
+    toast('Bu PIN boshqa xodimda mavjud!',true); return;
   }
   const s=arr.find(s=>s.id===editingStaffId);
-  if(!s){toast('Xodim topilmadi!',true);return;}
+  if(!s){ toast('Xodim topilmadi!',true); return; }
   s.pin=pin;
-  // Reset device binding
-  const devKey='iiv_dev_'+pin;
-  localStorage.removeItem(devKey);
-  // Remove old device bindings too (iterate old pin unknown, remove by staff id key)
+  localStorage.removeItem('iiv_dev_'+pin);
   saveStaff(arr);
-  // Server sync
-  const url=serverUrl();
-  if(url){
-    fetch(url+'/staff/update',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({id:editingStaffId,pin})}).catch(()=>{});
+  
+  const cfg = getJBCfg();
+  if(cfg.key && cfg.binid){
+    try{
+      await fetch(`https://api.jsonbin.io/v3/b/${cfg.binid}`, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Master-Key':cfg.key},
+        body: JSON.stringify({staff:arr, records:getAllRecords(), updatedAt:new Date().toISOString()})
+      });
+    } catch(e){}
   }
-  toast('✓ PIN o\'zgartirildi: '+pin);
+  
+  toast('✓ PIN o\'zgartirildi');
   closePinModal();
   loadStaff();
 }
@@ -634,12 +1242,13 @@ function savePinEdit(){
 // ══════════════════════════════════════════════
 //  REPORT
 // ══════════════════════════════════════════════
+let lastReportData = null;
+
 function populateReportStaff(){
   const sel=document.getElementById('rpt-staff');
   const staff=getStaff();
   sel.innerHTML='<option value="">Barcha xodimlar</option>'+
-    staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
-  // Set today as default
+    staff.map(s=>`<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
   const td=document.getElementById('rpt-date');
   if(!td.value) td.value=todayKey();
 }
@@ -649,7 +1258,7 @@ function renderReport(){
   const staffId=document.getElementById('rpt-staff').value;
   const date=document.getElementById('rpt-date').value;
   const out=document.getElementById('report-output');
-
+  lastReportData={view,staffId,date};
   if(view==='list') renderListReport(staffId, date, out);
   else renderJadvalReport(staffId, date, out);
 }
@@ -657,14 +1266,13 @@ function renderReport(){
 function renderListReport(staffId, date, out){
   const staff=staffId ? getStaff().filter(s=>s.id===staffId) : getStaff();
   const dateKey=date||todayKey();
-
-  if(!staff.length){out.innerHTML='<div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text2)">Xodim topilmadi</div>';return;}
+  if(!staff.length){ out.innerHTML='<div class="loading-text">Xodim topilmadi</div>'; return; }
 
   const rows=staff.map(s=>{
     const rec=getRecord(s.id, dateKey);
     return `<tr>
-      <td class="tc-name">${s.name}</td>
-      <td style="color:var(--text2);font-size:10px">${s.position||'—'}</td>
+      <td class="tc-name">${escHtml(s.name)}</td>
+      <td style="color:var(--text2);font-size:10px">${escHtml(s.position||'—')}</td>
       <td class="${rec.kelish?'tc-ok':'tc-none'}">${rec.kelish||'—'}</td>
       <td class="${rec.kelishStatus==='Kech'?'tc-late':rec.kelishStatus?'tc-ok':'tc-none'}">${rec.kelishStatus||'—'}</td>
       <td class="${rec.ketish?'tc-ok':'tc-none'}">${rec.ketish||'—'}</td>
@@ -678,13 +1286,11 @@ function renderListReport(staffId, date, out){
     </div>
     <div class="report-table-wrap">
       <table class="report-table">
-        <thead>
-          <tr>
-            <th>Xodim</th><th>Lavozim</th>
-            <th>Kelish</th><th>Kelish holati</th>
-            <th>Ketish</th><th>Ketish holati</th>
-          </tr>
-        </thead>
+        <thead><tr>
+          <th>Xodim</th><th>Lavozim</th>
+          <th>Kelish</th><th>Kelish holati</th>
+          <th>Ketish</th><th>Ketish holati</th>
+        </tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
@@ -697,33 +1303,39 @@ function renderJadvalReport(staffId, date, out){
   const month=baseDate.getMonth();
   const daysInMonth=new Date(year,month+1,0).getDate();
   const days=Array.from({length:daysInMonth},(_, i)=>i+1);
+  if(!staff.length){ out.innerHTML='<div class="loading-text">Xodim topilmadi</div>'; return; }
 
-  if(!staff.length){out.innerHTML='<div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text2)">Xodim topilmadi</div>';return;}
+  const dayHeaders=days.map(d=>{
+    const dow=new Date(year,month,d).getDay();
+    const isWeekend=dow===0||dow===6;
+    return `<th style="${isWeekend?'color:var(--red);opacity:.5':''}">${d}</th>`;
+  }).join('');
 
-  const dayHeaders=days.map(d=>`<th>${d}</th>`).join('');
   const rows=staff.map(s=>{
+    let lateTotal=0;
     const cells=days.map(d=>{
+      const dow=new Date(year,month,d).getDay();
+      const isWeekend=dow===0||dow===6;
+      if(isWeekend) return '<td class="j-weekend">·</td>';
       const dk=year+'-'+pad(month+1)+'-'+pad(d);
       const rec=getRecord(s.id, dk);
       if(!rec.kelish) return '<td class="j-absent">—</td>';
-      if(rec.kelishStatus==='Kech') return `<td class="j-late" title="${rec.kelish} Kech">K</td>`;
-      if(rec.ketishStatus==='Erta ketdi') return `<td class="j-early" title="${rec.kelish}">✓E</td>`;
+      if(rec.kelishStatus==='Kech'){ lateTotal++; return `<td class="j-late" title="${rec.kelish} — Kech">K</td>`; }
+      if(rec.ketishStatus==='Erta ketdi') return `<td class="j-early" title="${rec.kelish}">E</td>`;
       return `<td class="j-ok" title="${rec.kelish}">✓</td>`;
     }).join('');
-    return `<tr><td class="name-cell">${s.name}</td>${cells}</tr>`;
+    const lateBadge=lateTotal>0?`<span style="font-family:var(--mono);font-size:9px;color:var(--red);margin-left:4px">[${lateTotal}K]</span>`:'';
+    return `<tr><td class="name-cell">${escHtml(s.name)}${lateBadge}</td>${cells}</tr>`;
   }).join('');
 
-  const UZ_MON=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
   out.innerHTML=`
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase">
-      ${UZ_MON[month]} ${year} · Jadval
-    </div>
     <div style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:8px">
-      <span style="display:inline-block;width:10px;height:10px;background:#00ff8815;border:1px solid #00ff8840;margin-right:4px;vertical-align:middle"></span>✓ O'z vaqtida &nbsp;
-      <span style="display:inline-block;width:10px;height:10px;background:#ff445515;border:1px solid #ff444440;margin-right:4px;vertical-align:middle"></span>K Kech &nbsp;
-      <span style="display:inline-block;width:10px;height:10px;background:#ffaa0015;border:1px solid #ffaa0040;margin-right:4px;vertical-align:middle"></span>E Erta ketdi &nbsp;
-      <span style="display:inline-block;width:10px;height:10px;background:transparent;margin-right:4px;vertical-align:middle">—</span> Kelmagan
+      <span style="display:inline-block;width:10px;height:10px;background:#00e67612;border:1px solid #00e67630;margin-right:4px;vertical-align:middle"></span>✓ O'z vaqtida &nbsp;
+      <span style="display:inline-block;width:10px;height:10px;background:#ff3d5712;border:1px solid #ff3d5730;margin-right:4px;vertical-align:middle"></span>K Kech &nbsp;
+      <span style="display:inline-block;width:10px;height:10px;background:#ffab0012;border:1px solid #ffab0030;margin-right:4px;vertical-align:middle"></span>E Erta ketdi &nbsp;
+      — Kelmagan &nbsp; · Dam olish
     </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text2);margin-bottom:10px">[Kx] — o'sha oyda kechikish soni</div>
     <div class="jadval-wrap">
       <table class="jadval">
         <thead><tr><th class="name-col">Xodim</th>${dayHeaders}</tr></thead>
@@ -735,100 +1347,396 @@ function renderJadvalReport(staffId, date, out){
 // ══════════════════════════════════════════════
 //  LATE STATS
 // ══════════════════════════════════════════════
+let lastLateStats = null;
+
 function renderLateStats(){
   const monthVal=document.getElementById('kech-month').value;
-  if(!monthVal){toast('Oy tanlang!',true);return;}
+  if(!monthVal){ toast('Oy tanlang!',true); return; }
   const [year,month]=monthVal.split('-').map(Number);
   const daysInMonth=new Date(year,month,0).getDate();
   const staff=getStaff();
   const out=document.getElementById('late-output');
 
   const stats=staff.map(s=>{
-    let late=0, absent=0, early=0;
+    let late=0, absent=0, early=0, lateDays=[];
     for(let d=1;d<=daysInMonth;d++){
+      const dow=new Date(year,month-1,d).getDay();
+      if(dow===0||dow===6) continue; // skip weekends
       const dk=year+'-'+pad(month)+'-'+pad(d);
       const rec=getRecord(s.id, dk);
       if(!rec.kelish) absent++;
-      else if(rec.kelishStatus==='Kech') late++;
+      else if(rec.kelishStatus==='Kech'){ late++; lateDays.push(d); }
       if(rec.ketishStatus==='Erta ketdi') early++;
     }
-    return {...s, late, absent, early};
+    return {...s, late, absent, early, lateDays};
   }).sort((a,b)=>b.late-a.late);
+
+  lastLateStats={stats, year, month};
 
   const maxLate=Math.max(...stats.map(s=>s.late),1);
   const totalLate=stats.reduce((a,s)=>a+s.late,0);
   const totalAbsent=stats.reduce((a,s)=>a+s.absent,0);
-
-  const UZ_MON=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+  const totalEarly=stats.reduce((a,s)=>a+s.early,0);
 
   out.innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
-      <div class="stat-box"><div class="stat-num c-red" style="font-size:22px">${totalLate}</div><div class="stat-lbl">Jami kechikish</div></div>
-      <div class="stat-box"><div class="stat-num c-amber" style="font-size:22px">${totalAbsent}</div><div class="stat-lbl">Kelmagan kun</div></div>
-      <div class="stat-box"><div class="stat-num c-accent" style="font-size:22px">${staff.length}</div><div class="stat-lbl">Xodimlar</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:18px">
+      <div class="stat-box c-red-box"><div class="stat-num c-red" style="font-size:20px">${totalLate}</div><div class="stat-lbl">Jami kechikish</div></div>
+      <div class="stat-box c-amber-box"><div class="stat-num c-amber" style="font-size:20px">${totalAbsent}</div><div class="stat-lbl">Kelmagan kun</div></div>
+      <div class="stat-box"><div class="stat-num" style="font-size:20px;color:var(--purple)">${totalEarly}</div><div class="stat-lbl">Erta ketdi</div></div>
+      <div class="stat-box c-accent-box"><div class="stat-num c-accent" style="font-size:20px">${staff.length}</div><div class="stat-lbl">Xodimlar</div></div>
     </div>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:12px;text-transform:uppercase">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:1px;margin-bottom:14px;text-transform:uppercase">
       ${UZ_MON[month-1]} ${year} — Kechikish reytingi
     </div>
     ${stats.map((s,i)=>`
       <div class="late-item">
-        <div class="late-rank">${i+1}</div>
+        <div class="late-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div>
         <div class="late-bar-wrap">
-          <div class="late-name">${s.name}</div>
-          <div class="late-pos">${s.position||'—'} · Kelmagan: ${s.absent} kun · Erta ketdi: ${s.early}</div>
+          <div class="late-name">${escHtml(s.name)}</div>
+          <div class="late-pos">${escHtml(s.position||'—')}</div>
+          <div class="late-meta">
+            <span class="late-tag l-late">Kech: ${s.late} marta</span>
+            <span class="late-tag l-absent">Kelmagan: ${s.absent} kun</span>
+            <span class="late-tag l-early">Erta ketdi: ${s.early}</span>
+          </div>
+          ${s.lateDays.length?`<div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">Kech kelgan kunlar: ${s.lateDays.join(', ')}</div>`:''}
           <div class="late-bar"><div class="late-fill" style="width:${Math.round(s.late/maxLate*100)}%"></div></div>
         </div>
-        <div class="late-count">${s.late}x</div>
+        <div class="late-count">${s.late}×</div>
       </div>`).join('')}
   `;
 }
 
 // ══════════════════════════════════════════════
-//  SERVER TEST
+//  CSV EXPORT
 // ══════════════════════════════════════════════
-async function testServer(){
-  const url=document.getElementById('cfg-server').value.trim().replace(/\/$/,'');
-  const el=document.getElementById('server-test-result');
-  if(!url){el.style.color='var(--red)';el.textContent='URL kiriting!';return;}
-  el.style.color='var(--text2)'; el.innerHTML='<span class="spinner"></span> Tekshirilmoqda...';
-  try{
-    const res=await fetch(url+'/');
-    const data=await res.json();
-    el.style.color='var(--green)';
-    el.textContent='✓ Server ishlayapti! Xodimlar: '+data.staff_count;
-  }catch(e){
-    el.style.color='var(--red)';
-    el.textContent='✗ Ulanib bo\'lmadi. URL tekshiring.';
-  }
+function exportReportCSV(){
+  const staffId=document.getElementById('rpt-staff').value;
+  const date=document.getElementById('rpt-date').value||todayKey();
+  const staff=staffId ? getStaff().filter(s=>s.id===staffId) : getStaff();
+  
+  let csv='Xodim,Lavozim,Kelish vaqti,Kelish holati,Ketish vaqti,Ketish holati\n';
+  staff.forEach(s=>{
+    const rec=getRecord(s.id, date);
+    csv+=`"${s.name}","${s.position||''}","${rec.kelish||''}","${rec.kelishStatus||''}","${rec.ketish||''}","${rec.ketishStatus||''}"\n`;
+  });
+  
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`davomat_${date}.csv`;
+  a.click();
+  toast('✓ CSV yuklandi!', false, true);
 }
 
 // ══════════════════════════════════════════════
-//  GPS DETECT
+//  PDF GENERATION
 // ══════════════════════════════════════════════
-function detectGPS(){
-  const el=document.getElementById('gps-detected');
-  el.textContent='Aniqlanmoqda...';
-  navigator.geolocation.getCurrentPosition(
-    pos=>{
-      const lat=pos.coords.latitude;
-      const lon=pos.coords.longitude;
-      const r=parseFloat(document.getElementById('cfg-radius-range').value)||40;
-      document.getElementById('cfg-lat').value=lat.toFixed(7);
-      document.getElementById('cfg-lon').value=lon.toFixed(7);
-      el.style.color='var(--green)';
-      updateCoordDisplay(lat, lon, r);
-      if(map){
-        map.setView([lat, lon], 17);
-        marker.setLatLng([lat, lon]);
-        circle.setLatLng([lat, lon]);
-      } else {
-        initMap(lat, lon, r);
-      }
-      toast('✓ GPS aniqlandi: ±'+Math.round(pos.coords.accuracy)+'m');
+function buildDailyPDFDoc(dateKey, staffArr){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  
+  // Header
+  doc.setFillColor(7, 16, 26);
+  doc.rect(0, 0, 210, 40, 'F');
+  
+  doc.setTextColor(0, 212, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica','bold');
+  doc.text('IIV SURXONDARYO AKADEMIK LITSEY', 105, 14, {align:'center'});
+  
+  doc.setTextColor(106, 150, 188);
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+  doc.text('KUNLIK DAVOMAT HISOBOTI', 105, 22, {align:'center'});
+  
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(12);
+  doc.text(`Sana: ${dateKey}`, 105, 32, {align:'center'});
+  
+  // Stats
+  const today=dateKey;
+  let came=0,late=0;
+  staffArr.forEach(s=>{
+    const rec=getRecord(s.id,today);
+    if(rec.kelish) came++;
+    if(rec.kelishStatus==='Kech') late++;
+  });
+  const absent=staffArr.length-came;
+  
+  doc.setFillColor(11, 22, 34);
+  doc.rect(10, 44, 190, 16, 'F');
+  
+  doc.setFontSize(9); doc.setFont('helvetica','bold');
+  [
+    {label:'JAMI XODIM', val:staffArr.length, color:[0,212,255], x:30},
+    {label:'KELDI', val:came, color:[0,230,118], x:75},
+    {label:'KECH KELDI', val:late, color:[255,61,87], x:120},
+    {label:'KELMAGAN', val:absent, color:[255,171,0], x:165},
+  ].forEach(item=>{
+    doc.setTextColor(...item.color);
+    doc.text(String(item.val), item.x, 51, {align:'center'});
+    doc.setTextColor(106,150,188);
+    doc.setFontSize(7);
+    doc.text(item.label, item.x, 56, {align:'center'});
+    doc.setFontSize(9);
+  });
+  
+  // Table
+  const tableData = staffArr.map((s,i)=>{
+    const rec=getRecord(s.id, today);
+    return [
+      i+1,
+      s.name,
+      s.position||'—',
+      rec.kelish||'—',
+      rec.kelishStatus||'—',
+      rec.ketish||'—',
+      rec.ketishStatus||'—',
+    ];
+  });
+  
+  doc.autoTable({
+    head:[['#','Xodim','Lavozim','Kelish','Holat','Ketish','Ketish holati']],
+    body: tableData,
+    startY: 64,
+    styles:{ fontSize:9, cellPadding:3, font:'helvetica' },
+    headStyles:{ fillColor:[17,30,46], textColor:[0,212,255], fontStyle:'bold', fontSize:8 },
+    alternateRowStyles:{ fillColor:[11,22,34] },
+    bodyStyles:{ textColor:[220,235,255], fillColor:[7,16,26] },
+    columnStyles:{
+      0:{cellWidth:8, halign:'center'},
+      1:{cellWidth:40},
+      2:{cellWidth:35},
+      3:{cellWidth:18, halign:'center'},
+      4:{cellWidth:22, halign:'center'},
+      5:{cellWidth:18, halign:'center'},
+      6:{cellWidth:25, halign:'center'},
     },
-    ()=>{el.textContent='✗ GPS aniqlanmadi.';el.style.color='var(--red)';},
-    {enableHighAccuracy:true,timeout:10000}
-  );
+    didParseCell(data){
+      if(data.section==='body' && data.column.index===4){
+        if(data.cell.raw==='Kech') data.cell.styles.textColor=[255,61,87];
+        else if(data.cell.raw==="O'z vaqtida") data.cell.styles.textColor=[0,230,118];
+      }
+      if(data.section==='body' && data.column.index===6){
+        if(data.cell.raw==='Erta ketdi') data.cell.styles.textColor=[255,171,0];
+        else if(data.cell.raw==="O'z vaqtida ketdi") data.cell.styles.textColor=[0,230,118];
+      }
+    }
+  });
+  
+  // Footer
+  const finalY = doc.lastAutoTable.finalY + 6;
+  doc.setFontSize(8); doc.setTextColor(42,74,106);
+  doc.text(`Hisobot yaratildi: ${new Date().toLocaleString('uz-UZ')}  ·  IIV Surxondaryo Davomat Tizimi`, 105, finalY, {align:'center'});
+  
+  return doc;
+}
+
+function buildMonthlyPDFDoc(stats, year, month){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  
+  doc.setFillColor(7,16,26);
+  doc.rect(0,0,210,40,'F');
+  
+  doc.setTextColor(0,212,255);
+  doc.setFontSize(15); doc.setFont('helvetica','bold');
+  doc.text('IIV SURXONDARYO AKADEMIK LITSEY', 105, 13, {align:'center'});
+  
+  doc.setTextColor(106,150,188); doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text('OYLIK KECHIKISH TAHLILI', 105, 21, {align:'center'});
+  
+  doc.setTextColor(255,255,255); doc.setFontSize(12);
+  doc.text(`${UZ_MON[month-1]} ${year}`, 105, 32, {align:'center'});
+  
+  const totalLate=stats.reduce((a,s)=>a+s.late,0);
+  const totalAbsent=stats.reduce((a,s)=>a+s.absent,0);
+  const totalEarly=stats.reduce((a,s)=>a+s.early,0);
+  
+  doc.setFillColor(11,22,34);
+  doc.rect(10,44,190,16,'F');
+  doc.setFontSize(9); doc.setFont('helvetica','bold');
+  [
+    {label:'JAMI KECHIKISH', val:totalLate, color:[255,61,87], x:35},
+    {label:'KELMAGAN KUN', val:totalAbsent, color:[255,171,0], x:80},
+    {label:'ERTA KETDI', val:totalEarly, color:[168,85,247], x:125},
+    {label:'XODIMLAR', val:stats.length, color:[0,212,255], x:170},
+  ].forEach(item=>{
+    doc.setTextColor(...item.color);
+    doc.text(String(item.val), item.x, 51, {align:'center'});
+    doc.setTextColor(106,150,188); doc.setFontSize(7);
+    doc.text(item.label, item.x, 56, {align:'center'});
+    doc.setFontSize(9);
+  });
+  
+  const tableData = stats.map((s,i)=>[
+    i+1, s.name, s.position||'—', s.late, s.absent, s.early,
+    s.lateDays.length ? s.lateDays.join(', ') : '—'
+  ]);
+  
+  doc.autoTable({
+    head:[['#','Xodim','Lavozim','Kech (marta)','Kelmagan','Erta ketdi','Kech kelgan kunlar']],
+    body: tableData,
+    startY: 64,
+    styles:{ fontSize:8.5, cellPadding:3, font:'helvetica' },
+    headStyles:{ fillColor:[17,30,46], textColor:[0,212,255], fontStyle:'bold', fontSize:8 },
+    alternateRowStyles:{ fillColor:[11,22,34] },
+    bodyStyles:{ textColor:[220,235,255], fillColor:[7,16,26] },
+    columnStyles:{
+      0:{cellWidth:8, halign:'center'},
+      1:{cellWidth:40},
+      2:{cellWidth:32},
+      3:{cellWidth:20, halign:'center'},
+      4:{cellWidth:20, halign:'center'},
+      5:{cellWidth:20, halign:'center'},
+      6:{cellWidth:45},
+    },
+    didParseCell(data){
+      if(data.section==='body' && data.column.index===3 && Number(data.cell.raw)>0){
+        data.cell.styles.textColor=[255,61,87]; data.cell.styles.fontStyle='bold';
+      }
+    }
+  });
+  
+  const finalY = doc.lastAutoTable.finalY + 6;
+  doc.setFontSize(8); doc.setTextColor(42,74,106);
+  doc.text(`Hisobot yaratildi: ${new Date().toLocaleString('uz-UZ')}  ·  IIV Surxondaryo Davomat Tizimi`, 105, finalY, {align:'center'});
+  
+  return doc;
+}
+
+function exportReportPDF(){
+  const staffId=document.getElementById('rpt-staff').value;
+  const date=document.getElementById('rpt-date').value||todayKey();
+  const staff=staffId ? getStaff().filter(s=>s.id===staffId) : getStaff();
+  if(!staff.length){ toast('Xodim topilmadi!',true); return; }
+  const doc = buildDailyPDFDoc(date, staff);
+  doc.save(`davomat_${date}.pdf`);
+  toast('✓ PDF yuklandi!', false, true);
+}
+
+function exportLateStatsPDF(){
+  const monthVal=document.getElementById('kech-month').value;
+  if(!monthVal){ toast('Avval oy tanlang!',true); return; }
+  if(!lastLateStats){ renderLateStats(); return; }
+  const doc = buildMonthlyPDFDoc(lastLateStats.stats, lastLateStats.year, lastLateStats.month);
+  doc.save(`kechikish_${monthVal}.pdf`);
+  toast('✓ PDF yuklandi!', false, true);
+}
+
+// ══════════════════════════════════════════════
+//  TELEGRAM
+// ══════════════════════════════════════════════
+function loadTgConfig(){
+  const cfg = JSON.parse(localStorage.getItem('iiv_tg')||'{}');
+  if(cfg.token) document.getElementById('tg-token').value = cfg.token;
+  if(cfg.chatid) document.getElementById('tg-chatid').value = cfg.chatid;
+  const d=document.getElementById('tg-date');
+  if(!d.value) d.value = todayKey();
+}
+
+function saveTgConfig(){
+  const token = document.getElementById('tg-token').value.trim();
+  const chatid = document.getElementById('tg-chatid').value.trim();
+  if(!token||!chatid){ toast('Token va Chat ID kiriting!',true); return; }
+  localStorage.setItem('iiv_tg', JSON.stringify({token,chatid}));
+  toast('✓ Telegram sozlamalari saqlandi!');
+}
+
+async function testTgBot(){
+  const cfg = JSON.parse(localStorage.getItem('iiv_tg')||'{}');
+  if(!cfg.token||!cfg.chatid){ toast('Avval token va chat ID kiriting!',true); return; }
+  const el = document.getElementById('tg-test-result');
+  el.style.color='var(--text2)'; el.textContent='⏳ Tekshirilmoqda...';
+  try{
+    const res = await fetch(`https://api.telegram.org/bot${cfg.token}/sendMessage`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({chat_id:cfg.chatid, text:'✅ IIV Surxondaryo Litsey Admin Panel ulanishi tasdiqlandi!\n\nBot muvaffaqiyatli ishlayapti.'})
+    });
+    const data = await res.json();
+    if(data.ok){ el.style.color='var(--green)'; el.textContent='✓ Xabar yuborildi! Bot ishlayapti.'; }
+    else{ el.style.color='var(--red)'; el.textContent='✗ Xato: '+data.description; }
+  } catch(e){
+    el.style.color='var(--red)'; el.textContent='✗ Ulanib bo\'lmadi: '+e.message;
+  }
+}
+
+async function sendTelegramReport(){
+  const cfg = JSON.parse(localStorage.getItem('iiv_tg')||'{}');
+  if(!cfg.token||!cfg.chatid){ toast('Telegram sozlamalarini kiriting!',true); return; }
+  
+  const date = document.getElementById('tg-date').value || todayKey();
+  const reportType = document.getElementById('tg-report-type').value;
+  const staff = getStaff();
+  if(!staff.length){ toast('Xodimlar topilmadi!',true); return; }
+  
+  const btn = document.getElementById('tg-send-btn');
+  const res = document.getElementById('tg-send-result');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> YUBORILMOQDA...';
+  res.style.color='var(--text2)'; res.textContent='⏳ PDF tayyorlanmoqda...';
+  
+  try{
+    let sent = 0;
+    
+    if(reportType==='daily'||reportType==='both'){
+      const doc = buildDailyPDFDoc(date, staff);
+      const pdfBlob = doc.output('blob');
+      const ok = await sendPDFToTelegram(cfg.token, cfg.chatid, pdfBlob, `📊 Kunlik davomat hisoboti\n📅 Sana: ${date}\n🏫 IIV Surxondaryo Akademik Litsey`, `davomat_${date}.pdf`);
+      if(ok) sent++;
+    }
+    
+    if(reportType==='monthly'||reportType==='both'){
+      const baseDate = new Date(date);
+      const year = baseDate.getFullYear();
+      const month = baseDate.getMonth()+1;
+      const daysInMonth = new Date(year,month,0).getDate();
+      const stats = staff.map(s=>{
+        let late=0,absent=0,early=0,lateDays=[];
+        for(let d=1;d<=daysInMonth;d++){
+          const dow=new Date(year,month-1,d).getDay();
+          if(dow===0||dow===6) continue;
+          const dk=year+'-'+pad(month)+'-'+pad(d);
+          const rec=getRecord(s.id,dk);
+          if(!rec.kelish) absent++;
+          else if(rec.kelishStatus==='Kech'){ late++; lateDays.push(d); }
+          if(rec.ketishStatus==='Erta ketdi') early++;
+        }
+        return {...s,late,absent,early,lateDays};
+      }).sort((a,b)=>b.late-a.late);
+      
+      const doc2 = buildMonthlyPDFDoc(stats, year, month);
+      const pdfBlob2 = doc2.output('blob');
+      const ok2 = await sendPDFToTelegram(cfg.token, cfg.chatid, pdfBlob2, `⏰ Oylik kechikish tahlili\n📅 ${UZ_MON[month-1]} ${year}\n🏫 IIV Surxondaryo Akademik Litsey`, `kechikish_${year}-${pad(month)}.pdf`);
+      if(ok2) sent++;
+    }
+    
+    res.style.color='var(--green)';
+    res.textContent=`✓ ${sent} ta PDF muvaffaqiyatli yuborildi!`;
+    toast('✓ Telegram ga yuborildi!', false, true);
+  } catch(e){
+    res.style.color='var(--red)';
+    res.textContent='✗ Xato: '+e.message;
+    toast('✗ Xato: '+e.message, true);
+  }
+  
+  btn.disabled=false;
+  btn.textContent='✈️ TELEGRAM GA YUBORISH';
+}
+
+async function sendPDFToTelegram(token, chatId, pdfBlob, caption, filename){
+  const formData = new FormData();
+  formData.append('chat_id', chatId);
+  formData.append('caption', caption);
+  formData.append('document', pdfBlob, filename);
+  
+  const res = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
+    method:'POST', body: formData
+  });
+  const data = await res.json();
+  if(!data.ok) throw new Error(data.description||'Telegram xatosi');
+  return true;
 }
 
 // ══════════════════════════════════════════════
@@ -836,9 +1744,9 @@ function detectGPS(){
 // ══════════════════════════════════════════════
 function loadCfg(){
   const c=getCfg();
-  if(c.serverUrl) document.getElementById('cfg-server').value=c.serverUrl;
-  if(c.lat) document.getElementById('cfg-lat').value=c.lat;
-  if(c.lon) document.getElementById('cfg-lon').value=c.lon;
+  if(c.serverUrl) document.getElementById('cfg-server') && (document.getElementById('cfg-server').value=c.serverUrl);
+  if(c.lat){ document.getElementById('cfg-lat').value=c.lat; }
+  if(c.lon){ document.getElementById('cfg-lon').value=c.lon; }
   if(c.radius){
     document.getElementById('cfg-radius').value=c.radius;
     document.getElementById('cfg-radius-range').value=c.radius;
@@ -850,9 +1758,14 @@ function loadCfg(){
   if(c.leaveEnd) document.getElementById('cfg-le').value=c.leaveEnd;
 }
 
+function loadJBConfig(){
+  const cfg=getJBCfg();
+  if(cfg.key) document.getElementById('jb-key').value=cfg.key;
+  if(cfg.binid) document.getElementById('jb-binid').value=cfg.binid;
+}
+
 function saveCfg(){
   const c={
-    serverUrl: document.getElementById('cfg-server').value.trim(),
     lat: document.getElementById('cfg-lat').value.trim(),
     lon: document.getElementById('cfg-lon').value.trim(),
     radius: document.getElementById('cfg-radius-range').value,
@@ -861,89 +1774,53 @@ function saveCfg(){
     leaveStart: document.getElementById('cfg-ls').value,
     leaveEnd: document.getElementById('cfg-le').value,
   };
-  localStorage.setItem('iiv_cfg',JSON.stringify(c));
+  localStorage.setItem('iiv_cfg', JSON.stringify(c));
   toast('✓ Sozlamalar saqlandi!');
 }
 
 function clearAll(){
-  if(!confirm('Barcha sozlamalar va ma\'lumotlar o\'chadi!')) return;
-  localStorage.clear(); location.reload();
+  if(!confirm('BARCHA sozlamalar va ma\'lumotlar o\'chadi! Bu amaldan qaytish mumkin emas.')) return;
+  if(!confirm('Ikkinchi marta tasdiqlang: haqiqatan ham o\'chirasizmi?')) return;
+  localStorage.clear();
+  sessionStorage.clear();
+  location.reload();
 }
 
 // ══════════════════════════════════════════════
 //  LEAFLET MAP
 // ══════════════════════════════════════════════
 let map=null, marker=null, circle=null;
-const DEFAULT_LAT=41.2995, DEFAULT_LON=69.2401; // Toshkent
+const DEFAULT_LAT=37.9470, DEFAULT_LON=67.5677; // Termiz
 
 function initMap(lat, lon, radius){
   lat=lat||DEFAULT_LAT; lon=lon||DEFAULT_LON; radius=radius||40;
-
   document.getElementById('map-loading').style.display='none';
-
   if(map){ map.remove(); map=null; }
-
-  // Dark tile layer
-  map = L.map('leaflet-map', {
-    center:[lat, lon], zoom:17,
-    zoomControl:true, attributionControl:false
-  });
-
-  // OpenStreetMap tile
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    maxZoom:19, opacity:0.85
-  }).addTo(map);
-
-  // Custom marker icon
+  map = L.map('leaflet-map',{center:[lat,lon],zoom:17,zoomControl:true,attributionControl:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,opacity:.85}).addTo(map);
   const icon = L.divIcon({
     className:'',
-    html:`<div style="
-      width:22px;height:22px;border-radius:50%;
-      background:#00ccff;border:3px solid #fff;
-      box-shadow:0 0 0 2px #00ccff,0 2px 8px #000a;
-      cursor:grab;
-    "></div>`,
-    iconSize:[22,22], iconAnchor:[11,11]
+    html:`<div style="width:22px;height:22px;border-radius:50%;background:#00d4ff;border:3px solid #fff;box-shadow:0 0 0 2px #00d4ff,0 2px 8px #000a;cursor:grab"></div>`,
+    iconSize:[22,22],iconAnchor:[11,11]
   });
-
-  // Draggable marker
-  marker = L.marker([lat, lon], {icon, draggable:true}).addTo(map);
-
-  // Radius circle
-  circle = L.circle([lat, lon], {
-    radius: radius,
-    color:'#00ccff', fillColor:'#00ccff',
-    fillOpacity:0.12, weight:2, dashArray:'6,4'
-  }).addTo(map);
-
-  // On marker drag
-  marker.on('dragend', function(e){
-    const p=e.target.getLatLng();
-    setMapCoords(p.lat, p.lng);
-  });
-
-  // On map click — move marker
-  map.on('click', function(e){
-    marker.setLatLng(e.latlng);
-    circle.setLatLng(e.latlng);
-    setMapCoords(e.latlng.lat, e.latlng.lng);
-  });
-
-  updateCoordDisplay(lat, lon, radius);
+  marker = L.marker([lat,lon],{icon,draggable:true}).addTo(map);
+  circle = L.circle([lat,lon],{radius,color:'#00d4ff',fillColor:'#00d4ff',fillOpacity:.12,weight:2,dashArray:'6,4'}).addTo(map);
+  marker.on('dragend',e=>{ const p=e.target.getLatLng(); setMapCoords(p.lat,p.lng); });
+  map.on('click',e=>{ marker.setLatLng(e.latlng); circle.setLatLng(e.latlng); setMapCoords(e.latlng.lat,e.latlng.lng); });
+  updateCoordDisplay(lat,lon,radius);
 }
 
-function setMapCoords(lat, lon){
+function setMapCoords(lat,lon){
   const radius=parseFloat(document.getElementById('cfg-radius-range').value)||40;
-  circle.setLatLng([lat, lon]);
+  circle.setLatLng([lat,lon]);
   document.getElementById('cfg-lat').value=lat.toFixed(7);
   document.getElementById('cfg-lon').value=lon.toFixed(7);
   document.getElementById('cfg-radius').value=radius;
-  updateCoordDisplay(lat, lon, radius);
+  updateCoordDisplay(lat,lon,radius);
 }
 
-function updateCoordDisplay(lat, lon, radius){
-  document.getElementById('gps-detected').textContent=
-    lat.toFixed(6)+', '+lon.toFixed(6)+'  ·  radius: '+radius+'m';
+function updateCoordDisplay(lat,lon,radius){
+  document.getElementById('gps-detected').textContent=lat.toFixed(6)+', '+lon.toFixed(6)+'  ·  radius: '+radius+'m';
 }
 
 function onRadiusChange(val){
@@ -952,32 +1829,58 @@ function onRadiusChange(val){
   if(circle) circle.setRadius(parseFloat(val));
   const lat=parseFloat(document.getElementById('cfg-lat').value)||DEFAULT_LAT;
   const lon=parseFloat(document.getElementById('cfg-lon').value)||DEFAULT_LON;
-  updateCoordDisplay(lat, lon, val);
+  updateCoordDisplay(lat,lon,val);
 }
 
 function onCoordsInput(){
   const lat=parseFloat(document.getElementById('cfg-lat').value);
   const lon=parseFloat(document.getElementById('cfg-lon').value);
   if(isNaN(lat)||isNaN(lon)) return;
-  if(marker) marker.setLatLng([lat, lon]);
-  if(circle) circle.setLatLng([lat, lon]);
-  if(map) map.setView([lat, lon], map.getZoom());
+  if(marker) marker.setLatLng([lat,lon]);
+  if(circle) circle.setLatLng([lat,lon]);
+  if(map) map.setView([lat,lon],map.getZoom());
   const r=parseFloat(document.getElementById('cfg-radius-range').value)||40;
-  updateCoordDisplay(lat, lon, r);
+  updateCoordDisplay(lat,lon,r);
 }
 
 function centerMap(){
   const lat=parseFloat(document.getElementById('cfg-lat').value);
   const lon=parseFloat(document.getElementById('cfg-lon').value);
-  if(!isNaN(lat)&&!isNaN(lon)&&map) map.setView([lat, lon], 17);
-  else if(map) map.setView([DEFAULT_LAT, DEFAULT_LON], 14);
+  if(!isNaN(lat)&&!isNaN(lon)&&map) map.setView([lat,lon],17);
+  else if(map) map.setView([DEFAULT_LAT,DEFAULT_LON],14);
+}
+
+function detectGPS(){
+  const el=document.getElementById('gps-detected');
+  el.textContent='Aniqlanmoqda...';
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const lat=pos.coords.latitude, lon=pos.coords.longitude;
+      const r=parseFloat(document.getElementById('cfg-radius-range').value)||40;
+      document.getElementById('cfg-lat').value=lat.toFixed(7);
+      document.getElementById('cfg-lon').value=lon.toFixed(7);
+      updateCoordDisplay(lat,lon,r);
+      if(map){ map.setView([lat,lon],17); marker.setLatLng([lat,lon]); circle.setLatLng([lat,lon]); }
+      else initMap(lat,lon,r);
+      toast('✓ GPS aniqlandi: ±'+Math.round(pos.coords.accuracy)+'m');
+    },
+    ()=>{ el.textContent='✗ GPS aniqlanmadi'; toast('GPS aniqlanmadi',true); },
+    {enableHighAccuracy:true,timeout:10000}
+  );
 }
 
 // ══════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════
-loadCfg();
-loadStaff();
+function initApp(){
+  setInterval(updateClock, 1000);
+  updateClock();
+  loadStaff();
+  
+  // Check cloud status
+  const cfg=getJBCfg();
+  if(cfg.key && cfg.binid) updateConnStatus('ok');
+}
 </script>
 </body>
 </html>
