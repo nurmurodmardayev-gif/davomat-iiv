@@ -4,188 +4,319 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Davomat — IIV Surxondaryo Akademik Litsey</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#070d18;--surf:#0e1825;--surf2:#162030;--border:#1b3050;
-  --accent:#00ccff;--green:#00ff88;--red:#ff4455;--amber:#ffaa00;
-  --text:#ddeeff;--text2:#5a85aa;--text3:#2a4a6a;
-  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --bg:#050b14;--surf:#0b1622;--surf2:#111e2e;--surf3:#162438;
+  --border:#1c3454;--border2:#243d5e;
+  --accent:#00d4ff;--accent2:#0099cc;
+  --green:#00e676;--red:#ff3d57;--amber:#ffab00;
+  --text:#e8f4ff;--text2:#6a96bc;--text3:#2a4a6a;
+  --mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);
-  display:flex;flex-direction:column;
-  background-image:radial-gradient(ellipse at 50% 0%,#001a3322 0%,transparent 60%)}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--sans);
+  display:flex;flex-direction:column;min-height:100vh;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,#001e3d28 0%,transparent 70%);
+}
 
 /* ── HEADER ── */
-.hdr{padding:11px 18px;border-bottom:1px solid var(--border);display:flex;
-  align-items:center;justify-content:space-between;flex-shrink:0;background:#0a1220dd}
-.hdr-title{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:1.5px}
-.hdr-sub{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1px;margin-top:1px}
+.hdr{
+  padding:11px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;background:#07101acc;backdrop-filter:blur(10px);
+  position:sticky;top:0;z-index:30;
+}
+.hdr-title{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:2px;font-weight:600}
+.hdr-sub{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1px;margin-top:2px}
 .hdr-right{text-align:right}
-.clock-time{font-family:var(--mono);font-size:20px;font-weight:600;letter-spacing:2px;color:var(--text)}
-.clock-date{font-family:var(--mono);font-size:9px;color:var(--text2);margin-top:1px}
+.clock-time{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:3px;color:var(--text)}
+.clock-date{font-family:var(--mono);font-size:9px;color:var(--text2);margin-top:2px;letter-spacing:.5px}
 
 /* ── GPS BAR ── */
-.gps-bar{display:flex;align-items:center;justify-content:center;gap:6px;
-  padding:5px 18px;font-family:var(--mono);font-size:10px;letter-spacing:1px;
-  flex-shrink:0;border-bottom:1px solid var(--border);transition:all .3s}
-.gps-bar.checking{background:#ffaa0010;color:var(--amber)}
-.gps-bar.ok{background:#00ff8810;color:var(--green)}
-.gps-bar.fail{background:#ff445510;color:var(--red)}
-.gps-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1s ease-in-out infinite;flex-shrink:0}
-@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
+.gps-bar{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:6px 18px;font-family:var(--mono);font-size:10px;letter-spacing:1px;
+  flex-shrink:0;border-bottom:1px solid var(--border);transition:all .4s;
+}
+.gps-bar.checking{background:#ffab0012;color:var(--amber)}
+.gps-bar.ok{background:#00e67612;color:var(--green)}
+.gps-bar.fail{background:#ff3d5712;color:var(--red)}
+.gps-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.2s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
 
 /* ── SCREENS ── */
-.screen{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;
-  padding:20px;overflow:auto}
+.screen{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .screen.active{display:flex}
 
 /* ── LOGIN SCREEN ── */
-.login-box{width:100%;max-width:320px}
-.login-title{font-family:var(--mono);font-size:12px;color:var(--text2);letter-spacing:2px;
-  text-transform:uppercase;text-align:center;margin-bottom:24px}
-.pin-display{display:flex;justify-content:center;gap:12px;margin-bottom:28px}
-.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);
-  background:transparent;transition:all .2s}
-.pin-dot.filled{background:var(--accent);border-color:var(--accent);box-shadow:0 0 10px #00ccff66}
-.pin-dot.error{background:var(--red);border-color:var(--red)}
+.login-box{width:100%;max-width:300px}
+.login-title{
+  font-family:var(--mono);font-size:11px;color:var(--text2);
+  letter-spacing:2.5px;text-transform:uppercase;text-align:center;margin-bottom:28px;
+}
+.login-error{
+  text-align:center;font-family:var(--mono);font-size:11px;
+  color:var(--red);margin-bottom:14px;min-height:18px;letter-spacing:1px;
+}
 
-.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px;margin:0 auto}
-.num-btn{background:var(--surf);border:1px solid var(--border);border-radius:12px;
-  padding:18px 8px;font-family:var(--mono);font-size:22px;font-weight:600;color:var(--text);
-  cursor:pointer;transition:all .15s;text-align:center;user-select:none}
-.num-btn:active{background:var(--surf2);transform:scale(.94);border-color:var(--accent)}
-.num-btn.del{font-size:16px;color:var(--text2)}
-.num-btn.empty{background:transparent;border-color:transparent;cursor:default}
+/* PIN DOTS */
+.pin-display{display:flex;justify-content:center;gap:14px;margin-bottom:32px}
+.pin-dot{
+  width:15px;height:15px;border-radius:50%;border:2px solid var(--border2);
+  background:transparent;transition:all .2s cubic-bezier(.34,1.56,.64,1);
+}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent);box-shadow:0 0 12px #00d4ff50;transform:scale(1.1)}
+.pin-dot.error{background:var(--red);border-color:var(--red);animation:shake .4s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
-.login-hint{text-align:center;font-family:var(--mono);font-size:10px;color:var(--text3);
-  margin-top:20px;letter-spacing:1px}
-.login-error{text-align:center;font-family:var(--mono);font-size:11px;color:var(--red);
-  margin-bottom:16px;min-height:16px;letter-spacing:1px}
+/* NUMPAD */
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:260px;margin:0 auto}
+.num-btn{
+  background:var(--surf);border:1px solid var(--border);border-radius:14px;
+  padding:18px 8px;font-family:var(--mono);font-size:24px;font-weight:600;
+  color:var(--text);cursor:pointer;transition:all .12s;text-align:center;
+  user-select:none;-webkit-user-select:none;
+}
+.num-btn:active,.num-btn.pressed{
+  background:var(--surf2);transform:scale(.92);
+  border-color:var(--accent);box-shadow:0 0 0 2px #00d4ff20;
+}
+.num-btn.del{font-size:18px;color:var(--text2)}
+.num-btn.empty{background:transparent;border-color:transparent;cursor:default;pointer-events:none}
+
+.login-hint{text-align:center;font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:20px;letter-spacing:1px;line-height:1.8}
+
+/* ── SELFIE SCREEN ── */
+.selfie-box{width:100%;max-width:320px;text-align:center}
+.selfie-title{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.selfie-sub{font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:20px;line-height:1.7}
+.camera-wrap{
+  position:relative;width:220px;height:220px;margin:0 auto 20px;
+  border-radius:50%;overflow:hidden;
+  border:3px solid var(--border2);
+  box-shadow:0 0 0 6px #00d4ff12, 0 0 40px #00000060;
+}
+.camera-wrap video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.camera-overlay{
+  position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:linear-gradient(135deg,#00d4ff08,transparent 50%,#00d4ff04);
+}
+.camera-ring{
+  position:absolute;inset:-3px;border-radius:50%;
+  border:3px solid transparent;
+  border-top-color:var(--accent);
+  animation:ring-spin 2s linear infinite;
+}
+.camera-ring.ready{border-top-color:var(--green);border-right-color:var(--green);animation:none}
+@keyframes ring-spin{to{transform:rotate(360deg)}}
+
+.selfie-status{font-family:var(--mono);font-size:11px;margin-bottom:16px;min-height:18px}
+.selfie-status.ok{color:var(--green)}.selfie-status.err{color:var(--red)}.selfie-status.info{color:var(--accent)}
+
+.btn-capture{
+  width:100%;padding:16px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#000;font-family:var(--mono);font-size:13px;font-weight:700;
+  letter-spacing:2px;cursor:pointer;transition:all .2s;text-transform:uppercase;
+  margin-bottom:10px;
+}
+.btn-capture:hover{transform:translateY(-1px);box-shadow:0 8px 20px #00d4ff30}
+.btn-capture:active{transform:scale(.97)}
+.btn-capture:disabled{background:var(--border);color:var(--text3);cursor:not-allowed;transform:none;box-shadow:none}
+.btn-cancel{
+  width:100%;padding:12px;border-radius:10px;border:1px solid var(--border2);
+  background:transparent;color:var(--text2);font-family:var(--mono);font-size:11px;
+  letter-spacing:1px;cursor:pointer;transition:all .2s;
+}
+.btn-cancel:hover{border-color:var(--red);color:var(--red)}
 
 /* ── DASHBOARD SCREEN ── */
 .dash-box{width:100%;max-width:340px}
-.user-card{background:var(--surf);border:1px solid var(--border);border-radius:14px;
-  padding:18px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
-.user-avatar{width:52px;height:52px;border-radius:50%;background:var(--surf2);
+
+.user-card{
+  background:var(--surf);border:1px solid var(--border);border-radius:16px;
+  padding:18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;
+  position:relative;overflow:hidden;
+}
+.user-card::before{content:'';position:absolute;inset:0;background:radial-gradient(at 100% 0%,#00d4ff08,transparent 60%);pointer-events:none}
+.user-avatar{
+  width:52px;height:52px;border-radius:50%;background:var(--surf2);
   border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:22px;color:var(--accent);flex-shrink:0}
-.user-name{font-size:16px;font-weight:500;margin-bottom:3px}
-.user-pos{font-family:var(--mono);font-size:11px;color:var(--text2)}
-.user-status{margin-top:6px;font-family:var(--mono);font-size:10px;display:flex;align-items:center;gap:5px}
+  font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);flex-shrink:0;
+  position:relative;overflow:hidden;
+}
+.user-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.user-name{font-size:15px;font-weight:600;color:var(--text)}
+.user-pos{font-family:var(--mono);font-size:11px;color:var(--text2);margin-top:2px}
+.user-status{margin-top:7px;font-family:var(--mono);font-size:10px;display:flex;align-items:center;gap:6px}
 .sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.sdot-g{background:var(--green);box-shadow:0 0 5px var(--green)}
+.sdot-g{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s ease-in-out infinite}
 .sdot-r{background:var(--red)}
 .sdot-a{background:var(--amber)}
 
-.action-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-.act-btn{padding:22px 12px;border-radius:14px;border:none;font-family:var(--mono);
-  font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;
-  transition:all .2s;text-align:center;line-height:1.4;text-transform:uppercase}
-.act-btn:active{transform:scale(.96)}
-.act-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
-.btn-kelish{background:linear-gradient(135deg,#00ff8822,#00ff8808);
-  color:var(--green);border:1px solid #00ff8840}
-.btn-kelish:not(:disabled):hover{background:linear-gradient(135deg,#00ff8840,#00ff8815);border-color:#00ff8880}
-.btn-ketish{background:linear-gradient(135deg,#ff445522,#ff445508);
-  color:var(--red);border:1px solid #ff444440}
-.btn-ketish:not(:disabled):hover{background:linear-gradient(135deg,#ff445540,#ff444415);border-color:#ff444480}
-.act-btn .act-icon{font-size:28px;display:block;margin-bottom:6px}
-.act-btn .act-time{font-size:9px;color:var(--text2);letter-spacing:1px;margin-top:4px;font-weight:400}
+/* PHOTO BADGE */
+.photo-badge{
+  position:absolute;top:10px;right:10px;
+  background:#00e67620;border:1px solid #00e67640;
+  border-radius:4px;padding:2px 7px;
+  font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:1px;
+}
 
-.today-log{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px}
-.log-sec-title{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:2px;
-  text-transform:uppercase;margin-bottom:10px}
-.log-row{display:flex;justify-content:space-between;align-items:center;
-  padding:7px 0;border-bottom:1px solid var(--border)}
+/* ACTION BUTTONS */
+.action-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.act-btn{
+  padding:22px 10px;border-radius:14px;border:none;font-family:var(--mono);
+  font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;
+  transition:all .2s;text-align:center;line-height:1.4;text-transform:uppercase;
+}
+.act-btn:active{transform:scale(.95)}
+.act-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;filter:grayscale(.5)}
+.act-icon{font-size:26px;display:block;margin-bottom:6px}
+.act-time{font-size:9px;color:var(--text2);letter-spacing:.5px;margin-top:4px;font-weight:400}
+
+.btn-kelish{background:linear-gradient(135deg,#00e67618,#00e67808);color:var(--green);border:1px solid #00e67635}
+.btn-kelish:not(:disabled):hover{background:linear-gradient(135deg,#00e67630,#00e67812);border-color:#00e67660}
+.btn-ketish{background:linear-gradient(135deg,#ff3d5718,#ff3d5708);color:var(--red);border:1px solid #ff3d5735}
+.btn-ketish:not(:disabled):hover{background:linear-gradient(135deg,#ff3d5730,#ff3d5712);border-color:#ff3d5760}
+
+/* TODAY LOG */
+.today-log{
+  background:var(--surf);border:1px solid var(--border);border-radius:12px;
+  padding:14px;margin-bottom:12px;
+}
+.log-sec-title{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.log-sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.log-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
 .log-row:last-child{border-bottom:none}
 .log-label{font-family:var(--mono);font-size:11px;color:var(--text2)}
-.log-val{font-family:var(--mono);font-size:12px;font-weight:500}
+.log-val{font-family:var(--mono);font-size:12px;font-weight:600}
 .log-val.ok{color:var(--green)}.log-val.late{color:var(--red)}.log-val.none{color:var(--text3)}
 
-.logout-btn{width:100%;padding:11px;border-radius:8px;background:transparent;
+/* PHOTO PREVIEW in log */
+.log-photo-btn{
+  font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:4px;
+  background:#00d4ff15;color:var(--accent);border:1px solid #00d4ff30;
+  cursor:pointer;letter-spacing:1px;transition:all .2s;
+}
+.log-photo-btn:hover{background:#00d4ff25}
+
+.logout-btn{
+  width:100%;padding:12px;border-radius:10px;background:transparent;
   border:1px solid var(--border);color:var(--text2);font-family:var(--mono);
-  font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .2s}
+  font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .2s;
+}
 .logout-btn:hover{border-color:var(--red);color:var(--red)}
 
-/* ── TIME PILL ── */
-.time-pill{display:inline-block;font-family:var(--mono);font-size:9px;
-  padding:2px 8px;border-radius:2px;letter-spacing:1px;margin-top:3px}
-.pill-ok{background:#00ff8818;color:var(--green);border:1px solid #00ff8840}
-.pill-late{background:#ff445518;color:var(--red);border:1px solid #ff444440}
-.pill-neutral{background:#00ccff10;color:var(--accent);border:1px solid #00ccff30}
+/* ── COUNTDOWN ── */
+.countdown-wrap{width:100%;max-width:340px;margin-bottom:12px}
+.countdown-card{
+  border-radius:14px;padding:14px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  transition:all .4s;border:1px solid transparent;
+}
+.phase-before{background:#00d4ff0d;border-color:#00d4ff25}
+.phase-ok{background:#00e6760d;border-color:#00e67630}
+.phase-late{background:#ff3d570d;border-color:#ff3d5730}
+.phase-done{background:#ffffff06;border-color:var(--border)}
+.cd-label{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
+.phase-before .cd-label{color:#00d4ffaa}.phase-ok .cd-label{color:#00e676aa}
+.phase-late .cd-label{color:#ff3d57aa}.phase-done .cd-label{color:var(--text2)}
+.cd-time{font-family:var(--mono);font-weight:700;letter-spacing:2px;font-size:26px}
+.phase-before .cd-time{color:var(--accent)}.phase-ok .cd-time{color:var(--green)}
+.phase-late .cd-time{color:var(--red)}.phase-done .cd-time{color:var(--text2);font-size:20px}
+.cd-sub{font-family:var(--mono);font-size:10px;margin-top:4px}
+.phase-before .cd-sub{color:#00d4ff55}.phase-ok .cd-sub{color:#00e67655}
+.phase-late .cd-sub{color:#ff3d5755}.phase-done .cd-sub{color:var(--text3)}
+.cd-window{font-family:var(--mono);font-size:10px;line-height:1.8;text-align:right}
+.phase-before .cd-window{color:#00d4ff70}.phase-ok .cd-window{color:#00e67670}
+.phase-late .cd-window{color:#ff3d5770}.phase-done .cd-window{color:var(--text3)}
+@keyframes cdPulse{0%,100%{opacity:1}50%{opacity:.5}}
+.cd-pulse{animation:cdPulse 1s ease-in-out infinite}
+
+/* ── DEVICE LOCKED ── */
+.lock-card{width:100%;max-width:300px;text-align:center;padding:24px}
+.lock-icon{font-size:52px;margin-bottom:18px}
+.lock-title{font-family:var(--mono);font-size:13px;color:var(--red);letter-spacing:2px;margin-bottom:12px}
+.lock-msg{font-family:var(--mono);font-size:11px;color:var(--text2);line-height:2}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
-  background:var(--green);color:#000;padding:11px 22px;border-radius:6px;
-  font-family:var(--mono);font-size:12px;opacity:0;transition:all .3s;
-  z-index:999;white-space:nowrap;max-width:90vw;text-align:center}
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(70px);
+  background:var(--green);color:#000;padding:12px 24px;border-radius:8px;
+  font-family:var(--mono);font-size:12px;font-weight:700;opacity:0;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:999;
+  white-space:nowrap;max-width:90vw;text-align:center;
+}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.err{background:var(--red);color:#fff}
 .toast.warn{background:var(--amber);color:#000}
 
-/* ── COUNTDOWN WIDGET ── */
-.countdown-wrap{width:100%;max-width:340px;margin-bottom:14px}
-.countdown-card{border-radius:14px;padding:14px 18px;display:flex;
-  align-items:center;justify-content:space-between;gap:12px;
-  transition:all .4s;border:1px solid transparent}
-.countdown-card.phase-before{background:#00ccff0d;border-color:#00ccff25}
-.countdown-card.phase-ok{background:#00ff880d;border-color:#00ff8830}
-.countdown-card.phase-late{background:#ff44550d;border-color:#ff444430}
-.countdown-card.phase-done{background:#ffffff06;border-color:var(--border)}
-.cd-left{}
-.cd-label{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;
-  text-transform:uppercase;margin-bottom:4px}
-.phase-before .cd-label{color:#00ccffaa}
-.phase-ok .cd-label{color:#00ff88aa}
-.phase-late .cd-label{color:#ff4455aa}
-.phase-done .cd-label{color:var(--text2)}
-.cd-time{font-family:var(--mono);font-weight:700;letter-spacing:2px;line-height:1}
-.phase-before .cd-time{font-size:28px;color:var(--accent)}
-.phase-ok .cd-time{font-size:28px;color:var(--green)}
-.phase-late .cd-time{font-size:28px;color:var(--red)}
-.phase-done .cd-time{font-size:20px;color:var(--text2)}
-.cd-sub{font-family:var(--mono);font-size:10px;margin-top:4px}
-.phase-before .cd-sub{color:#00ccff66}
-.phase-ok .cd-sub{color:#00ff8866}
-.phase-late .cd-sub{color:#ff445566}
-.phase-done .cd-sub{color:var(--text3)}
-.cd-right{flex-shrink:0;text-align:right}
-.cd-window{font-family:var(--mono);font-size:10px;line-height:1.7}
-.phase-before .cd-window{color:#00ccff80}
-.phase-ok .cd-window{color:#00ff8880}
-.phase-late .cd-window{color:#ff445580}
-.phase-done .cd-window{color:var(--text3)}
-@keyframes cdPulse{0%,100%{opacity:1}50%{opacity:.6}}
-.cd-pulse{animation:cdPulse 1s ease-in-out infinite}
-
-/* ── DEVICE LOCK MSG ── */
-.lock-card{width:100%;max-width:300px;text-align:center;padding:20px}
-.lock-icon{font-size:48px;margin-bottom:16px}
-.lock-title{font-family:var(--mono);font-size:13px;color:var(--red);letter-spacing:2px;margin-bottom:10px}
-.lock-msg{font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.8}
-
 /* ── SPINNER ── */
-.spinner{display:inline-block;width:12px;height:12px;border:2px solid #00ccff44;
-  border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid #00d4ff30;border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── CONFIRM OVERLAY ── */
-.overlay-bg{position:fixed;inset:0;background:#000000cc;z-index:100;display:none;
-  align-items:center;justify-content:center;padding:20px}
+.overlay-bg{position:fixed;inset:0;background:#000000d0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
 .overlay-bg.active{display:flex}
-.confirm-card{background:var(--surf);border:1px solid var(--border);border-radius:16px;
-  padding:24px;width:100%;max-width:300px;text-align:center}
-.confirm-title{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:1px;margin-bottom:8px}
-.confirm-msg{font-size:14px;color:var(--text);margin-bottom:20px;line-height:1.5}
+.confirm-card{background:var(--surf);border:1px solid var(--border2);border-radius:16px;padding:24px;width:100%;max-width:300px;text-align:center;box-shadow:0 24px 60px #00000080}
+.confirm-title{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:1.5px;margin-bottom:10px;text-transform:uppercase}
+.confirm-msg{font-size:14px;color:var(--text);margin-bottom:8px;line-height:1.6;white-space:pre-line}
+.confirm-gps{font-family:var(--mono);font-size:9px;color:var(--text2);margin-bottom:18px;letter-spacing:1px}
 .confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.cfm-btn{padding:12px;border-radius:8px;border:none;font-family:var(--mono);
-  font-size:12px;font-weight:600;cursor:pointer;letter-spacing:1px}
+.cfm-btn{padding:13px;border-radius:10px;border:none;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .2s}
 .cfm-yes-kelish{background:var(--green);color:#000}
 .cfm-yes-ketish{background:var(--red);color:#fff}
-.cfm-no{background:var(--surf2);color:var(--text2);border:1px solid var(--border)}
+.cfm-no{background:var(--surf2);color:var(--text2);border:1px solid var(--border2)}
+
+/* ── PHOTO VIEWER MODAL ── */
+.photo-modal-bg{position:fixed;inset:0;background:#000000e8;z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
+.photo-modal-bg.active{display:flex}
+.photo-modal{background:var(--surf);border:1px solid var(--border2);border-radius:16px;padding:20px;width:100%;max-width:360px;text-align:center}
+.photo-modal-title{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:2px;margin-bottom:14px;text-transform:uppercase}
+.photo-modal img{width:200px;height:200px;border-radius:50%;object-fit:cover;border:3px solid var(--border2);margin-bottom:12px}
+.photo-modal-info{font-family:var(--mono);font-size:11px;color:var(--text2);line-height:2;margin-bottom:14px}
+.photo-modal-close{
+  padding:11px 24px;border-radius:8px;border:1px solid var(--border2);
+  background:transparent;color:var(--text2);font-family:var(--mono);font-size:11px;
+  cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+.photo-modal-close:hover{border-color:var(--accent);color:var(--accent)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--surf)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── FINGERPRINT ANIMATION ── */
+@keyframes fpScan{
+  0%{stroke-dashoffset:200;opacity:0}
+  20%{opacity:1}
+  100%{stroke-dashoffset:0;opacity:1}
+}
+.fp-line{
+  stroke-dasharray:200;
+  stroke-dashoffset:200;
+}
+.fp-scanning .fp-line{
+  animation:fpScan 0.5s ease forwards;
+}
+.fp-scanning .fp-line:nth-child(1){animation-delay:0s}
+.fp-scanning .fp-line:nth-child(2){animation-delay:0.1s}
+.fp-scanning .fp-line:nth-child(3){animation-delay:0.2s}
+.fp-scanning .fp-line:nth-child(4){animation-delay:0.3s}
+.fp-scanning .fp-line:nth-child(5){animation-delay:0.4s}
+@keyframes fpPulse{
+  0%,100%{opacity:0.15;transform:scale(1)}
+  50%{opacity:0.35;transform:scale(1.05)}
+}
+#bio-icon-wrap{
+  cursor:pointer;
+  transition:box-shadow 0.3s;
+}
+#bio-icon-wrap:hover{
+  box-shadow:0 0 0 6px #00d4ff20, 0 0 40px #00000060 !important;
+}
 </style>
 </head>
 <body>
@@ -206,7 +337,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
   <span id="gps-txt">GPS aniqlanmoqda...</span>
 </div>
 
-<!-- SCREEN: Login -->
+<!-- ════ SCREEN: Login ════ -->
 <div class="screen active" id="scr-login">
   <div class="login-box">
     <div class="login-title">PIN KOD KIRITING</div>
@@ -217,7 +348,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
       <div class="pin-dot" id="pd2"></div>
       <div class="pin-dot" id="pd3"></div>
     </div>
-    <div class="numpad">
+    <div class="numpad" id="numpad">
       <div class="num-btn" onclick="numPress('1')">1</div>
       <div class="num-btn" onclick="numPress('2')">2</div>
       <div class="num-btn" onclick="numPress('3')">3</div>
@@ -231,11 +362,43 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
       <div class="num-btn" onclick="numPress('0')">0</div>
       <div class="num-btn del" onclick="numDel()">⌫</div>
     </div>
-    <div class="login-hint">4 xonali PIN → faqat o'z qurilmangizdan</div>
+    <div class="login-hint">
+      4 xonali PIN → Davomat belgilash<br>
+      👆 Barmoq izi bilan tasdiqlash
+    </div>
   </div>
 </div>
 
-<!-- SCREEN: Device locked -->
+<!-- ════ SCREEN: WebAuthn / Biometrik ════ -->
+<div class="screen" id="scr-biometric">
+  <div class="selfie-box">
+    <div class="selfie-title">BIOMETRIK TASDIQLASH</div>
+    <div class="selfie-sub" id="bio-who">Barmoq izi yoki yuzingiz bilan tasdiqlang</div>
+
+    <div class="camera-wrap" id="bio-icon-wrap" style="background:var(--surf2);display:flex;align-items:center;justify-content:center">
+      <div id="bio-icon-inner" style="text-align:center">
+        <svg viewBox="0 0 120 120" width="100" height="100" style="display:block;margin:auto" id="fp-svg">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--accent)" stroke-width="1" opacity="0.2"/>
+          <path class="fp-line" d="M60 20 C35 20 16 39 16 60 C16 81 35 100 60 100 C85 100 104 81 104 60" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" opacity="0"/>
+          <path class="fp-line" d="M60 28 C39 28 24 43 24 60 C24 77 39 92 60 92" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0"/>
+          <path class="fp-line" d="M60 36 C43 36 32 47 32 60 C32 73 43 84 60 84" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0"/>
+          <path class="fp-line" d="M60 44 C47 44 40 51 40 60 C40 69 47 76 60 76" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0"/>
+          <path class="fp-line" d="M60 52 C51 52 48 55 48 60 C48 65 51 68 60 68" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity="0"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="selfie-status info" id="bio-status">Tayyorlanmoqda...</div>
+
+    <button class="btn-capture" id="btn-bio" onclick="startBiometric()" disabled>
+      👆 BARMOQ IZI BILAN KIRISH
+    </button>
+    <button class="btn-cancel" onclick="cancelBiometric()">← BEKOR</button>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-align:center;margin-top:14px;line-height:1.8" id="bio-hint"></div>
+  </div>
+</div>
+
+<!-- ════ SCREEN: Device locked ════ -->
 <div class="screen" id="scr-locked">
   <div class="lock-card">
     <div class="lock-icon">🔒</div>
@@ -248,12 +411,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
   </div>
 </div>
 
-<!-- SCREEN: Dashboard -->
+<!-- ════ SCREEN: Dashboard ════ -->
 <div class="screen" id="scr-dash">
   <div class="dash-box">
+
     <div class="user-card">
       <div class="user-avatar" id="u-avatar">?</div>
-      <div>
+      <div style="flex:1;min-width:0">
         <div class="user-name" id="u-name">—</div>
         <div class="user-pos" id="u-pos">—</div>
         <div class="user-status" id="u-status">
@@ -261,19 +425,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
           <span style="font-family:var(--mono);font-size:10px;color:var(--text2)">Yuklanmoqda...</span>
         </div>
       </div>
+      <div id="photo-badge" class="photo-badge" style="display:none">📷 FOTO</div>
     </div>
 
-    <!-- Countdown widget -->
+    <!-- Countdown -->
     <div class="countdown-wrap" id="countdown-wrap" style="display:none">
       <div class="countdown-card phase-before" id="countdown-card">
-        <div class="cd-left">
+        <div>
           <div class="cd-label" id="cd-label">KELISH VAQTIGACHA</div>
           <div class="cd-time" id="cd-time">--:--</div>
           <div class="cd-sub" id="cd-sub"></div>
         </div>
-        <div class="cd-right">
-          <div class="cd-window" id="cd-window"></div>
-        </div>
+        <div class="cd-window" id="cd-window"></div>
       </div>
     </div>
 
@@ -294,7 +457,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
       <div class="log-sec-title">Bugungi holat</div>
       <div class="log-row">
         <span class="log-label">Kelish vaqti</span>
-        <span class="log-val" id="log-kelish">—</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="log-val" id="log-kelish">—</span>
+          <span class="log-photo-btn" id="log-kelish-photo" style="display:none" onclick="showPhotoModal('kelish')">📷</span>
+        </div>
       </div>
       <div class="log-row">
         <span class="log-label">Kelish holati</span>
@@ -302,7 +468,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
       </div>
       <div class="log-row">
         <span class="log-label">Ketish vaqti</span>
-        <span class="log-val" id="log-ketish">—</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="log-val" id="log-ketish">—</span>
+          <span class="log-photo-btn" id="log-ketish-photo" style="display:none" onclick="showPhotoModal('ketish')">📷</span>
+        </div>
       </div>
       <div class="log-row">
         <span class="log-label">Ketish holati</span>
@@ -319,6 +488,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
   <div class="confirm-card">
     <div class="confirm-title" id="cfm-title">TASDIQLASH</div>
     <div class="confirm-msg" id="cfm-msg"></div>
+    <div class="confirm-gps" id="cfm-gps"></div>
     <div class="confirm-btns">
       <button class="cfm-btn cfm-no" onclick="closeConfirm()">BEKOR</button>
       <button class="cfm-btn" id="cfm-yes" onclick="confirmAction()">HA</button>
@@ -326,25 +496,75 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
   </div>
 </div>
 
+<!-- Photo viewer modal -->
+<div class="photo-modal-bg" id="photo-modal-bg">
+  <div class="photo-modal">
+    <div class="photo-modal-title" id="pm-title">KIRISH RASMI</div>
+    <img id="pm-img" src="" alt="selfie">
+    <div class="photo-modal-info" id="pm-info"></div>
+    <button class="photo-modal-close" onclick="closePhotoModal()">✕ YOPISH</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
+'use strict';
 // ══════════════════════════════════════════════
-//  CONFIG
+//  CONFIG & HELPERS
 // ══════════════════════════════════════════════
 function getCfg(){ return JSON.parse(localStorage.getItem('iiv_cfg')||'{}'); }
+function getJBCfg(){ return JSON.parse(localStorage.getItem('iiv_jb')||'{}'); }
 
-const UZ_MON=['Yanvar','Fevral','Mart','Aprel','May','Iyun',
-               'Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+const UZ_MON=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
 const UZ_DAY=['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
+
+// Sana bir marta olinadi (tun o'tish muammosi uchun)
+let SESSION_DATE = null;
+function todayKey(){
+  if(!SESSION_DATE){
+    const d=new Date();
+    SESSION_DATE=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  }
+  return SESSION_DATE;
+}
+function pad(n){ return String(n).padStart(2,'0'); }
+
+function escHtml(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toast(msg, err, warn){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show'+(err?' err':warn?' warn':'');
+  setTimeout(()=>t.className='toast',3500);
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
 // ══════════════════════════════════════════════
 //  DEVICE FINGERPRINT
 // ══════════════════════════════════════════════
 function getDeviceId(){
+  // Bir nechta ma'lumotni birlashtirib ishonchli ID yasaymiz
   let id = localStorage.getItem('_dev_id');
   if(!id){
-    id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+    // Navigator fingerprint + random
+    const nav = [
+      navigator.userAgent,
+      navigator.language,
+      screen.width+'x'+screen.height,
+      screen.colorDepth,
+      Intl.DateTimeFormat().resolvedOptions().timeZone
+    ].join('|');
+    // Simple hash
+    let hash = 0;
+    for(let i=0;i<nav.length;i++) hash=(Math.imul(31,hash)+nav.charCodeAt(i))|0;
+    id = 'dev_' + Math.abs(hash).toString(36) + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,7);
     localStorage.setItem('_dev_id', id);
   }
   return id;
@@ -356,167 +576,18 @@ function getDeviceId(){
 function startClock(){
   function tick(){
     const now=new Date();
-    const h=String(now.getHours()).padStart(2,'0');
-    const m=String(now.getMinutes()).padStart(2,'0');
-    document.getElementById('clk').textContent=h+':'+m;
-    document.getElementById('clk-date').textContent=
-      UZ_DAY[now.getDay()]+', '+now.getDate()+' '+UZ_MON[now.getMonth()];
-    updateTimePill(now);
+    document.getElementById('clk').textContent=pad(now.getHours())+':'+pad(now.getMinutes());
+    document.getElementById('clk-date').textContent=UZ_DAY[now.getDay()]+', '+now.getDate()+' '+UZ_MON[now.getMonth()];
+    updateCountdown(now);
     updateActionBtns();
   }
   tick(); setInterval(tick,1000);
 }
 
-function updateTimePill(now){
-  if(!currentUser) return;
-
-  const today=todayKey();
-  const rec=JSON.parse(localStorage.getItem('iiv_rec_'+(currentUser.id||'')+'_'+today)||'{}');
-  const cfg=getCfg();
-
-  const card=document.getElementById('countdown-card');
-  const lblEl=document.getElementById('cd-label');
-  const timeEl=document.getElementById('cd-time');
-  const subEl=document.getElementById('cd-sub');
-  const winEl=document.getElementById('cd-window');
-  const wrap=document.getElementById('countdown-wrap');
-
-  function fmt(sec){
-    const s=Math.abs(Math.round(sec));
-    const hh=Math.floor(s/3600);
-    const mm=Math.floor((s%3600)/60);
-    const ss=s%60;
-    if(hh>0) return pad(hh)+':'+pad(mm)+':'+pad(ss);
-    return pad(mm)+':'+pad(ss);
-  }
-
-  const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
-
-  // ── KETISH rejimi: kelgan lekin ketmagan ──
-  if(rec.kelish && !rec.ketish){
-    wrap.style.display='block';
-    if(!cfg.leaveStart){
-      card.className='countdown-card phase-done';
-      lblEl.textContent='KETISH VAQTI';
-      timeEl.className='cd-time';
-      const hh=String(now.getHours()).padStart(2,'0');
-      const mm=String(now.getMinutes()).padStart(2,'0');
-      timeEl.textContent=hh+':'+mm;
-      subEl.textContent='Ish vaqti sozlanmagan';
-      winEl.textContent='';
-      return;
-    }
-    const [lsh,lsm]=cfg.leaveStart.split(':').map(Number);
-    const [leh,lem]=(cfg.leaveEnd||cfg.leaveStart).split(':').map(Number);
-    const leaveStartSec=lsh*3600+lsm*60;
-    const leaveEndSec=leh*3600+lem*60;
-    const activeFrom=leaveStartSec-3600;   // 1 soat oldin sanash boshlaydi
-    const activeUntil=leaveStartSec+1800;  // 30 daqiqa keyin to'xtaydi
-
-    wrap.style.display='block';
-    winEl.textContent='Ketish oynasi\n'+cfg.leaveStart+' - '+(cfg.leaveEnd||cfg.leaveStart);
-
-    if(nowSec > activeUntil){
-      // 30 daqiqa o'tdi — widget yashiriladi
-      wrap.style.display='none'; return;
-    } else if(nowSec < activeFrom){
-      // Hali 1 soatdan ko'p vaqt bor — oddiy holat ko'rsatish
-      card.className='countdown-card phase-done';
-      lblEl.textContent='KETISH VAQTI';
-      timeEl.className='cd-time';
-      timeEl.textContent=cfg.leaveStart;
-      subEl.textContent='Rejalashtirilgan ketish';
-    } else if(nowSec < leaveStartSec){
-      // 1 soat qoldi — sanash boshladi
-      card.className='countdown-card phase-before';
-      lblEl.textContent='KETISH VAQTIGACHA';
-      timeEl.className='cd-time';
-      timeEl.textContent=fmt(leaveStartSec-nowSec);
-      subEl.textContent=cfg.leaveStart+' da boshlanadi';
-    } else if(nowSec <= leaveEndSec){
-      const diff=leaveEndSec-nowSec;
-      card.className='countdown-card phase-ok';
-      lblEl.textContent='KETISH OYNASI';
-      timeEl.className='cd-time'+(diff<300?' cd-pulse':'');
-      timeEl.textContent=fmt(diff);
-      subEl.textContent=(cfg.leaveEnd||cfg.leaveStart)+' gacha keting';
-    } else {
-      // leaveEnd dan keyin, lekin hali activeUntil ichida
-      card.className='countdown-card phase-late';
-      lblEl.textContent="VAQT O'TDI";
-      timeEl.className='cd-time cd-pulse';
-      timeEl.textContent='+'+fmt(nowSec-leaveEndSec);
-      subEl.textContent=(cfg.leaveEnd||cfg.leaveStart)+' dan keyin';
-    }
-    return;
-  }
-
-  // ── KELISH rejimi: hali kelmagan ──
-  if(rec.kelish){ wrap.style.display='none'; return; }
-
-  wrap.style.display='block';
-
-  if(!cfg.workStart){
-    // Config yo'q — faqat joriy vaqtni ko'rsat
-    card.className='countdown-card phase-done';
-    lblEl.textContent='KELISH VAQTI';
-    timeEl.className='cd-time';
-    const hh=String(now.getHours()).padStart(2,'0');
-    const mm=String(now.getMinutes()).padStart(2,'0');
-    timeEl.textContent=hh+':'+mm;
-    subEl.textContent='Ish vaqti sozlanmagan';
-    winEl.textContent='';
-    return;
-  }
-
-  const [sh,sm]=cfg.workStart.split(':').map(Number);
-  const [eh,em]=(cfg.workEnd||cfg.workStart).split(':').map(Number);
-  const startSec=sh*3600+sm*60;
-  const endSec=eh*3600+em*60;
-  const activeFrom=startSec-3600;   // 1 soat oldin sanash boshlaydi
-  const activeUntil=startSec+1800;  // 30 daqiqa keyin to'xtaydi
-
-  wrap.style.display='block';
-  winEl.textContent='Kelish oynasi\n'+cfg.workStart+' - '+(cfg.workEnd||cfg.workStart);
-
-  if(nowSec > activeUntil){
-    // 30 daqiqa o'tdi — widget yashiriladi
-    wrap.style.display='none'; return;
-  } else if(nowSec < activeFrom){
-    // Hali 1 soatdan ko'p vaqt bor — oddiy holat ko'rsatish
-    card.className='countdown-card phase-done';
-    lblEl.textContent='KELISH VAQTI';
-    timeEl.className='cd-time';
-    timeEl.textContent=cfg.workStart;
-    subEl.textContent='Rejalashtirilgan kelish';
-  } else if(nowSec < startSec){
-    // 1 soat qoldi — sanash boshladi
-    card.className='countdown-card phase-before';
-    lblEl.textContent='KELISH VAQTIGACHA';
-    timeEl.className='cd-time';
-    timeEl.textContent=fmt(startSec-nowSec);
-    subEl.textContent=cfg.workStart+' da boshlanadi';
-  } else if(nowSec <= endSec){
-    const diff=endSec-nowSec;
-    card.className='countdown-card phase-ok';
-    lblEl.textContent='KECH QOLISHGACHA';
-    timeEl.className='cd-time'+(diff<300?' cd-pulse':'');
-    timeEl.textContent=fmt(diff);
-    subEl.textContent=(cfg.workEnd||cfg.workStart)+" gacha o'z vaqtida";
-  } else {
-    // endSec dan keyin, lekin hali activeUntil ichida
-    card.className='countdown-card phase-late';
-    lblEl.textContent='KECHIKISH';
-    timeEl.className='cd-time cd-pulse';
-    timeEl.textContent='+'+fmt(nowSec-endSec);
-    subEl.textContent=(cfg.workEnd||cfg.workStart)+' dan keyin kelindi';
-  }
-}
-
 // ══════════════════════════════════════════════
 //  GPS
 // ══════════════════════════════════════════════
-let gpsAllowed=false, userLat=null, userLon=null;
+let gpsAllowed=false, userLat=null, userLon=null, gpsWatchId=null;
 
 function startGPS(){
   const bar=document.getElementById('gps-bar');
@@ -528,38 +599,35 @@ function startGPS(){
     txt.textContent='GPS sozlanmagan — hamma joyda ishlaydi';
     gpsAllowed=true; return;
   }
-
   if(!navigator.geolocation){
     bar.className='gps-bar fail';
     txt.textContent='GPS qo\'llab-quvvatlanmaydi!';
-    return;
+    gpsAllowed=false; return;
   }
 
-  navigator.geolocation.watchPosition(
+  gpsWatchId = navigator.geolocation.watchPosition(
     pos=>{
       userLat=pos.coords.latitude;
       userLon=pos.coords.longitude;
       const dist=haversine(userLat,userLon,parseFloat(cfg.lat),parseFloat(cfg.lon));
       const radius=parseFloat(cfg.radius||40);
       const acc=Math.round(pos.coords.accuracy);
-
-      if(dist<=radius){
+      if(dist<=radius+acc*0.5){ // accuracy buferi
         gpsAllowed=true;
         bar.className='gps-bar ok';
-        txt.textContent=`✓ Hudud ichida (${Math.round(dist)}m) · ±${acc}m`;
-        updateActionBtns();
+        txt.textContent='✓ Hudud ichida ('+Math.round(dist)+'m) · ±'+acc+'m';
       }else{
         gpsAllowed=false;
         bar.className='gps-bar fail';
-        txt.textContent=`✗ Hudud tashqarida — ${Math.round(dist)}m uzoq`;
-        updateActionBtns();
+        txt.textContent='✗ Hudud tashqarida — '+Math.round(dist)+'m uzoq';
       }
+      updateActionBtns();
     },
     err=>{
       bar.className='gps-bar fail';
-      txt.textContent='GPS ruxsati berilmadi!';
-      gpsAllowed=false;
-      updateActionBtns();
+      const msgs={1:'GPS ruxsati berilmadi!',2:'GPS signali yo\'q',3:'GPS vaqt tugadi'};
+      txt.textContent=msgs[err.code]||'GPS xatosi';
+      gpsAllowed=false; updateActionBtns();
     },
     {enableHighAccuracy:true, maximumAge:5000, timeout:15000}
   );
@@ -572,75 +640,94 @@ function haversine(lat1,lon1,lat2,lon2){
 }
 
 // ══════════════════════════════════════════════
+//  JSONBIN SYNC
+// ══════════════════════════════════════════════
+async function syncAttendanceToCloud(staffId, dateKey, rec){
+  const jb=getJBCfg();
+  if(!jb.key||!jb.binid) return;
+  try{
+    // Fetch current bin
+    const res=await fetch('https://api.jsonbin.io/v3/b/'+jb.binid+'/latest',{
+      headers:{'X-Master-Key':jb.key}
+    });
+    if(!res.ok) return;
+    const data=await res.json();
+    const current=data.record||{staff:[],records:{}};
+    // Update only this record
+    const recKey=staffId+'_'+dateKey;
+    current.records=current.records||{};
+    current.records[recKey]=rec;
+    current.updatedAt=new Date().toISOString();
+    await fetch('https://api.jsonbin.io/v3/b/'+jb.binid,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':jb.key},
+      body:JSON.stringify(current)
+    });
+  }catch(e){ /* offline — local ga saqlangan */ }
+}
+
+async function fetchStaffFromCloud(){
+  const jb=getJBCfg();
+  if(!jb.key||!jb.binid) return JSON.parse(localStorage.getItem('iiv_staff')||'[]');
+  try{
+    const res=await fetch('https://api.jsonbin.io/v3/b/'+jb.binid+'/latest',{
+      headers:{'X-Master-Key':jb.key}
+    });
+    if(!res.ok) throw new Error();
+    const data=await res.json();
+    if(data.record?.staff){
+      localStorage.setItem('iiv_staff',JSON.stringify(data.record.staff));
+      // Sync records too
+      if(data.record.records){
+        Object.entries(data.record.records).forEach(([k,v])=>{
+          localStorage.setItem('iiv_rec_'+k, JSON.stringify(v));
+        });
+      }
+      return data.record.staff;
+    }
+  }catch(e){}
+  return JSON.parse(localStorage.getItem('iiv_staff')||'[]');
+}
+
+// ══════════════════════════════════════════════
 //  PIN LOGIN
 // ══════════════════════════════════════════════
-let pinInput='';
-let currentUser=null;
-let pendingAction=null;
+let pinInput='', currentUser=null, pendingAction=null;
 
 function numPress(d){
   if(pinInput.length>=4) return;
+  // Button press animation
+  event.currentTarget.classList.add('pressed');
+  setTimeout(()=>event.currentTarget.classList.remove('pressed'),120);
   pinInput+=d;
   updatePinDots();
-  if(pinInput.length===4) setTimeout(checkPin,120);
+  if(pinInput.length===4) setTimeout(checkPin,150);
 }
-
 function numDel(){
   if(!pinInput.length) return;
   pinInput=pinInput.slice(0,-1);
-  updatePinDots();
-  clearLoginError();
+  updatePinDots(); clearLoginError();
 }
-
 function updatePinDots(state){
   for(let i=0;i<4;i++){
     const dot=document.getElementById('pd'+i);
     dot.className='pin-dot'+(i<pinInput.length?' filled':'')+(state==='error'?' error':'');
   }
 }
-
-function clearLoginError(){
-  document.getElementById('login-error').textContent='';
-}
+function clearLoginError(){ document.getElementById('login-error').textContent=''; }
 
 async function checkPin(){
-  const cfg=getCfg();
-  const serverUrl=(cfg.serverUrl||'').replace(/\/$/,'');
   const pin=pinInput;
   const deviceId=getDeviceId();
 
-  // Try server first
-  if(serverUrl){
-    try{
-      const res=await fetch(serverUrl+'/auth/login',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({pin, device_id:deviceId})
-      });
-      const data=await res.json();
-      if(data.ok){
-        if(data.device_blocked){
-          pinInput=''; updatePinDots();
-          showScreen('scr-locked'); return;
-        }
-        loginSuccess(data.staff);
-        return;
-      }else{
-        pinError(data.error||'PIN noto\'g\'ri!');
-        return;
-      }
-    }catch(e){
-      // Server yo'q — local fallback
-    }
-  }
-
-  // Local fallback — stafflar localStorage da
-  const localStaff=JSON.parse(localStorage.getItem('iiv_staff')||'[]');
-  const found=localStaff.find(s=>s.pin===pin);
+  // Staff ro'yxatini yukla (cloud yoki local)
+  const staffList = await fetchStaffFromCloud();
+  const found=staffList.find(s=>s.pin===pin);
+  
   if(!found){ pinError('PIN noto\'g\'ri!'); return; }
 
-  // Device check
-  const devKey='iiv_dev_'+pin;
+  // Qurilma tekshiruvi
+  const devKey='iiv_dev_'+found.id; // ID bo'yicha, PIN bo'yicha emas
   const savedDev=localStorage.getItem(devKey);
   if(savedDev && savedDev!==deviceId){
     pinInput=''; updatePinDots();
@@ -648,7 +735,10 @@ async function checkPin(){
   }
   if(!savedDev) localStorage.setItem(devKey, deviceId);
 
-  loginSuccess(found);
+  // PIN to'g'ri → selfie ekraniga o't
+  currentUser=found;
+  pinInput=''; updatePinDots(); clearLoginError();
+  openBiometricScreen();
 }
 
 function pinError(msg){
@@ -657,10 +747,245 @@ function pinError(msg){
   setTimeout(()=>{ pinInput=''; updatePinDots(); clearLoginError(); },900);
 }
 
-function loginSuccess(staff){
-  currentUser=staff;
+// ══════════════════════════════════════════════
+//  WEBAUTHN — BARMOQ IZI / FACE ID
+// ══════════════════════════════════════════════
+
+// WebAuthn ishlayaptimi tekshirish
+function isWebAuthnSupported(){
+  return !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create);
+}
+
+// Har bir xodimga unikal credentialId saqlash (staffId bo'yicha)
+function getSavedCredentialId(staffId){
+  return localStorage.getItem('iiv_wacid_'+staffId);
+}
+function saveCredentialId(staffId, credId){
+  localStorage.setItem('iiv_wacid_'+staffId, credId);
+}
+
+// base64url yordamchi funksiyalar
+function b64urlToBuffer(b64url){
+  const b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
+  const bin = atob(b64);
+  return Uint8Array.from(bin, c=>c.charCodeAt(0)).buffer;
+}
+function bufferToB64url(buf){
+  const arr = new Uint8Array(buf);
+  let bin = '';
+  arr.forEach(b=>bin+=String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+// Animatsiya
+function animateFP(success){
+  const lines = document.querySelectorAll('.fp-line');
+  lines.forEach((l,i)=>{
+    setTimeout(()=>{
+      l.style.transition='opacity 0.3s';
+      l.style.opacity='1';
+      l.style.stroke = success ? 'var(--green)' : 'var(--red)';
+    }, i*80);
+  });
+}
+function resetFP(){
+  const fpSvg = document.getElementById('fp-svg');
+  if(fpSvg) fpSvg.classList.remove('fp-scanning');
+  document.querySelectorAll('.fp-line').forEach(l=>{
+    l.style.transition='none';
+    l.style.opacity='0';
+    l.style.stroke='var(--accent)';
+  });
+}
+
+// Biometrik ekranni ochish
+async function openBiometricScreen(){
+  const rec = JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
+  // Bugun ikkisi ham belgilangan — to'g'ri dashboard ga
+  if(rec.kelish && rec.ketish){ loginSuccess(); return; }
+
+  document.getElementById('bio-who').textContent =
+    currentUser.name.split(' ')[0] + ', barmoq izingiz bilan tasdiqlang';
+
+  showScreen('scr-biometric');
+  resetFP();
+
+  const bioBtn   = document.getElementById('btn-bio');
+  const bioStat  = document.getElementById('bio-status');
+  const bioHint  = document.getElementById('bio-hint');
+
+  if(!isWebAuthnSupported()){
+    bioStat.className='selfie-status err';
+    bioStat.textContent='✗ Qurilmangiz biometriyani qo'llab-quvvatlamaydi';
+    bioBtn.textContent='DAVOM ETISH (biometriksiz)';
+    bioBtn.disabled=false;
+    bioBtn.onclick=()=>loginSuccess();
+    bioHint.textContent='Eski brauzer yoki qurilma. Admin bilan bog'laning.';
+    return;
+  }
+
+  // Saqlangan credential bor yoki yo'q?
+  const savedCid = getSavedCredentialId(currentUser.id);
+
+  if(!savedCid){
+    // Birinchi marta — ro'yxatdan o'tkazish rejimi
+    bioStat.className='selfie-status info';
+    bioStat.textContent='Birinchi kirish — barmoq izini ro'yxatga olish';
+    bioBtn.textContent='👆 BARMOQ IZI QO'SHISH';
+    bioBtn.disabled=false;
+    bioHint.textContent='Bu qurilma sizning telefoningiz sifatida biriktiriladi.
+Boshqa telefondan kirish mumkin bo'lmaydi.';
+  } else {
+    // Keyingi kirishlar — tekshirish rejimi
+    bioStat.className='selfie-status info';
+    bioStat.textContent='Barmoq izingizni skanerlang';
+    bioBtn.textContent='👆 BARMOQ IZI BILAN KIRISH';
+    bioBtn.disabled=false;
+    bioHint.textContent='Faqat bu qurilmadan kirish mumkin.';
+  }
+}
+
+async function startBiometric(){
+  const bioBtn  = document.getElementById('btn-bio');
+  const bioStat = document.getElementById('bio-status');
+  bioBtn.disabled = true;
+  resetFP();
+  // Scan animatsiyasi
+  const fpSvg = document.getElementById('fp-svg');
+  if(fpSvg) fpSvg.classList.add('fp-scanning');
+
+  const savedCid = getSavedCredentialId(currentUser.id);
+
+  if(!savedCid){
+    await registerBiometric(bioBtn, bioStat);
+  } else {
+    await verifyBiometric(bioBtn, bioStat, savedCid);
+  }
+}
+
+// Birinchi marta — credential yaratish (ro'yxatga olish)
+async function registerBiometric(bioBtn, bioStat){
+  bioStat.className='selfie-status info';
+  bioStat.textContent='⏳ Barmoq izini skanerlamoqda...';
+
+  // Challenge — random bytes (real app da serverdan keladi)
+  const challenge = crypto.getRandomValues(new Uint8Array(32));
+
+  // Foydalanuvchi ID — staffId dan hash
+  const encoder = new TextEncoder();
+  const userIdBuf = encoder.encode(currentUser.id).buffer;
+
+  const pubKeyOptions = {
+    challenge: challenge.buffer,
+    rp: {
+      name: 'IIV Surxondaryo Litsey',
+      id: location.hostname || 'localhost'
+    },
+    user: {
+      id: userIdBuf,
+      name: currentUser.pin,
+      displayName: currentUser.name
+    },
+    pubKeyCredParams: [
+      { alg: -7,  type: 'public-key' }, // ES256
+      { alg: -257, type: 'public-key'} // RS256
+    ],
+    authenticatorSelection: {
+      authenticatorAttachment: 'platform',   // faqat qurilma ichidagi (barmoq izi / Face ID)
+      userVerification: 'required',           // biometrika majburiy
+      requireResidentKey: false
+    },
+    timeout: 60000,
+    attestation: 'none'
+  };
+
+  try{
+    const cred = await navigator.credentials.create({ publicKey: pubKeyOptions });
+    const credId = bufferToB64url(cred.rawId);
+
+    // Credential ID ni saqlash
+    saveCredentialId(currentUser.id, credId);
+    // Qurilma ID ni ham saqlash
+    localStorage.setItem('iiv_dev_'+currentUser.id, getDeviceId());
+
+    animateFP(true);
+    bioStat.className='selfie-status ok';
+    bioStat.textContent='✓ Barmoq izi muvaffaqiyatli ro'yxatga olindi!';
+    setTimeout(()=>loginSuccess(), 800);
+
+  } catch(e){
+    animateFP(false);
+    bioStat.className='selfie-status err';
+    bioBtn.disabled=false;
+
+    if(e.name==='NotAllowedError'){
+      bioStat.textContent='✗ Bekor qilindi yoki vaqt tugadi';
+    } else if(e.name==='InvalidStateError'){
+      bioStat.textContent='✗ Bu qurilmada allaqachon ro'yxatga olingan';
+    } else {
+      bioStat.textContent='✗ Xato: ' + e.message;
+    }
+    bioBtn.disabled=false;
+  }
+}
+
+// Keyingi kirishlar — credential tekshirish
+async function verifyBiometric(bioBtn, bioStat, savedCid){
+  bioStat.className='selfie-status info';
+  bioStat.textContent='⏳ Barmoq izini skanerlamoqda...';
+
+  const challenge = crypto.getRandomValues(new Uint8Array(32));
+
+  const assertionOptions = {
+    challenge: challenge.buffer,
+    allowCredentials: [{
+      id: b64urlToBuffer(savedCid),
+      type: 'public-key',
+      transports: ['internal']
+    }],
+    userVerification: 'required',
+    timeout: 60000
+  };
+
+  try{
+    const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
+
+    // Credential ID mos kelishini tekshirish
+    const returnedId = bufferToB64url(assertion.rawId);
+    if(returnedId !== savedCid){
+      throw new Error('credential_mismatch');
+    }
+
+    animateFP(true);
+    bioStat.className='selfie-status ok';
+    bioStat.textContent='✓ Tasdiqlanodi!';
+    setTimeout(()=>loginSuccess(), 600);
+
+  } catch(e){
+    animateFP(false);
+    bioStat.className='selfie-status err';
+
+    if(e.name==='NotAllowedError'){
+      bioStat.textContent='✗ Barmoq izi mos kelmadi yoki bekor qilindi';
+    } else if(e.message==='credential_mismatch'){
+      // Boshqa qurilma — bloklash
+      pinInput=''; updatePinDots();
+      showScreen('scr-locked'); return;
+    } else {
+      bioStat.textContent='✗ Xato: '+e.message;
+    }
+    bioBtn.disabled=false;
+    setTimeout(()=>{ bioBtn.disabled=false; resetFP(); }, 1500);
+  }
+}
+
+function cancelBiometric(){
+  currentUser=null;
   pinInput=''; updatePinDots();
-  clearLoginError();
+  showScreen('scr-login');
+}
+
+function loginSuccess(){
   loadDashboard();
   showScreen('scr-dash');
 }
@@ -670,15 +995,75 @@ function loginSuccess(staff){
 // ══════════════════════════════════════════════
 function loadDashboard(){
   if(!currentUser) return;
-  const name=currentUser.name||'Noma\'lum';
-  document.getElementById('u-avatar').textContent=(name[0]||'?').toUpperCase();
-  document.getElementById('u-name').textContent=name;
-  document.getElementById('u-pos').textContent=currentUser.position||'—';
-
+  const name=escHtml(currentUser.name||'Noma\'lum');
+  
+  // Avatar: selfie bo'lsa ko'rsat
+  const avatarEl=document.getElementById('u-avatar');
+  const todayRec=JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
+  if(todayRec.kelishPhoto){
+    avatarEl.innerHTML=`<img src="${todayRec.kelishPhoto}" alt="foto">`;
+  } else {
+    avatarEl.textContent=(currentUser.name||'?')[0].toUpperCase();
+    avatarEl.style.fontSize='22px';
+  }
+  
+  document.getElementById('u-name').textContent=currentUser.name||'—';
+  document.getElementById('u-pos').textContent=escHtml(currentUser.position||'—');
+  
   loadTodayRecord();
   updateActionBtns();
   updateTimeLbls();
-  updateTimePill(new Date());
+  updateCountdown(new Date());
+}
+
+function loadTodayRecord(){
+  if(!currentUser) return;
+  const rec=JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
+
+  // Kelish
+  if(rec.kelish){
+    document.getElementById('log-kelish').innerHTML='<span class="log-val ok">'+escHtml(rec.kelish)+'</span>';
+    // no photo log
+  } else {
+    document.getElementById('log-kelish').innerHTML='<span class="log-val none">—</span>';
+    document.getElementById('log-kelish-photo').style.display='none';
+  }
+
+  // Ketish
+  if(rec.ketish){
+    document.getElementById('log-ketish').innerHTML='<span class="log-val ok">'+escHtml(rec.ketish)+'</span>';
+    // no photo log
+  } else {
+    document.getElementById('log-ketish').innerHTML='<span class="log-val none">—</span>';
+    document.getElementById('log-ketish-photo').style.display='none';
+  }
+
+  setLogStatus('log-kelish-status', rec.kelishStatus||null);
+  setLogStatus('log-ketish-status', rec.ketishStatus||null);
+
+  const stat=document.getElementById('u-status');
+  const photoBadge=document.getElementById('photo-badge');
+  
+  if(rec.ketish){
+    stat.innerHTML='<div class="sdot sdot-g"></div><span style="font-family:var(--mono);font-size:10px;color:var(--green)">Ishdan chiqdi</span>';
+    photoBadge.style.display='none';
+  }else if(rec.kelish){
+    stat.innerHTML='<div class="sdot sdot-g"></div><span style="font-family:var(--mono);font-size:10px;color:var(--green)">Ishda</span>';
+    photoBadge.style.display='none';
+  }else{
+    stat.innerHTML='<div class="sdot sdot-a"></div><span style="font-family:var(--mono);font-size:10px;color:var(--text2)">Hali kelmagan</span>';
+    photoBadge.style.display='none';
+  }
+}
+
+function setLogStatus(id, status){
+  const el=document.getElementById(id);
+  if(!status){ el.innerHTML='<span class="log-val none">Belgilanmagan</span>'; return; }
+  if(status==='Kech'||status==='Erta ketdi'){
+    el.innerHTML='<span class="log-val late">'+escHtml(status)+'</span>';
+  }else{
+    el.innerHTML='<span class="log-val ok">'+escHtml(status)+'</span>';
+  }
 }
 
 function updateTimeLbls(){
@@ -687,92 +1072,142 @@ function updateTimeLbls(){
   document.getElementById('ketish-time-lbl').textContent=cfg.leaveStart?(cfg.leaveStart+(cfg.leaveEnd?'–'+cfg.leaveEnd:'')):'';
 }
 
-function loadTodayRecord(){
-  if(!currentUser) return;
-  const today=todayKey();
-  const key='iiv_rec_'+currentUser.id+'_'+today;
-  const rec=JSON.parse(localStorage.getItem(key)||'{}');
-
-  setLogVal('log-kelish', rec.kelish||null, null);
-  setLogVal('log-ketish', rec.ketish||null, null);
-  setLogStatus('log-kelish-status', rec.kelishStatus||null);
-  setLogStatus('log-ketish-status', rec.ketishStatus||null);
-
-  const stat=document.getElementById('u-status');
-  if(rec.ketish){
-    stat.innerHTML='<div class="sdot sdot-g"></div><span style="font-family:var(--mono);font-size:10px;color:var(--green)">Ishdan chiqdi</span>';
-  }else if(rec.kelish){
-    stat.innerHTML='<div class="sdot sdot-g"></div><span style="font-family:var(--mono);font-size:10px;color:var(--green)">Ishda</span>';
-  }else{
-    stat.innerHTML='<div class="sdot sdot-a"></div><span style="font-family:var(--mono);font-size:10px;color:var(--text2)">Hali kelmagan</span>';
-  }
-
-  updateActionBtns();
-}
-
-function setLogVal(id, val, extra){
-  const el=document.getElementById(id);
-  if(val) el.innerHTML='<span class="log-val ok">'+val+'</span>';
-  else el.innerHTML='<span class="log-val none">—</span>';
-}
-
-function setLogStatus(id, status){
-  const el=document.getElementById(id);
-  if(!status){ el.innerHTML='<span class="log-val none">Belgilanmagan</span>'; return; }
-  if(status==='Kech'||status==='Erta ketdi'){
-    el.innerHTML='<span class="log-val late">'+status+'</span>';
-  }else{
-    el.innerHTML='<span class="log-val ok">'+status+'</span>';
-  }
-}
-
 function updateActionBtns(){
-  if(!currentUser){ return; }
-  const today=todayKey();
-  const key='iiv_rec_'+currentUser.id+'_'+today;
-  const rec=JSON.parse(localStorage.getItem(key)||'{}');
-
+  if(!currentUser) return;
+  const rec=JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
   const bK=document.getElementById('btn-kelish');
   const bT=document.getElementById('btn-ketish');
-
-  // GPS check
   const cfg=getCfg();
-  const gpsNeeded=!!(cfg.lat && cfg.lon);
-
-  if(gpsNeeded && !gpsAllowed){
-    bK.disabled=true; bT.disabled=true; return;
-  }
+  const gpsNeeded=!!(cfg.lat&&cfg.lon);
+  
+  if(gpsNeeded&&!gpsAllowed){ bK.disabled=true; bT.disabled=true; return; }
 
   const now=new Date();
-  const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+  const nowMin=now.getHours()*60+now.getMinutes();
 
-  // KELDIM tugmasi: allaqachon bosilgan → disabled
+  // KELISH tugmasi
   if(rec.kelish){
     bK.disabled=true;
   } else if(cfg.workStart){
-    // workStart ±30 daqiqa oynasida faol
+    // FIX: workStart dan workEnd gacha + 60 daqiqa tolerance
     const [sh,sm]=cfg.workStart.split(':').map(Number);
-    const startSec=sh*3600+sm*60;
-    const winFrom=startSec-1800;
-    const winUntil=startSec+1800;
-    bK.disabled=!(nowSec>=winFrom && nowSec<=winUntil);
-  } else {
-    bK.disabled=false; // config yo'q — har doim faol
-  }
+    const [eh,em]=(cfg.workEnd||cfg.workStart).split(':').map(Number);
+    const startMin=sh*60+sm;
+    const endMin=eh*60+em;
+    const winFrom=startMin-30;      // 30 daqiqa oldin faol
+    const winUntil=endMin+60;       // FIX: kech kelganlar uchun +60 daqiqa
+    bK.disabled=!(nowMin>=winFrom&&nowMin<=winUntil);
+  } else { bK.disabled=false; }
 
-  // KETDIM tugmasi: kelish bo'lmasa yoki allaqachon ketgan → disabled
-  if(!rec.kelish || rec.ketish){
+  // KETISH tugmasi
+  if(!rec.kelish||rec.ketish){
     bT.disabled=true;
   } else if(cfg.leaveStart){
-    // leaveStart ±30 daqiqa oynasida faol
     const [lh,lm]=cfg.leaveStart.split(':').map(Number);
-    const leaveSec=lh*3600+lm*60;
-    const winFrom=leaveSec-1800;
-    const winUntil=leaveSec+1800;
-    bT.disabled=!(nowSec>=winFrom && nowSec<=winUntil);
-  } else {
-    bT.disabled=false; // config yo'q — har doim faol
+    const [leh,lem]=(cfg.leaveEnd||cfg.leaveStart).split(':').map(Number);
+    const leaveMin=lh*60+lm;
+    const leaveEndMin=leh*60+lem;
+    const winFrom=leaveMin-30;
+    const winUntil=leaveEndMin+60;
+    bT.disabled=!(nowMin>=winFrom&&nowMin<=winUntil);
+  } else { bT.disabled=false; }
+}
+
+// ══════════════════════════════════════════════
+//  COUNTDOWN WIDGET
+// ══════════════════════════════════════════════
+function updateCountdown(now){
+  if(!currentUser){ document.getElementById('countdown-wrap').style.display='none'; return; }
+  const rec=JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
+  const cfg=getCfg();
+  const wrap=document.getElementById('countdown-wrap');
+  const card=document.getElementById('countdown-card');
+  const lblEl=document.getElementById('cd-label');
+  const timeEl=document.getElementById('cd-time');
+  const subEl=document.getElementById('cd-sub');
+  const winEl=document.getElementById('cd-window');
+
+  function fmt(sec){
+    const s=Math.abs(Math.round(sec));
+    const hh=Math.floor(s/3600),mm=Math.floor((s%3600)/60),ss=s%60;
+    if(hh>0) return pad(hh)+':'+pad(mm)+':'+pad(ss);
+    return pad(mm)+':'+pad(ss);
   }
+  const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+
+  // Ikkalasi ham tugagan — yashir
+  if(rec.kelish&&rec.ketish){ wrap.style.display='none'; return; }
+
+  // KETISH rejimi
+  if(rec.kelish&&!rec.ketish){
+    wrap.style.display='block';
+    if(!cfg.leaveStart){
+      card.className='countdown-card phase-done';
+      lblEl.textContent='KETISH VAQTI'; timeEl.textContent=pad(now.getHours())+':'+pad(now.getMinutes());
+      subEl.textContent='Ish vaqti sozlanmagan'; winEl.textContent=''; return;
+    }
+    const [lsh,lsm]=cfg.leaveStart.split(':').map(Number);
+    const [leh,lem]=(cfg.leaveEnd||cfg.leaveStart).split(':').map(Number);
+    const leaveStartSec=lsh*3600+lsm*60, leaveEndSec=leh*3600+lem*60;
+    const activeFrom=leaveStartSec-3600, activeUntil=leaveEndSec+3600;
+    winEl.textContent='Ketish oynasi\n'+cfg.leaveStart+' – '+(cfg.leaveEnd||cfg.leaveStart);
+    if(nowSec<activeFrom){
+      card.className='countdown-card phase-done';
+      lblEl.textContent='REJALASHTIRILGAN KETISH'; timeEl.textContent=cfg.leaveStart;
+      subEl.textContent='Ketish vaqti';
+    } else if(nowSec<leaveStartSec){
+      card.className='countdown-card phase-before';
+      lblEl.textContent='KETISH VAQTIGACHA'; timeEl.textContent=fmt(leaveStartSec-nowSec);
+      subEl.textContent=cfg.leaveStart+' da boshlanadi';
+    } else if(nowSec<=leaveEndSec){
+      const diff=leaveEndSec-nowSec;
+      card.className='countdown-card phase-ok';
+      lblEl.textContent='KETISH OYNASI';
+      timeEl.className='cd-time'+(diff<300?' cd-pulse':'');
+      timeEl.textContent=fmt(diff); subEl.textContent=(cfg.leaveEnd||cfg.leaveStart)+' gacha keting';
+    } else if(nowSec<=activeUntil){
+      card.className='countdown-card phase-late';
+      lblEl.textContent="VAQT O'TDI";
+      timeEl.className='cd-time cd-pulse';
+      timeEl.textContent='+'+fmt(nowSec-leaveEndSec);
+      subEl.textContent='Iltimos darhol keting';
+    } else { wrap.style.display='none'; }
+    return;
+  }
+
+  // KELISH rejimi
+  wrap.style.display='block';
+  if(!cfg.workStart){
+    card.className='countdown-card phase-done';
+    lblEl.textContent='KELISH VAQTI'; timeEl.textContent=pad(now.getHours())+':'+pad(now.getMinutes());
+    subEl.textContent='Ish vaqti sozlanmagan'; winEl.textContent=''; return;
+  }
+  const [sh,sm]=cfg.workStart.split(':').map(Number);
+  const [eh,em]=(cfg.workEnd||cfg.workStart).split(':').map(Number);
+  const startSec=sh*3600+sm*60, endSec=eh*3600+em*60;
+  const activeFrom=startSec-3600, activeUntil=endSec+3600;
+  winEl.textContent='Kelish oynasi\n'+cfg.workStart+' – '+(cfg.workEnd||cfg.workStart);
+  if(nowSec<activeFrom){
+    card.className='countdown-card phase-done';
+    lblEl.textContent='KELISH VAQTI'; timeEl.textContent=cfg.workStart;
+    subEl.textContent='Rejalashtirilgan kelish';
+  } else if(nowSec<startSec){
+    card.className='countdown-card phase-before';
+    lblEl.textContent='KELISH VAQTIGACHA'; timeEl.textContent=fmt(startSec-nowSec);
+    subEl.textContent=cfg.workStart+' da boshlanadi';
+  } else if(nowSec<=endSec){
+    const diff=endSec-nowSec;
+    card.className='countdown-card phase-ok';
+    lblEl.textContent='KECH QOLISHGACHA';
+    timeEl.className='cd-time'+(diff<300?' cd-pulse':'');
+    timeEl.textContent=fmt(diff); subEl.textContent=(cfg.workEnd||cfg.workStart)+" gacha o'z vaqtida";
+  } else if(nowSec<=activeUntil){
+    card.className='countdown-card phase-late';
+    lblEl.textContent='KECHIKISH';
+    timeEl.className='cd-time cd-pulse';
+    timeEl.textContent='+'+fmt(nowSec-endSec);
+    subEl.textContent='Iltimos tezroq keling!';
+  } else { wrap.style.display='none'; }
 }
 
 // ══════════════════════════════════════════════
@@ -786,48 +1221,51 @@ function doAction(type){
   const cfg=getCfg();
   const timeStr=pad(now.getHours())+':'+pad(now.getMinutes());
   let status='';
-
   if(type==='kelish'){
-    status=computeKelishStatus(now, cfg);
-    const emoji=status==='O\'z vaqtida'?'✓':'⚠';
-    pendingAction={type, timeStr, status};
+    status=computeKelishStatus(now,cfg);
+    const emoji=status==="O'z vaqtida"?'✓':'⚠';
+    pendingAction={type,timeStr,status};
     showConfirm('KELISH TASDIQLASH',
-      `${currentUser.name.split(' ')[0]}, kelish vaqti:\n${timeStr}\n${emoji} ${status}`,
-      'kelish');
-  }else{
-    status=computeKetishStatus(now, cfg);
-    const emoji=status==='O\'z vaqtida ketdi'?'✓':'⚠';
-    pendingAction={type, timeStr, status};
+      currentUser.name.split(' ')[0]+', kelish vaqti:\n'+timeStr+'\n'+emoji+' '+status,'kelish');
+  } else {
+    status=computeKetishStatus(now,cfg);
+    const emoji=status==="O'z vaqtida ketdi"?'✓':'⚠';
+    pendingAction={type,timeStr,status};
     showConfirm('KETISH TASDIQLASH',
-      `${currentUser.name.split(' ')[0]}, ketish vaqti:\n${timeStr}\n${emoji} ${status}`,
-      'ketish');
+      currentUser.name.split(' ')[0]+', ketish vaqti:\n'+timeStr+'\n'+emoji+' '+status,'ketish');
   }
 }
 
-function computeKelishStatus(now, cfg){
+// FIX: startMin ham tekshiriladi
+function computeKelishStatus(now,cfg){
   if(!cfg.workStart) return 'Belgilanmagan';
   const [sh,sm]=cfg.workStart.split(':').map(Number);
   const [eh,em]=(cfg.workEnd||cfg.workStart).split(':').map(Number);
   const nowMin=now.getHours()*60+now.getMinutes();
-  const startMin=sh*60+sm;
-  const endMin=eh*60+em;
-  if(nowMin<=endMin) return 'O\'z vaqtida';
+  const startMin=sh*60+sm, endMin=eh*60+em;
+  if(nowMin>=startMin && nowMin<=endMin) return "O'z vaqtida";
+  if(nowMin<startMin) return 'Erta keldi';
   return 'Kech';
 }
 
-function computeKetishStatus(now, cfg){
+function computeKetishStatus(now,cfg){
   if(!cfg.leaveStart) return 'Belgilanmagan';
   const [sh,sm]=cfg.leaveStart.split(':').map(Number);
   const [eh,em]=(cfg.leaveEnd||cfg.leaveStart).split(':').map(Number);
   const nowMin=now.getHours()*60+now.getMinutes();
-  const startMin=sh*60+sm;
+  const startMin=sh*60+sm, endMin=eh*60+em;
+  if(nowMin>=startMin && nowMin<=endMin) return "O'z vaqtida ketdi";
   if(nowMin<startMin) return 'Erta ketdi';
-  return 'O\'z vaqtida ketdi';
+  return 'Kech ketdi';
 }
 
-function showConfirm(title, msg, actionType){
+function showConfirm(title,msg,actionType){
   document.getElementById('cfm-title').textContent=title;
   document.getElementById('cfm-msg').textContent=msg;
+  const gpsEl=document.getElementById('cfm-gps');
+  if(userLat){
+    gpsEl.textContent='📍 GPS: '+userLat.toFixed(5)+', '+userLon.toFixed(5);
+  } else { gpsEl.textContent=''; }
   const yesBtn=document.getElementById('cfm-yes');
   yesBtn.className='cfm-btn '+(actionType==='kelish'?'cfm-yes-kelish':'cfm-yes-ketish');
   document.getElementById('overlay-bg').classList.add('active');
@@ -840,7 +1278,7 @@ function closeConfirm(){
 async function confirmAction(){
   closeConfirm();
   if(!pendingAction||!currentUser) return;
-  const {type, timeStr, status}=pendingAction;
+  const {type,timeStr,status}=pendingAction;
   pendingAction=null;
 
   const today=todayKey();
@@ -849,60 +1287,63 @@ async function confirmAction(){
 
   if(type==='kelish'){
     rec.kelish=timeStr; rec.kelishStatus=status;
-  }else{
+    // no photo
+    if(userLat){ rec.kelishLat=userLat; rec.kelishLon=userLon; }
+    rec.kelishDevice=getDeviceId();
+    rec.kelishAt=new Date().toISOString();
+  } else {
     rec.ketish=timeStr; rec.ketishStatus=status;
+    // no photo
+    if(userLat){ rec.ketishLat=userLat; rec.ketishLon=userLon; }
+    rec.ketishDevice=getDeviceId();
+    rec.ketishAt=new Date().toISOString();
   }
   localStorage.setItem(key, JSON.stringify(rec));
 
-  // Server sync
-  const cfg=getCfg();
-  const serverUrl=(cfg.serverUrl||'').replace(/\/$/,'');
-  if(serverUrl){
-    try{
-      await fetch(serverUrl+'/attendance/mark',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          staff_id:currentUser.id,
-          date:today,
-          type, time:timeStr, status,
-          lat:userLat, lon:userLon
-        })
-      });
-    }catch(e){ /* offline — already saved locally */ }
-  }
+  // Cloud sync
+  await syncAttendanceToCloud(currentUser.id, today, rec);
 
-  const emoji=type==='kelish'?'→':'←';
+
   const label=type==='kelish'?'Kelish':'Ketish';
-  toast(emoji+' '+label+' belgilandi: '+timeStr);
+  toast('✓ '+label+' belgilandi: '+timeStr);
   loadDashboard();
 }
 
 // ══════════════════════════════════════════════
-//  HELPERS
+//  PHOTO VIEWER
 // ══════════════════════════════════════════════
-function todayKey(){
-  const d=new Date();
-  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-}
-function pad(n){return String(n).padStart(2,'0');}
+function showPhotoModal(type){
+  if(!currentUser) return;
+  const rec=JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
+  const photo=type==='kelish'?rec.kelishPhoto:rec.ketishPhoto;
+  if(!photo){ toast('Rasm topilmadi',true); return; }
+  const time=type==='kelish'?rec.kelish:rec.ketish;
+  const status=type==='kelish'?rec.kelishStatus:rec.ketishStatus;
+  const lat=type==='kelish'?rec.kelishLat:rec.ketishLat;
+  const lon=type==='kelish'?rec.kelishLon:rec.ketishLon;
 
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  document.getElementById('pm-title').textContent=type==='kelish'?'KELISH RASMI':'KETISH RASMI';
+  document.getElementById('pm-img').src=photo;
+  let info=currentUser.name+'\n';
+  info+='Vaqt: '+time+' — '+status+'\n';
+  if(lat) info+='GPS: '+lat.toFixed(5)+', '+lon.toFixed(5)+'\n';
+  info+='Sana: '+todayKey();
+  document.getElementById('pm-info').textContent=info;
+  document.getElementById('photo-modal-bg').classList.add('active');
+}
+function closePhotoModal(){
+  document.getElementById('photo-modal-bg').classList.remove('active');
 }
 
+// ══════════════════════════════════════════════
+//  LOGOUT
+// ══════════════════════════════════════════════
 function doLogout(){
+  capturedSelfie=null;
   currentUser=null;
+  SESSION_DATE=null; // keyingi kirish yangi sanani oladi
   pinInput=''; updatePinDots(); clearLoginError();
   showScreen('scr-login');
-}
-
-function toast(msg, err, warn){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className='toast show'+(err?' err':warn?' warn':'');
-  setTimeout(()=>t.className='toast',3000);
 }
 
 // ══════════════════════════════════════════════
