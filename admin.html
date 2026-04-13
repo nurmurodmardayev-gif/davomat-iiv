@@ -362,6 +362,7 @@ body{
 .badge-ok{background:#00e67618;color:var(--green);border:1px solid #00e67630}
 .badge-late{background:#ff3d5718;color:var(--red);border:1px solid #ff3d5730}
 .badge-neutral{background:#00d4ff15;color:var(--accent);border:1px solid #00d4ff30}
+.btn-secondary2{background:var(--surf2);color:var(--text3);border:1px solid var(--border)}
 
 /* ─── TELEGRAM SECTION ─────────────────────────── */
 .tg-card{
@@ -767,8 +768,10 @@ input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;box-shadow:0 0 0 
         oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)" min="1000" max="9999">
     </div>
     <div class="info-box" style="margin-top:8px">
-      PIN o'zgartirilganda xodimning qurilma bog'lanishi sifirlanadi.<br>
-      Xodim yangi qurilmasidan birinchi kirishda yangi qurilma bog'lanadi.
+      PIN o'zgartirilganda:<br>
+      ① Xodimning <strong>qurilma bog'lanishi</strong> sifirlanadi<br>
+      ② <strong>Barmoq izi</strong> ro'yxatdan o'chirish ham sifirlanadi<br>
+      Xodim yangi telefonidan birinchi kirishda qayta ro'yxatdan o'tadi.
     </div>
     <button class="btn btn-primary" onclick="savePinEdit()">✓ SAQLASH</button>
   </div>
@@ -904,6 +907,8 @@ async function syncToCloud(){
   const cfg = getJBCfg();
   if(!cfg.key || !cfg.binid){ toast('Avval JSONBin sozlamalarini kiriting!', true); return; }
   
+  // MUHIM: iiv_dev_ va iiv_wacid_ kalitlari FAQAT lokal qurilmada qoladi
+  // Ular cloud ga yuborilmaydi — xavfsizlik talabi
   const payload = {
     staff: getStaff(),
     records: getAllRecords(),
@@ -950,6 +955,8 @@ async function fetchFromCloud(){
     if(rec.staff) saveStaff(rec.staff);
     if(rec.records){
       Object.entries(rec.records).forEach(([k,v])=>{
+        // Xavfsizlik: qurilma kalitlari cloud dan kelsa ham yozmaymiz
+        if(k.startsWith('dev_') || k.startsWith('wacid_')) return;
         localStorage.setItem('iiv_rec_'+k, JSON.stringify(v));
       });
     }
@@ -1025,6 +1032,7 @@ async function loadStaff(){
         if(data.record.staff) saveStaff(data.record.staff);
         if(data.record.records){
           Object.entries(data.record.records).forEach(([k,v])=>{
+            if(k.startsWith('dev_') || k.startsWith('wacid_')) return;
             localStorage.setItem('iiv_rec_'+k, JSON.stringify(v));
           });
         }
@@ -1090,6 +1098,11 @@ function renderStaffList(staff){
       </div>
       <div class="s-actions">
         <button class="btn-sm btn-blue" onclick="openPinModal('${s.id}','${escHtml(s.name)}')">PIN</button>
+        <button class="btn-sm ${localStorage.getItem('iiv_wacid_'+s.id)?'btn-amber':'btn-secondary2'}" 
+          onclick="resetBiometric('${s.id}','${escHtml(s.name)}')" 
+          title="${localStorage.getItem('iiv_wacid_'+s.id)?'Barmoq izi biriktirilgan — reset qilish':'Barmoq izi biriktirilmagan'}">
+          ${localStorage.getItem('iiv_wacid_'+s.id)?'👆':'—'}
+        </button>
         <button class="btn-sm btn-red" onclick="deleteStaff('${s.id}','${escHtml(s.name)}')">O'chir</button>
       </div>
     </div>`;
@@ -1174,11 +1187,29 @@ async function addStaff(){
 }
 
 // ══════════════════════════════════════════════
+//  BIOMETRIC RESET (admin tomonidan)
+// ══════════════════════════════════════════════
+async function resetBiometric(id, name){
+  const hasCred = !!localStorage.getItem('iiv_wacid_'+id);
+  if(!hasCred){
+    toast(name+' — barmoq izi hali biriktirilmagan', false, true); return;
+  }
+  if(!confirm(name+' ning barmoq izi bog\'lanishini o\'chirasizmi?\n\nXodim keyingi kirishda qayta ro\'yxatdan o\'tadi.')) return;
+  localStorage.removeItem('iiv_wacid_'+id);
+  localStorage.removeItem('iiv_dev_'+id);
+  toast('✓ '+name+' barmoq izi sifirlandi');
+  loadStaff();
+}
+
+// ══════════════════════════════════════════════
 //  DELETE
 // ══════════════════════════════════════════════
 async function deleteStaff(id, name){
   if(!confirm(name+' ni o\'chirmoqchimisiz?')) return;
   const arr=getStaff().filter(s=>s.id!==id);
+  // WebAuthn credential va qurilma bog'lanishini ham o'chirish
+  localStorage.removeItem('iiv_dev_'+id);
+  localStorage.removeItem('iiv_wacid_'+id);
   saveStaff(arr);
   
   const cfg = getJBCfg();
@@ -1220,7 +1251,9 @@ async function savePinEdit(){
   const s=arr.find(s=>s.id===editingStaffId);
   if(!s){ toast('Xodim topilmadi!',true); return; }
   s.pin=pin;
-  localStorage.removeItem('iiv_dev_'+pin);
+  // WebAuthn + qurilma bog'lanishini reset qilish (staffId bo'yicha, eski PIN bo'yicha emas)
+  localStorage.removeItem('iiv_dev_'+editingStaffId);
+  localStorage.removeItem('iiv_wacid_'+editingStaffId);
   saveStaff(arr);
   
   const cfg = getJBCfg();
