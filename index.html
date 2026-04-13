@@ -349,17 +349,17 @@ body{
       <div class="pin-dot" id="pd3"></div>
     </div>
     <div class="numpad" id="numpad">
-      <div class="num-btn" onclick="numPress('1')">1</div>
-      <div class="num-btn" onclick="numPress('2')">2</div>
-      <div class="num-btn" onclick="numPress('3')">3</div>
-      <div class="num-btn" onclick="numPress('4')">4</div>
-      <div class="num-btn" onclick="numPress('5')">5</div>
-      <div class="num-btn" onclick="numPress('6')">6</div>
-      <div class="num-btn" onclick="numPress('7')">7</div>
-      <div class="num-btn" onclick="numPress('8')">8</div>
-      <div class="num-btn" onclick="numPress('9')">9</div>
+      <div class="num-btn" onclick="numPress('1',this)">1</div>
+      <div class="num-btn" onclick="numPress('2',this)">2</div>
+      <div class="num-btn" onclick="numPress('3',this)">3</div>
+      <div class="num-btn" onclick="numPress('4',this)">4</div>
+      <div class="num-btn" onclick="numPress('5',this)">5</div>
+      <div class="num-btn" onclick="numPress('6',this)">6</div>
+      <div class="num-btn" onclick="numPress('7',this)">7</div>
+      <div class="num-btn" onclick="numPress('8',this)">8</div>
+      <div class="num-btn" onclick="numPress('9',this)">9</div>
       <div class="num-btn empty"></div>
-      <div class="num-btn" onclick="numPress('0')">0</div>
+      <div class="num-btn" onclick="numPress('0',this)">0</div>
       <div class="num-btn del" onclick="numDel()">⌫</div>
     </div>
     <div class="login-hint">
@@ -522,10 +522,13 @@ const UZ_DAY=['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma',
 // Sana bir marta olinadi (tun o'tish muammosi uchun)
 let SESSION_DATE = null;
 function todayKey(){
-  if(!SESSION_DATE){
-    const d=new Date();
-    SESSION_DATE=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  const d=new Date();
+  const fresh=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  // Tun o'tgan bo'lsa sessiyani yangilash
+  if(SESSION_DATE && SESSION_DATE !== fresh){
+    SESSION_DATE = fresh;
   }
+  if(!SESSION_DATE) SESSION_DATE = fresh;
   return SESSION_DATE;
 }
 function pad(n){ return String(n).padStart(2,'0'); }
@@ -694,11 +697,10 @@ async function fetchStaffFromCloud(){
 // ══════════════════════════════════════════════
 let pinInput='', currentUser=null, pendingAction=null;
 
-function numPress(d){
+function numPress(d, el){
   if(pinInput.length>=4) return;
   // Button press animation
-  event.currentTarget.classList.add('pressed');
-  setTimeout(()=>event.currentTarget.classList.remove('pressed'),120);
+  if(el){ el.classList.add('pressed'); setTimeout(()=>el.classList.remove('pressed'),120); }
   pinInput+=d;
   updatePinDots();
   if(pinInput.length===4) setTimeout(checkPin,150);
@@ -807,11 +809,11 @@ async function openBiometricScreen(){
 
   if(!isWebAuthnSupported()){
     bioStat.className='selfie-status err';
-    bioStat.textContent='✗ Qurilmangiz biometriyani qo'llab-quvvatlamaydi';
+    bioStat.textContent='✗ Qurilmangiz biometriyani qo\'llab-quvvatlamaydi';
     bioBtn.textContent='DAVOM ETISH (biometriksiz)';
     bioBtn.disabled=false;
     bioBtn.onclick=()=>loginSuccess();
-    bioHint.textContent='Eski brauzer yoki qurilma. Admin bilan bog'laning.';
+    bioHint.textContent='Eski brauzer yoki qurilma. Admin bilan bog\'laning.';
     return;
   }
 
@@ -821,11 +823,10 @@ async function openBiometricScreen(){
   if(!savedCid){
     // Birinchi marta — ro'yxatdan o'tkazish rejimi
     bioStat.className='selfie-status info';
-    bioStat.textContent='Birinchi kirish — barmoq izini ro'yxatga olish';
-    bioBtn.textContent='👆 BARMOQ IZI QO'SHISH';
+    bioStat.textContent='Birinchi kirish — barmoq izini ro\'yxatga olish';
+    bioBtn.textContent='👆 BARMOQ IZI QO\'SHISH';
     bioBtn.disabled=false;
-    bioHint.textContent='Bu qurilma sizning telefoningiz sifatida biriktiriladi.
-Boshqa telefondan kirish mumkin bo'lmaydi.';
+    bioHint.textContent='Bu qurilma sizning telefoningiz sifatida biriktiriladi.\nBoshqa telefondan kirish mumkin bo\'lmaydi.';
   } else {
     // Keyingi kirishlar — tekshirish rejimi
     bioStat.className='selfie-status info';
@@ -912,7 +913,7 @@ async function registerBiometric(bioBtn, bioStat){
     if(e.name==='NotAllowedError'){
       bioStat.textContent='✗ Bekor qilindi yoki vaqt tugadi';
     } else if(e.name==='InvalidStateError'){
-      bioStat.textContent='✗ Bu qurilmada allaqachon ro'yxatga olingan';
+      bioStat.textContent='✗ Bu qurilmada allaqachon ro\'yxatga olingan';
     } else {
       bioStat.textContent='✗ Xato: ' + e.message;
     }
@@ -1079,12 +1080,16 @@ function updateActionBtns(){
   const rec=JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
   const bK=document.getElementById('btn-kelish');
   const bT=document.getElementById('btn-ketish');
+  if(!bK||!bT) return;
   const cfg=getCfg();
   const gpsNeeded=!!(cfg.lat&&cfg.lon);
-  
+  const now=new Date();
+
+  // Dam olish kuni (0=Yakshanba, 6=Shanba)
+  if(now.getDay()===0||now.getDay()===6){ bK.disabled=true; bT.disabled=true; return; }
+
   if(gpsNeeded&&!gpsAllowed){ bK.disabled=true; bT.disabled=true; return; }
 
-  const now=new Date();
   const nowMin=now.getHours()*60+now.getMinutes();
 
   // KELISH tugmasi
