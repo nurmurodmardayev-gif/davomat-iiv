@@ -718,7 +718,6 @@ function clearLoginError(){ document.getElementById('login-error').textContent='
 
 async function checkPin(){
   const pin=pinInput;
-  const deviceId=getDeviceId();
 
   // Staff ro'yxatini yukla (cloud yoki local)
   const staffList = await fetchStaffFromCloud();
@@ -726,16 +725,8 @@ async function checkPin(){
   
   if(!found){ pinError('PIN noto\'g\'ri!'); return; }
 
-  // Qurilma tekshiruvi
-  const devKey='iiv_dev_'+found.id; // ID bo'yicha, PIN bo'yicha emas
-  const savedDev=localStorage.getItem(devKey);
-  if(savedDev && savedDev!==deviceId){
-    pinInput=''; updatePinDots();
-    showScreen('scr-locked'); return;
-  }
-  if(!savedDev) localStorage.setItem(devKey, deviceId);
-
-  // PIN to'g'ri → selfie ekraniga o't
+  // PIN to'g'ri → barmoq izi ekraniga o't
+  // Qurilma tekshiruvi barmoq izi ichida amalga oshiriladi
   currentUser=found;
   pinInput=''; updatePinDots(); clearLoginError();
   openBiometricScreen();
@@ -910,7 +901,7 @@ async function registerBiometric(bioBtn, bioStat){
 
     animateFP(true);
     bioStat.className='selfie-status ok';
-    bioStat.textContent='✓ Barmoq izi muvaffaqiyatli ro'yxatga olindi!';
+    bioStat.textContent='✓ Barmoq izi biriktirildi! Keyingi kirishda ham shu barmoq bilan kirasi';
     setTimeout(()=>loginSuccess(), 800);
 
   } catch(e){
@@ -933,6 +924,16 @@ async function registerBiometric(bioBtn, bioStat){
 async function verifyBiometric(bioBtn, bioStat, savedCid){
   bioStat.className='selfie-status info';
   bioStat.textContent='⏳ Barmoq izini skanerlamoqda...';
+
+  // Qurilma tekshiruvi: barmoq izi bor, lekin bu boshqa qurilmami?
+  const savedDevId = localStorage.getItem('iiv_dev_'+currentUser.id);
+  if(savedDevId && savedDevId !== getDeviceId()){
+    // Bu boshqa qurilma — blok
+    animateFP(false);
+    pinInput=''; updatePinDots();
+    showScreen('scr-locked');
+    return;
+  }
 
   const challenge = crypto.getRandomValues(new Uint8Array(32));
 
@@ -958,7 +959,7 @@ async function verifyBiometric(bioBtn, bioStat, savedCid){
 
     animateFP(true);
     bioStat.className='selfie-status ok';
-    bioStat.textContent='✓ Tasdiqlanodi!';
+    bioStat.textContent='✓ Tasdiqlandi!';
     setTimeout(()=>loginSuccess(), 600);
 
   } catch(e){
@@ -967,15 +968,16 @@ async function verifyBiometric(bioBtn, bioStat, savedCid){
 
     if(e.name==='NotAllowedError'){
       bioStat.textContent='✗ Barmoq izi mos kelmadi yoki bekor qilindi';
+      bioBtn.disabled=false;
     } else if(e.message==='credential_mismatch'){
-      // Boshqa qurilma — bloklash
+      // Credential boshqa qurilmadan — blok
       pinInput=''; updatePinDots();
-      showScreen('scr-locked'); return;
+      showScreen('scr-locked');
     } else {
       bioStat.textContent='✗ Xato: '+e.message;
+      bioBtn.disabled=false;
     }
-    bioBtn.disabled=false;
-    setTimeout(()=>{ bioBtn.disabled=false; resetFP(); }, 1500);
+    setTimeout(()=>{ resetFP(); }, 1500);
   }
 }
 
