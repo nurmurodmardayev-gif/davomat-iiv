@@ -3,1361 +3,504 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Davomat — IIV Surxondaryo Akademik Litsey</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>Davomat — Xodim</title>
 <style>
-:root{
-  --bg:#050b14;--surf:#0b1622;--surf2:#111e2e;--surf3:#162438;
-  --border:#1c3454;--border2:#243d5e;
-  --accent:#00d4ff;--accent2:#0099cc;
-  --green:#00e676;--red:#ff3d57;--amber:#ffab00;
-  --text:#e8f4ff;--text2:#6a96bc;--text3:#2a4a6a;
-  --mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
-body{
-  background:var(--bg);color:var(--text);font-family:var(--sans);
-  display:flex;flex-direction:column;min-height:100vh;
-  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,#001e3d28 0%,transparent 70%);
-}
-
-/* ── HEADER ── */
-.hdr{
-  padding:11px 18px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  flex-shrink:0;background:#07101acc;backdrop-filter:blur(10px);
-  position:sticky;top:0;z-index:30;
-}
-.hdr-title{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:2px;font-weight:600}
-.hdr-sub{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1px;margin-top:2px}
-.hdr-right{text-align:right}
-.clock-time{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:3px;color:var(--text)}
-.clock-date{font-family:var(--mono);font-size:9px;color:var(--text2);margin-top:2px;letter-spacing:.5px}
-
-/* ── GPS BAR ── */
-.gps-bar{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  padding:6px 18px;font-family:var(--mono);font-size:10px;letter-spacing:1px;
-  flex-shrink:0;border-bottom:1px solid var(--border);transition:all .4s;
-}
-.gps-bar.checking{background:#ffab0012;color:var(--amber)}
-.gps-bar.ok{background:#00e67612;color:var(--green)}
-.gps-bar.fail{background:#ff3d5712;color:var(--red)}
-.gps-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.2s ease-in-out infinite;flex-shrink:0}
-@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
-
-/* ── SCREENS ── */
-.screen{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-.screen.active{display:flex}
-
-/* ── LOGIN SCREEN ── */
-.login-box{width:100%;max-width:300px}
-.login-title{
-  font-family:var(--mono);font-size:11px;color:var(--text2);
-  letter-spacing:2.5px;text-transform:uppercase;text-align:center;margin-bottom:28px;
-}
-.login-error{
-  text-align:center;font-family:var(--mono);font-size:11px;
-  color:var(--red);margin-bottom:14px;min-height:18px;letter-spacing:1px;
-}
-
-/* PIN DOTS */
-.pin-display{display:flex;justify-content:center;gap:14px;margin-bottom:32px}
-.pin-dot{
-  width:15px;height:15px;border-radius:50%;border:2px solid var(--border2);
-  background:transparent;transition:all .2s cubic-bezier(.34,1.56,.64,1);
-}
-.pin-dot.filled{background:var(--accent);border-color:var(--accent);box-shadow:0 0 12px #00d4ff50;transform:scale(1.1)}
-.pin-dot.error{background:var(--red);border-color:var(--red);animation:shake .4s ease}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-
-/* NUMPAD */
-.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:260px;margin:0 auto}
-.num-btn{
-  background:var(--surf);border:1px solid var(--border);border-radius:14px;
-  padding:18px 8px;font-family:var(--mono);font-size:24px;font-weight:600;
-  color:var(--text);cursor:pointer;transition:all .12s;text-align:center;
-  user-select:none;-webkit-user-select:none;
-}
-.num-btn:active,.num-btn.pressed{
-  background:var(--surf2);transform:scale(.92);
-  border-color:var(--accent);box-shadow:0 0 0 2px #00d4ff20;
-}
-.num-btn.del{font-size:18px;color:var(--text2)}
-.num-btn.empty{background:transparent;border-color:transparent;cursor:default;pointer-events:none}
-
-.login-hint{text-align:center;font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:20px;letter-spacing:1px;line-height:1.8}
-
-/* ── SELFIE SCREEN ── */
-.selfie-box{width:100%;max-width:320px;text-align:center}
-.selfie-title{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
-.selfie-sub{font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:20px;line-height:1.7}
-.camera-wrap{
-  position:relative;width:220px;height:220px;margin:0 auto 20px;
-  border-radius:50%;overflow:hidden;
-  border:3px solid var(--border2);
-  box-shadow:0 0 0 6px #00d4ff12, 0 0 40px #00000060;
-}
-.camera-wrap video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-.camera-overlay{
-  position:absolute;inset:0;border-radius:50%;pointer-events:none;
-  background:linear-gradient(135deg,#00d4ff08,transparent 50%,#00d4ff04);
-}
-.camera-ring{
-  position:absolute;inset:-3px;border-radius:50%;
-  border:3px solid transparent;
-  border-top-color:var(--accent);
-  animation:ring-spin 2s linear infinite;
-}
-.camera-ring.ready{border-top-color:var(--green);border-right-color:var(--green);animation:none}
-@keyframes ring-spin{to{transform:rotate(360deg)}}
-
-.selfie-status{font-family:var(--mono);font-size:11px;margin-bottom:16px;min-height:18px}
-.selfie-status.ok{color:var(--green)}.selfie-status.err{color:var(--red)}.selfie-status.info{color:var(--accent)}
-
-.btn-capture{
-  width:100%;padding:16px;border-radius:12px;border:none;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#000;font-family:var(--mono);font-size:13px;font-weight:700;
-  letter-spacing:2px;cursor:pointer;transition:all .2s;text-transform:uppercase;
-  margin-bottom:10px;
-}
-.btn-capture:hover{transform:translateY(-1px);box-shadow:0 8px 20px #00d4ff30}
-.btn-capture:active{transform:scale(.97)}
-.btn-capture:disabled{background:var(--border);color:var(--text3);cursor:not-allowed;transform:none;box-shadow:none}
-.btn-cancel{
-  width:100%;padding:12px;border-radius:10px;border:1px solid var(--border2);
-  background:transparent;color:var(--text2);font-family:var(--mono);font-size:11px;
-  letter-spacing:1px;cursor:pointer;transition:all .2s;
-}
-.btn-cancel:hover{border-color:var(--red);color:var(--red)}
-
-/* ── DASHBOARD SCREEN ── */
-.dash-box{width:100%;max-width:340px}
-
-.user-card{
-  background:var(--surf);border:1px solid var(--border);border-radius:16px;
-  padding:18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;
-  position:relative;overflow:hidden;
-}
-.user-card::before{content:'';position:absolute;inset:0;background:radial-gradient(at 100% 0%,#00d4ff08,transparent 60%);pointer-events:none}
-.user-avatar{
-  width:52px;height:52px;border-radius:50%;background:var(--surf2);
-  border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);flex-shrink:0;
-  position:relative;overflow:hidden;
-}
-.user-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-.user-name{font-size:15px;font-weight:600;color:var(--text)}
-.user-pos{font-family:var(--mono);font-size:11px;color:var(--text2);margin-top:2px}
-.user-status{margin-top:7px;font-family:var(--mono);font-size:10px;display:flex;align-items:center;gap:6px}
-.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.sdot-g{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s ease-in-out infinite}
-.sdot-r{background:var(--red)}
-.sdot-a{background:var(--amber)}
-
-/* PHOTO BADGE */
-.photo-badge{
-  position:absolute;top:10px;right:10px;
-  background:#00e67620;border:1px solid #00e67640;
-  border-radius:4px;padding:2px 7px;
-  font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:1px;
-}
-
-/* ACTION BUTTONS */
-.action-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-.act-btn{
-  padding:22px 10px;border-radius:14px;border:none;font-family:var(--mono);
-  font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;
-  transition:all .2s;text-align:center;line-height:1.4;text-transform:uppercase;
-}
-.act-btn:active{transform:scale(.95)}
-.act-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;filter:grayscale(.5)}
-.act-icon{font-size:26px;display:block;margin-bottom:6px}
-.act-time{font-size:9px;color:var(--text2);letter-spacing:.5px;margin-top:4px;font-weight:400}
-
-.btn-kelish{background:linear-gradient(135deg,#00e67618,#00e67808);color:var(--green);border:1px solid #00e67635}
-.btn-kelish:not(:disabled):hover{background:linear-gradient(135deg,#00e67630,#00e67812);border-color:#00e67660}
-.btn-ketish{background:linear-gradient(135deg,#ff3d5718,#ff3d5708);color:var(--red);border:1px solid #ff3d5735}
-.btn-ketish:not(:disabled):hover{background:linear-gradient(135deg,#ff3d5730,#ff3d5712);border-color:#ff3d5760}
-
-/* TODAY LOG */
-.today-log{
-  background:var(--surf);border:1px solid var(--border);border-radius:12px;
-  padding:14px;margin-bottom:12px;
-}
-.log-sec-title{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.log-sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
-.log-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
-.log-row:last-child{border-bottom:none}
-.log-label{font-family:var(--mono);font-size:11px;color:var(--text2)}
-.log-val{font-family:var(--mono);font-size:12px;font-weight:600}
-.log-val.ok{color:var(--green)}.log-val.late{color:var(--red)}.log-val.none{color:var(--text3)}
-
-/* PHOTO PREVIEW in log */
-.log-photo-btn{
-  font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:4px;
-  background:#00d4ff15;color:var(--accent);border:1px solid #00d4ff30;
-  cursor:pointer;letter-spacing:1px;transition:all .2s;
-}
-.log-photo-btn:hover{background:#00d4ff25}
-
-.logout-btn{
-  width:100%;padding:12px;border-radius:10px;background:transparent;
-  border:1px solid var(--border);color:var(--text2);font-family:var(--mono);
-  font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .2s;
-}
-.logout-btn:hover{border-color:var(--red);color:var(--red)}
-
-/* ── COUNTDOWN ── */
-.countdown-wrap{width:100%;max-width:340px;margin-bottom:12px}
-.countdown-card{
-  border-radius:14px;padding:14px 16px;
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  transition:all .4s;border:1px solid transparent;
-}
-.phase-before{background:#00d4ff0d;border-color:#00d4ff25}
-.phase-ok{background:#00e6760d;border-color:#00e67630}
-.phase-late{background:#ff3d570d;border-color:#ff3d5730}
-.phase-done{background:#ffffff06;border-color:var(--border)}
-.cd-label{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
-.phase-before .cd-label{color:#00d4ffaa}.phase-ok .cd-label{color:#00e676aa}
-.phase-late .cd-label{color:#ff3d57aa}.phase-done .cd-label{color:var(--text2)}
-.cd-time{font-family:var(--mono);font-weight:700;letter-spacing:2px;font-size:26px}
-.phase-before .cd-time{color:var(--accent)}.phase-ok .cd-time{color:var(--green)}
-.phase-late .cd-time{color:var(--red)}.phase-done .cd-time{color:var(--text2);font-size:20px}
-.cd-sub{font-family:var(--mono);font-size:10px;margin-top:4px}
-.phase-before .cd-sub{color:#00d4ff55}.phase-ok .cd-sub{color:#00e67655}
-.phase-late .cd-sub{color:#ff3d5755}.phase-done .cd-sub{color:var(--text3)}
-.cd-window{font-family:var(--mono);font-size:10px;line-height:1.8;text-align:right}
-.phase-before .cd-window{color:#00d4ff70}.phase-ok .cd-window{color:#00e67670}
-.phase-late .cd-window{color:#ff3d5770}.phase-done .cd-window{color:var(--text3)}
-@keyframes cdPulse{0%,100%{opacity:1}50%{opacity:.5}}
-.cd-pulse{animation:cdPulse 1s ease-in-out infinite}
-
-/* ── DEVICE LOCKED ── */
-.lock-card{width:100%;max-width:300px;text-align:center;padding:24px}
-.lock-icon{font-size:52px;margin-bottom:18px}
-.lock-title{font-family:var(--mono);font-size:13px;color:var(--red);letter-spacing:2px;margin-bottom:12px}
-.lock-msg{font-family:var(--mono);font-size:11px;color:var(--text2);line-height:2}
-
-/* ── TOAST ── */
-.toast{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(70px);
-  background:var(--green);color:#000;padding:12px 24px;border-radius:8px;
-  font-family:var(--mono);font-size:12px;font-weight:700;opacity:0;
-  transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:999;
-  white-space:nowrap;max-width:90vw;text-align:center;
-}
-.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-.toast.err{background:var(--red);color:#fff}
-.toast.warn{background:var(--amber);color:#000}
-
-/* ── SPINNER ── */
-.spinner{display:inline-block;width:13px;height:13px;border:2px solid #00d4ff30;border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── CONFIRM OVERLAY ── */
-.overlay-bg{position:fixed;inset:0;background:#000000d0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
-.overlay-bg.active{display:flex}
-.confirm-card{background:var(--surf);border:1px solid var(--border2);border-radius:16px;padding:24px;width:100%;max-width:300px;text-align:center;box-shadow:0 24px 60px #00000080}
-.confirm-title{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:1.5px;margin-bottom:10px;text-transform:uppercase}
-.confirm-msg{font-size:14px;color:var(--text);margin-bottom:8px;line-height:1.6;white-space:pre-line}
-.confirm-gps{font-family:var(--mono);font-size:9px;color:var(--text2);margin-bottom:18px;letter-spacing:1px}
-.confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.cfm-btn{padding:13px;border-radius:10px;border:none;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .2s}
-.cfm-yes-kelish{background:var(--green);color:#000}
-.cfm-yes-ketish{background:var(--red);color:#fff}
-.cfm-no{background:var(--surf2);color:var(--text2);border:1px solid var(--border2)}
-
-/* ── PHOTO VIEWER MODAL ── */
-.photo-modal-bg{position:fixed;inset:0;background:#000000e8;z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
-.photo-modal-bg.active{display:flex}
-.photo-modal{background:var(--surf);border:1px solid var(--border2);border-radius:16px;padding:20px;width:100%;max-width:360px;text-align:center}
-.photo-modal-title{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:2px;margin-bottom:14px;text-transform:uppercase}
-.photo-modal img{width:200px;height:200px;border-radius:50%;object-fit:cover;border:3px solid var(--border2);margin-bottom:12px}
-.photo-modal-info{font-family:var(--mono);font-size:11px;color:var(--text2);line-height:2;margin-bottom:14px}
-.photo-modal-close{
-  padding:11px 24px;border-radius:8px;border:1px solid var(--border2);
-  background:transparent;color:var(--text2);font-family:var(--mono);font-size:11px;
-  cursor:pointer;transition:all .2s;letter-spacing:1px;
-}
-.photo-modal-close:hover{border-color:var(--accent);color:var(--accent)}
-
-/* SCROLLBAR */
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--surf)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-
-/* ── FINGERPRINT ANIMATION ── */
-@keyframes fpScan{
-  0%{stroke-dashoffset:200;opacity:0}
-  20%{opacity:1}
-  100%{stroke-dashoffset:0;opacity:1}
-}
-.fp-line{
-  stroke-dasharray:200;
-  stroke-dashoffset:200;
-}
-.fp-scanning .fp-line{
-  animation:fpScan 0.5s ease forwards;
-}
-.fp-scanning .fp-line:nth-child(1){animation-delay:0s}
-.fp-scanning .fp-line:nth-child(2){animation-delay:0.1s}
-.fp-scanning .fp-line:nth-child(3){animation-delay:0.2s}
-.fp-scanning .fp-line:nth-child(4){animation-delay:0.3s}
-.fp-scanning .fp-line:nth-child(5){animation-delay:0.4s}
-@keyframes fpPulse{
-  0%,100%{opacity:0.15;transform:scale(1)}
-  50%{opacity:0.35;transform:scale(1.05)}
-}
-#bio-icon-wrap{
-  cursor:pointer;
-  transition:box-shadow 0.3s;
-}
-#bio-icon-wrap:hover{
-  box-shadow:0 0 0 6px #00d4ff20, 0 0 40px #00000060 !important;
-}
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:#0d0f12;color:#e8e6e0;min-height:100vh;display:flex;align-items:flex-start;justify-content:center}
+:root{--bg:#0d0f12;--s1:#141720;--s2:#1c2030;--bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.14);--g:#4ade80;--g2:#22c55e;--r:#f87171;--w:#fbbf24;--b:#60a5fa;--mu:#8a8a8a;--mono:'IBM Plex Mono',monospace}
+.wrap{width:100%;max-width:420px;padding:24px 20px;min-height:100vh}
+.hdr{text-align:center;padding:20px 0 28px}
+.logo{font-family:var(--mono);font-size:11px;color:var(--g);letter-spacing:.1em}
+.hdr-title{font-size:22px;font-weight:500;margin-top:6px}
+.clock{font-family:var(--mono);font-size:13px;color:var(--mu);margin-top:4px}
+.steps{display:flex;align-items:center;justify-content:center;margin-bottom:24px}
+.sn{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;border:1.5px solid var(--bd2);color:var(--mu);flex-shrink:0}
+.sn.dn{background:rgba(74,222,128,.15);border-color:var(--g);color:var(--g)}
+.sn.ac{background:var(--g2);border-color:var(--g2);color:#0d1a0f}
+.sl{width:32px;height:1px;background:var(--bd2);margin:0 4px}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:20px;margin-bottom:14px}
+.ct{font-size:14px;font-weight:500;margin-bottom:4px}
+.cs{font-size:12px;color:var(--mu);margin-bottom:18px}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.tb{padding:20px 12px;border-radius:10px;border:1.5px solid var(--bd2);background:var(--s1);cursor:pointer;transition:all .15s;text-align:center;-webkit-tap-highlight-color:transparent}
+.tb:active{transform:scale(.97)}
+.tb.in-sel{border-color:var(--g);background:rgba(74,222,128,.08)}
+.tb.out-sel{border-color:var(--w);background:rgba(251,191,36,.08)}
+.tb.off{opacity:.35;cursor:not-allowed}
+.ti{font-size:32px;margin-bottom:8px}
+.tl{font-size:14px;font-weight:500}
+.tt{font-size:11px;color:var(--mu);margin-top:3px;font-family:var(--mono)}
+.pin-wrap{display:flex;gap:9px;justify-content:center;margin:14px 0}
+.pin-box{width:54px;height:62px;background:var(--s2);border:1.5px solid var(--bd2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:26px;color:var(--g);transition:border-color .15s}
+.pin-box.ac{border-color:var(--g)}.pin-box.fi{border-color:rgba(74,222,128,.4)}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:230px;margin:0 auto}
+.key{background:var(--s2);border:1px solid var(--bd2);border-radius:9px;padding:15px 10px;text-align:center;font-size:20px;cursor:pointer;font-family:var(--mono);transition:background .1s;user-select:none;-webkit-tap-highlight-color:transparent}
+.key:active{background:var(--s1);transform:scale(.95)}
+.key.dl{font-size:14px;color:var(--r)}
+.key.ok{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:var(--g)}
+.gps{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;font-size:13px;margin-bottom:12px}
+.gps.ok{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);color:var(--g)}
+.gps.err{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:var(--r)}
+.gps.loading{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--w)}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;animation:pulse 1.4s ease-in-out infinite}
+.dg{background:var(--g)}.dr{background:var(--r)}.dw{background:var(--w)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.fp-area{text-align:center;margin:16px 0}
+.fp-btn{width:120px;height:120px;border-radius:50%;border:2px solid var(--bd2);background:var(--s2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .25s;margin:0 auto;-webkit-tap-highlight-color:transparent}
+.fp-btn:active{transform:scale(.95)}
+.fp-btn.sc{border-color:var(--g);animation:scan 1s ease-in-out infinite}
+.fp-btn.ok{border-color:var(--g);background:rgba(74,222,128,.15)}
+@keyframes scan{0%,100%{box-shadow:0 0 0 6px rgba(74,222,128,.07)}50%{box-shadow:0 0 0 18px rgba(74,222,128,.03)}}
+.fp-ic{font-size:48px}
+.fp-lb{font-size:11px;color:var(--mu);margin-top:6px}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:'IBM Plex Sans',sans-serif;margin-top:10px;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.98)}
+.bp{background:var(--g2);color:#0d1a0f}.bp:hover,.bp:active{background:var(--g)}
+.bo{background:transparent;border:1px solid var(--bd2);color:#e8e6e0}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.alert{padding:11px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;line-height:1.5}
+.al-e{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:var(--r)}
+.al-s{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);color:var(--g)}
+.al-i{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);color:var(--b)}
+.al-w{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--w)}
+.done{text-align:center;padding:20px 0}
+.done-ic{font-size:80px;margin-bottom:16px;animation:pop .4s ease-out}
+@keyframes pop{0%{transform:scale(.3)}80%{transform:scale(1.1)}100%{transform:scale(1)}}
+.done-h{font-size:20px;font-weight:500;color:var(--g);margin-bottom:10px}
+.done-n{font-size:16px;color:var(--mu);margin-bottom:8px}
+.done-t{font-family:var(--mono);font-size:36px;margin-bottom:4px}
+.done-d{font-size:12px;color:var(--mu);margin-bottom:28px}
+.mono{font-family:var(--mono)}
+/* Setup screen */
+.setup{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 20px;width:100%}
+.setup-card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:28px;width:100%;max-width:420px}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.fl{font-size:11px;color:var(--mu)}
+input{background:var(--s2);border:1px solid var(--bd2);border-radius:6px;padding:8px 11px;color:#e8e6e0;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;transition:border-color .15s;width:100%}
+input:focus{border-color:var(--g)}
+input::placeholder{color:var(--mu)}
+code{font-family:var(--mono);background:rgba(255,255,255,.08);padding:1px 5px;border-radius:3px;font-size:11px;color:#e8e6e0}
 </style>
 </head>
 <body>
 
-<div class="hdr">
-  <div>
-    <div class="hdr-title">DAVOMAT TIZIMI</div>
-    <div class="hdr-sub">IIV SURXONDARYO · AKADEMIK LITSEY</div>
-  </div>
-  <div class="hdr-right">
-    <div class="clock-time" id="clk">--:--</div>
-    <div class="clock-date" id="clk-date"></div>
-  </div>
-</div>
-
-<div class="gps-bar checking" id="gps-bar">
-  <div class="gps-dot"></div>
-  <span id="gps-txt">GPS aniqlanmoqda...</span>
-</div>
-
-<!-- ════ SCREEN: Login ════ -->
-<div class="screen active" id="scr-login">
-  <div class="login-box">
-    <div class="login-title">PIN KOD KIRITING</div>
-    <div class="login-error" id="login-error"></div>
-    <div class="pin-display" id="pin-display">
-      <div class="pin-dot" id="pd0"></div>
-      <div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div>
-      <div class="pin-dot" id="pd3"></div>
+<!-- FIREBASE SETUP -->
+<div id="setup-screen" class="setup" style="display:none">
+  <div class="setup-card">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--g);letter-spacing:.1em;margin-bottom:12px">DAVOMAT · XODIM</div>
+    <div style="font-size:18px;font-weight:500;margin-bottom:6px">🔥 Firebase ulash</div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:20px;line-height:1.6">
+      Admin siz bilan Firebase config ma'lumotlarini ulashishi kerak.<br>
+      Yoki admin <code>admin.html</code> ni birinchi sozlashi kerak.
     </div>
-    <div class="numpad" id="numpad">
-      <div class="num-btn" onclick="numPress('1',this)">1</div>
-      <div class="num-btn" onclick="numPress('2',this)">2</div>
-      <div class="num-btn" onclick="numPress('3',this)">3</div>
-      <div class="num-btn" onclick="numPress('4',this)">4</div>
-      <div class="num-btn" onclick="numPress('5',this)">5</div>
-      <div class="num-btn" onclick="numPress('6',this)">6</div>
-      <div class="num-btn" onclick="numPress('7',this)">7</div>
-      <div class="num-btn" onclick="numPress('8',this)">8</div>
-      <div class="num-btn" onclick="numPress('9',this)">9</div>
-      <div class="num-btn empty"></div>
-      <div class="num-btn" onclick="numPress('0',this)">0</div>
-      <div class="num-btn del" onclick="numDel()">⌫</div>
-    </div>
-    <div class="login-hint">
-      4 xonali PIN → Davomat belgilash<br>
-      👆 Barmoq izi bilan tasdiqlash
-    </div>
+    <div class="fg"><label class="fl">API Key</label><input id="cfg-apiKey" placeholder="AIzaSy..."></div>
+    <div class="fg"><label class="fl">Auth Domain</label><input id="cfg-authDomain" placeholder="yourapp.firebaseapp.com"></div>
+    <div class="fg"><label class="fl">Project ID</label><input id="cfg-projectId" placeholder="your-project-id"></div>
+    <div class="fg"><label class="fl">Storage Bucket</label><input id="cfg-storageBucket" placeholder="yourapp.appspot.com"></div>
+    <div class="fg"><label class="fl">Messaging Sender ID</label><input id="cfg-messagingSenderId" placeholder="123456789"></div>
+    <div class="fg"><label class="fl">App ID</label><input id="cfg-appId" placeholder="1:123456789:web:abc..."></div>
+    <div id="cfg-err" class="alert al-e" style="display:none"></div>
+    <button class="btn bp" onclick="saveFirebaseConfig()" style="margin-top:4px">🔥 Ulanish</button>
   </div>
 </div>
 
-<!-- ════ SCREEN: WebAuthn / Biometrik ════ -->
-<div class="screen" id="scr-biometric">
-  <div class="selfie-box">
-    <div class="selfie-title">BIOMETRIK TASDIQLASH</div>
-    <div class="selfie-sub" id="bio-who">Barmoq izi yoki yuzingiz bilan tasdiqlang</div>
+<!-- MAIN APP -->
+<div id="main-screen" style="display:none;width:100%">
+<div class="wrap">
+  <div class="hdr">
+    <div class="logo">DAVOMAT TIZIMI</div>
+    <div class="hdr-title">Xodim kirishi</div>
+    <div class="clock" id="clock"></div>
+  </div>
+  <div id="root"></div>
+</div>
+</div>
 
-    <div class="camera-wrap" id="bio-icon-wrap" style="background:var(--surf2);display:flex;align-items:center;justify-content:center">
-      <div id="bio-icon-inner" style="text-align:center">
-        <svg viewBox="0 0 120 120" width="100" height="100" style="display:block;margin:auto" id="fp-svg">
-          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--accent)" stroke-width="1" opacity="0.2"/>
-          <path class="fp-line" d="M60 20 C35 20 16 39 16 60 C16 81 35 100 60 100 C85 100 104 81 104 60" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" opacity="0"/>
-          <path class="fp-line" d="M60 28 C39 28 24 43 24 60 C24 77 39 92 60 92" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0"/>
-          <path class="fp-line" d="M60 36 C43 36 32 47 32 60 C32 73 43 84 60 84" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0"/>
-          <path class="fp-line" d="M60 44 C47 44 40 51 40 60 C40 69 47 76 60 76" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0"/>
-          <path class="fp-line" d="M60 52 C51 52 48 55 48 60 C48 65 51 68 60 68" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity="0"/>
-        </svg>
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc,
+  collection, getDocs, query, where
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+let db = null;
+
+function getConfig() {
+  const raw = localStorage.getItem('dav_fb_config');
+  return raw ? JSON.parse(raw) : null;
+}
+
+async function initFirebase(cfg) {
+  try {
+    const app = initializeApp(cfg, 'davomat-emp');
+    db = getFirestore(app);
+    await getDoc(doc(db,'settings','main'));
+    return true;
+  } catch(e) {
+    db = null;
+    return false;
+  }
+}
+
+// ── Setup ────────────────────────────────────────
+window.saveFirebaseConfig = async function() {
+  const cfg = {
+    apiKey: document.getElementById('cfg-apiKey').value.trim(),
+    authDomain: document.getElementById('cfg-authDomain').value.trim(),
+    projectId: document.getElementById('cfg-projectId').value.trim(),
+    storageBucket: document.getElementById('cfg-storageBucket').value.trim(),
+    messagingSenderId: document.getElementById('cfg-messagingSenderId').value.trim(),
+    appId: document.getElementById('cfg-appId').value.trim(),
+  };
+  const errEl = document.getElementById('cfg-err');
+  if(!cfg.apiKey||!cfg.projectId){
+    errEl.textContent='API Key va Project ID majburiy'; errEl.style.display='block'; return;
+  }
+  const btn = document.querySelector('#setup-screen .bp');
+  btn.disabled=true; btn.textContent='Ulanmoqda...';
+  const ok = await initFirebase(cfg);
+  if(ok){
+    localStorage.setItem('dav_fb_config', JSON.stringify(cfg));
+    document.getElementById('setup-screen').style.display='none';
+    document.getElementById('main-screen').style.display='block';
+    updateClock();
+    render();
+  } else {
+    errEl.textContent='Firebase ga ulanib bo\'lmadi. Config ni tekshiring.';
+    errEl.style.display='block';
+    btn.disabled=false; btn.textContent='🔥 Ulanish';
+  }
+};
+
+// ── Firestore helpers ────────────────────────────
+async function loadSettings() {
+  const snap = await getDoc(doc(db,'settings','main'));
+  if(snap.exists()) return snap.data();
+  return {arrivalStart:'07:00',arrivalEnd:'09:00',departureStart:'16:00',departureEnd:'20:00',locationLat:41.2995,locationLng:69.2401,locationName:'Ofis',radius:15};
+}
+
+async function loadEmployees() {
+  const snap = await getDocs(collection(db,'employees'));
+  return snap.docs.map(d=>({id:d.id,...d.data()}));
+}
+
+async function loadTodayRecord(empId, date) {
+  const q = query(collection(db,'records'), where('empId','==',empId), where('date','==',date));
+  const snap = await getDocs(q);
+  if(snap.empty) return null;
+  return {id:snap.docs[0].id,...snap.docs[0].data()};
+}
+
+async function saveRecord(rec) {
+  const existing = await loadTodayRecord(rec.empId, rec.date);
+  if(existing) {
+    await updateDoc(doc(db,'records',existing.id), rec);
+  } else {
+    await setDoc(doc(db,'records',rec.id.toString()), rec);
+  }
+}
+
+// ── State ────────────────────────────────────────
+let state = {
+  step: 'type', type: null, pin: '',
+  empId: null, empName: '',
+  gpsStatus: 'idle', gpsMsg: '',
+  fpState: 'idle',
+  error: null, result: null,
+  loading: false,
+};
+
+// ── Render ───────────────────────────────────────
+async function render() {
+  let s;
+  try {
+    s = await loadSettings();
+  } catch(e) {
+    document.getElementById('root').innerHTML = `<div class="alert al-e">Firebase xatosi: ${e.message}</div>`;
+    return;
+  }
+
+  const now = new Date();
+  const cur = now.getHours()*60+now.getMinutes();
+  const inOk  = cur>=tMin(s.arrivalStart)   && cur<=tMin(s.arrivalEnd);
+  const outOk = cur>=tMin(s.departureStart) && cur<=tMin(s.departureEnd);
+
+  let steps = '';
+  if(state.step !== 'type' && state.step !== 'done') {
+    const names = ['Tur','Kod','GPS','Barmoq'];
+    const idx = ['type','pin','gps','fp'].indexOf(state.step);
+    steps = `<div class="steps">${names.map((n,i)=>`
+      <div style="display:flex;align-items:center">
+        <div class="sn ${i<idx?'dn':i===idx?'ac':''}">${i<idx?'✓':i+1}</div>
+        ${i<names.length-1?'<div class="sl"></div>':''}
+      </div>`).join('')}</div>`;
+  }
+
+  const err = state.error ? `<div class="alert al-e">${state.error} <span onclick="clearErr()" style="float:right;cursor:pointer">✕</span></div>` : '';
+  let content = '';
+
+  if(state.step === 'type') {
+    content = `
+      <div class="card">
+        <div class="ct">Davomat turi</div>
+        <div class="cs">Kelayapsizmi yoki ketayapsizmi?</div>
+        <div class="tg">
+          <div class="tb ${state.type==='in'?'in-sel':''} ${!inOk?'off':''}" onclick="${inOk?'selectType(\'in\')':''}">
+            <div class="ti">🏢</div>
+            <div class="tl">Kelish</div>
+            <div class="tt">${s.arrivalStart}–${s.arrivalEnd}</div>
+          </div>
+          <div class="tb ${state.type==='out'?'out-sel':''} ${!outOk?'off':''}" onclick="${outOk?'selectType(\'out\')':''}">
+            <div class="ti">🏠</div>
+            <div class="tl">Ketish</div>
+            <div class="tt">${s.departureStart}–${s.departureEnd}</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--mu);text-align:center">📍 ${s.locationName} · Radius: ${s.radius}m</div>
       </div>
-    </div>
+    `;
+  }
 
-    <div class="selfie-status info" id="bio-status">Tayyorlanmoqda...</div>
-
-    <button class="btn-capture" id="btn-bio" onclick="startBiometric()" disabled>
-      👆 BARMOQ IZI BILAN KIRISH
-    </button>
-    <button class="btn-cancel" onclick="cancelBiometric()">← BEKOR</button>
-    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-align:center;margin-top:14px;line-height:1.8" id="bio-hint"></div>
-  </div>
-</div>
-
-<!-- ════ SCREEN: Device locked ════ -->
-<div class="screen" id="scr-locked">
-  <div class="lock-card">
-    <div class="lock-icon">🔒</div>
-    <div class="lock-title">QURILMA BLOKLANGAN</div>
-    <div class="lock-msg">
-      Bu PIN boshqa qurilmada ro'yxatdan o'tgan.<br><br>
-      Faqat o'z telefoningizdan kiring.<br><br>
-      Muammo bo'lsa — admin bilan bog'laning.
-    </div>
-  </div>
-</div>
-
-<!-- ════ SCREEN: Dashboard ════ -->
-<div class="screen" id="scr-dash">
-  <div class="dash-box">
-
-    <div class="user-card">
-      <div class="user-avatar" id="u-avatar">?</div>
-      <div style="flex:1;min-width:0">
-        <div class="user-name" id="u-name">—</div>
-        <div class="user-pos" id="u-pos">—</div>
-        <div class="user-status" id="u-status">
-          <div class="sdot sdot-a"></div>
-          <span style="font-family:var(--mono);font-size:10px;color:var(--text2)">Yuklanmoqda...</span>
+  else if(state.step === 'pin') {
+    content = `
+      <div class="card">
+        <div class="ct">${state.type==='in'?'🏢 Kelish':'🏠 Ketish'} — Kod kiriting</div>
+        <div class="cs">Sizga berilgan 4 xonali kodni kiriting</div>
+        <div class="pin-wrap" id="pin-display">
+          ${Array.from({length:4}).map((_,i)=>{
+            const d=state.pin[i]||'';
+            return `<div class="pin-box ${i===state.pin.length?'ac':''} ${d?'fi':''}">${d?'●':''}</div>`;
+          }).join('')}
+        </div>
+        <div class="kp">
+          ${['1','2','3','4','5','6','7','8','9','del','0','ok'].map(k=>`
+            <div class="key ${k==='del'?'dl':''} ${k==='ok'?'ok':''}" onclick="pinKey('${k}')">${k==='del'?'⌫':k==='ok'?'✓':k}</div>
+          `).join('')}
         </div>
       </div>
-      <div id="photo-badge" class="photo-badge" style="display:none">📷 FOTO</div>
-    </div>
+      <button class="btn bo" onclick="goBack()">← Orqaga</button>
+    `;
+  }
 
-    <!-- Countdown -->
-    <div class="countdown-wrap" id="countdown-wrap" style="display:none">
-      <div class="countdown-card phase-before" id="countdown-card">
-        <div>
-          <div class="cd-label" id="cd-label">KELISH VAQTIGACHA</div>
-          <div class="cd-time" id="cd-time">--:--</div>
-          <div class="cd-sub" id="cd-sub"></div>
+  else if(state.step === 'gps') {
+    const gClass = state.gpsStatus==='ok'?'ok':state.gpsStatus==='err'?'err':'loading';
+    const dotClass = state.gpsStatus==='ok'?'dg':state.gpsStatus==='err'?'dr':'dw';
+    const gMsg = state.gpsStatus==='loading'?'📡 Joylashuv aniqlanmoqda...'
+                :state.gpsStatus==='ok'?state.gpsMsg
+                :state.gpsMsg||'GPS xatosi';
+    content = `
+      <div class="card">
+        <div class="ct">📍 GPS tekshiruvi</div>
+        <div class="cs">${state.empName} — ${state.type==='in'?'Kelish':'Ketish'}</div>
+        <div class="gps ${gClass}">
+          <div class="dot ${dotClass}"></div>
+          <span>${gMsg}</span>
         </div>
-        <div class="cd-window" id="cd-window"></div>
+        ${state.gpsStatus==='ok'?`<button class="btn bp" onclick="continueGps()">Davom etish →</button>`:''}
+        ${state.gpsStatus==='err'?`<button class="btn bo" style="margin-top:8px" onclick="startGps()">🔄 Qayta urinish</button>`:''}
       </div>
-    </div>
+      <button class="btn bo" onclick="goBack()" ${state.gpsStatus==='loading'?'disabled':''}>← Orqaga</button>
+    `;
+  }
 
-    <div class="action-btns">
-      <button class="act-btn btn-kelish" id="btn-kelish" onclick="doAction('kelish')">
-        <span class="act-icon">→</span>
-        KELDIM
-        <div class="act-time" id="kelish-time-lbl"></div>
-      </button>
-      <button class="act-btn btn-ketish" id="btn-ketish" onclick="doAction('ketish')">
-        <span class="act-icon">←</span>
-        KETDIM
-        <div class="act-time" id="ketish-time-lbl"></div>
-      </button>
-    </div>
-
-    <div class="today-log">
-      <div class="log-sec-title">Bugungi holat</div>
-      <div class="log-row">
-        <span class="log-label">Kelish vaqti</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="log-val" id="log-kelish">—</span>
-          <span class="log-photo-btn" id="log-kelish-photo" style="display:none" onclick="showPhotoModal('kelish')">📷</span>
-        </div>
-      </div>
-      <div class="log-row">
-        <span class="log-label">Kelish holati</span>
-        <span class="log-val" id="log-kelish-status"><span class="log-val none">Belgilanmagan</span></span>
-      </div>
-      <div class="log-row">
-        <span class="log-label">Ketish vaqti</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="log-val" id="log-ketish">—</span>
-          <span class="log-photo-btn" id="log-ketish-photo" style="display:none" onclick="showPhotoModal('ketish')">📷</span>
+  else if(state.step === 'fp') {
+    content = `
+      <div class="card">
+        <div class="ct">🔐 Tasdiqlash</div>
+        <div class="cs">${state.empName}</div>
+        <div class="fp-area">
+          <div class="fp-btn ${state.fpState==='scanning'?'sc':state.fpState==='success'?'ok':''}" onclick="scanFp()">
+            <div class="fp-ic">${state.fpState==='success'?'✅':'👆'}</div>
+            <div class="fp-lb">${state.fpState==='success'?'Tasdiqlandi!':state.fpState==='scanning'?'Skanlanmoqda...':'Bosing'}</div>
+          </div>
         </div>
       </div>
-      <div class="log-row">
-        <span class="log-label">Ketish holati</span>
-        <span class="log-val" id="log-ketish-status"><span class="log-val none">Belgilanmagan</span></span>
+      <button class="btn bo" onclick="goBack()" ${state.fpState==='scanning'?'disabled':''}>← Orqaga</button>
+    `;
+  }
+
+  else if(state.step === 'done' && state.result) {
+    content = `
+      <div class="done">
+        <div class="done-ic">${state.result.type==='in'?'✅':'👋'}</div>
+        <div class="done-h">${state.result.type==='in'?'Kelish qayd etildi!':'Ketish qayd etildi!'}</div>
+        <div class="done-n">${state.result.empName}</div>
+        <div class="done-t">${state.result.time}</div>
+        <div class="done-d">${td()}</div>
+        <div style="font-size:12px;color:var(--g);margin-bottom:20px;font-family:var(--mono)">🔥 Firebase ga saqlandi</div>
+        <button class="btn bp" onclick="resetState()">Yangi amal</button>
       </div>
-    </div>
-
-    <button class="logout-btn" onclick="doLogout()">↩ CHIQISH</button>
-  </div>
-</div>
-
-<!-- Confirm overlay -->
-<div class="overlay-bg" id="overlay-bg">
-  <div class="confirm-card">
-    <div class="confirm-title" id="cfm-title">TASDIQLASH</div>
-    <div class="confirm-msg" id="cfm-msg"></div>
-    <div class="confirm-gps" id="cfm-gps"></div>
-    <div class="confirm-btns">
-      <button class="cfm-btn cfm-no" onclick="closeConfirm()">BEKOR</button>
-      <button class="cfm-btn" id="cfm-yes" onclick="confirmAction()">HA</button>
-    </div>
-  </div>
-</div>
-
-<!-- Photo viewer modal -->
-<div class="photo-modal-bg" id="photo-modal-bg">
-  <div class="photo-modal">
-    <div class="photo-modal-title" id="pm-title">KIRISH RASMI</div>
-    <img id="pm-img" src="" alt="selfie">
-    <div class="photo-modal-info" id="pm-info"></div>
-    <button class="photo-modal-close" onclick="closePhotoModal()">✕ YOPISH</button>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-'use strict';
-// ══════════════════════════════════════════════
-//  CONFIG & HELPERS
-// ══════════════════════════════════════════════
-function getCfg(){ return JSON.parse(localStorage.getItem('iiv_cfg')||'{}'); }
-function getJBCfg(){ return JSON.parse(localStorage.getItem('iiv_jb')||'{}'); }
-
-const UZ_MON=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
-const UZ_DAY=['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
-
-// Sana bir marta olinadi (tun o'tish muammosi uchun)
-let SESSION_DATE = null;
-function todayKey(){
-  const d=new Date();
-  const fresh=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-  // Tun o'tgan bo'lsa sessiyani yangilash
-  if(SESSION_DATE && SESSION_DATE !== fresh){
-    SESSION_DATE = fresh;
+    `;
   }
-  if(!SESSION_DATE) SESSION_DATE = fresh;
-  return SESSION_DATE;
-}
-function pad(n){ return String(n).padStart(2,'0'); }
 
-function escHtml(str){
-  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.getElementById('root').innerHTML = steps + err + content;
 }
 
-function toast(msg, err, warn){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className='toast show'+(err?' err':warn?' warn':'');
-  setTimeout(()=>t.className='toast',3500);
-}
+// ── Actions ──────────────────────────────────────
+window.clearErr = function() { state.error=null; render(); };
+window.goBack = function() {
+  const order=['type','pin','gps','fp'];
+  const idx=order.indexOf(state.step);
+  if(idx>0){ state.step=order[idx-1]; state.error=null; render(); }
+};
+window.resetState = function() {
+  state={step:'type',type:null,pin:'',empId:null,empName:'',gpsStatus:'idle',gpsMsg:'',fpState:'idle',error:null,result:null,loading:false};
+  render();
+};
 
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-// ══════════════════════════════════════════════
-//  DEVICE FINGERPRINT
-// ══════════════════════════════════════════════
-function getDeviceId(){
-  // Bir nechta ma'lumotni birlashtirib ishonchli ID yasaymiz
-  let id = localStorage.getItem('_dev_id');
-  if(!id){
-    // Navigator fingerprint + random
-    const nav = [
-      navigator.userAgent,
-      navigator.language,
-      screen.width+'x'+screen.height,
-      screen.colorDepth,
-      Intl.DateTimeFormat().resolvedOptions().timeZone
-    ].join('|');
-    // Simple hash
-    let hash = 0;
-    for(let i=0;i<nav.length;i++) hash=(Math.imul(31,hash)+nav.charCodeAt(i))|0;
-    id = 'dev_' + Math.abs(hash).toString(36) + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,7);
-    localStorage.setItem('_dev_id', id);
+window.selectType = async function(type) {
+  const s = await loadSettings();
+  const cur=new Date().getHours()*60+new Date().getMinutes();
+  if(type==='in'&&(cur<tMin(s.arrivalStart)||cur>tMin(s.arrivalEnd))){
+    state.error=`Kelish vaqti ${s.arrivalStart}–${s.arrivalEnd} orasida`; render(); return;
   }
-  return id;
+  if(type==='out'&&(cur<tMin(s.departureStart)||cur>tMin(s.departureEnd))){
+    state.error=`Ketish vaqti ${s.departureStart}–${s.departureEnd} orasida`; render(); return;
+  }
+  state.type=type; state.step='pin'; state.error=null; render();
+};
+
+window.pinKey = function(k) {
+  if(k==='del'){ state.pin=state.pin.slice(0,-1); render(); return; }
+  if(k==='ok'){ if(state.pin.length>=4) submitPin(); return; }
+  if(state.pin.length<4){ state.pin+=k; render(); if(state.pin.length===4) setTimeout(submitPin,150); }
+};
+
+async function submitPin() {
+  if(state.loading) return;
+  state.loading=true;
+  try {
+    const emps = await loadEmployees();
+    if(!emps||emps.length===0){
+      state.error='Tizimda xodimlar ro\'yxati yo\'q. Admin panelida xodim qo\'shing.';
+      state.pin=''; state.loading=false; render(); return;
+    }
+    const emp = emps.find(e=>e.code===state.pin);
+    if(!emp){
+      state.error='Noto\'g\'ri kod. Qayta urinib ko\'ring.';
+      state.pin=''; state.loading=false; render(); return;
+    }
+    const today = td();
+    const existing = await loadTodayRecord(emp.id, today);
+    if(state.type==='in'&&existing?.checkIn){
+      state.error=`${emp.name} bugun allaqachon kelgan.`; state.pin=''; state.loading=false; render(); return;
+    }
+    if(state.type==='out'&&existing?.checkOut){
+      state.error=`${emp.name} bugun allaqachon ketgan.`; state.pin=''; state.loading=false; render(); return;
+    }
+    if(state.type==='out'&&!existing?.checkIn){
+      state.error='Avval kelish qayd etilmagan.'; state.pin=''; state.loading=false; render(); return;
+    }
+    state.empId=emp.id; state.empName=emp.name; state.step='gps'; state.error=null; state.loading=false;
+    render();
+    startGps();
+  } catch(e) {
+    state.error='Firebase xatosi: '+e.message; state.pin=''; state.loading=false; render();
+  }
 }
 
-// ══════════════════════════════════════════════
-//  CLOCK
-// ══════════════════════════════════════════════
-function startClock(){
-  function tick(){
-    const now=new Date();
-    document.getElementById('clk').textContent=pad(now.getHours())+':'+pad(now.getMinutes());
-    document.getElementById('clk-date').textContent=UZ_DAY[now.getDay()]+', '+now.getDate()+' '+UZ_MON[now.getMonth()];
-    updateCountdown(now);
-    updateActionBtns();
-  }
-  tick(); setInterval(tick,1000);
-}
-
-// ══════════════════════════════════════════════
-//  GPS
-// ══════════════════════════════════════════════
-let gpsAllowed=false, userLat=null, userLon=null, gpsWatchId=null;
-
-function startGPS(){
-  const bar=document.getElementById('gps-bar');
-  const txt=document.getElementById('gps-txt');
-  const cfg=getCfg();
-
-  if(!cfg.lat || !cfg.lon){
-    bar.className='gps-bar ok';
-    txt.textContent='GPS sozlanmagan — hamma joyda ishlaydi';
-    gpsAllowed=true; return;
-  }
+window.startGps = function() {
+  state.gpsStatus='loading'; state.gpsMsg=''; render();
   if(!navigator.geolocation){
-    bar.className='gps-bar fail';
-    txt.textContent='GPS qo\'llab-quvvatlanmaydi!';
-    gpsAllowed=false; return;
+    state.gpsStatus='err'; state.gpsMsg='Qurilmangiz GPS ni qo\'llamaydi'; render(); return;
   }
-
-  gpsWatchId = navigator.geolocation.watchPosition(
-    pos=>{
-      userLat=pos.coords.latitude;
-      userLon=pos.coords.longitude;
-      const dist=haversine(userLat,userLon,parseFloat(cfg.lat),parseFloat(cfg.lon));
-      const radius=parseFloat(cfg.radius||40);
-      const acc=Math.round(pos.coords.accuracy);
-      if(dist<=radius+acc*0.5){ // accuracy buferi
-        gpsAllowed=true;
-        bar.className='gps-bar ok';
-        txt.textContent='✓ Hudud ichida ('+Math.round(dist)+'m) · ±'+acc+'m';
-      }else{
-        gpsAllowed=false;
-        bar.className='gps-bar fail';
-        txt.textContent='✗ Hudud tashqarida — '+Math.round(dist)+'m uzoq';
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      const s = await loadSettings();
+      const R=6371000,dLat=(pos.coords.latitude-s.locationLat)*Math.PI/180,dLon=(pos.coords.longitude-s.locationLng)*Math.PI/180;
+      const a=Math.sin(dLat/2)**2+Math.cos(s.locationLat*Math.PI/180)*Math.cos(pos.coords.latitude*Math.PI/180)*Math.sin(dLon/2)**2;
+      const dist=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+      if(dist<=s.radius){
+        state.gpsStatus='ok';
+        state.gpsMsg=`✓ Hududda (${Math.round(dist)}m, ruxsat: ${s.radius}m)`;
+      } else {
+        state.gpsStatus='err';
+        state.gpsMsg=`Hududdan ${Math.round(dist-s.radius)}m tashqaridasiz`;
       }
-      updateActionBtns();
+      render();
     },
-    err=>{
-      bar.className='gps-bar fail';
-      const msgs={1:'GPS ruxsati berilmadi!',2:'GPS signali yo\'q',3:'GPS vaqt tugadi'};
-      txt.textContent=msgs[err.code]||'GPS xatosi';
-      gpsAllowed=false; updateActionBtns();
+    err => {
+      state.gpsStatus='err';
+      state.gpsMsg=err.code===1?'Joylashuvga ruxsat berilmagan (sozlamalarda yoqing)':'GPS signali topilmadi';
+      render();
     },
-    {enableHighAccuracy:true, maximumAge:5000, timeout:15000}
+    {enableHighAccuracy:true,timeout:10000,maximumAge:0}
   );
-}
+};
 
-function haversine(lat1,lon1,lat2,lon2){
-  const R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R*2*Math.asin(Math.sqrt(a));
-}
+window.continueGps = function() {
+  if(state.gpsStatus!=='ok') return;
+  state.step='fp'; render();
+};
 
-// ══════════════════════════════════════════════
-//  JSONBIN SYNC
-// ══════════════════════════════════════════════
-async function syncAttendanceToCloud(staffId, dateKey, rec){
-  const jb=getJBCfg();
-  if(!jb.key||!jb.binid) return;
-  try{
-    // Fetch current bin
-    const res=await fetch('https://api.jsonbin.io/v3/b/'+jb.binid+'/latest',{
-      headers:{'X-Master-Key':jb.key}
-    });
-    if(!res.ok) return;
-    const data=await res.json();
-    const current=data.record||{staff:[],records:{}};
-    // Update only this record
-    const recKey=staffId+'_'+dateKey;
-    current.records=current.records||{};
-    current.records[recKey]=rec;
-    current.updatedAt=new Date().toISOString();
-    await fetch('https://api.jsonbin.io/v3/b/'+jb.binid,{
-      method:'PUT',
-      headers:{'Content-Type':'application/json','X-Master-Key':jb.key},
-      body:JSON.stringify(current)
-    });
-  }catch(e){ /* offline — local ga saqlangan */ }
-}
-
-async function fetchStaffFromCloud(){
-  const jb=getJBCfg();
-  if(!jb.key||!jb.binid) return JSON.parse(localStorage.getItem('iiv_staff')||'[]');
-  try{
-    const res=await fetch('https://api.jsonbin.io/v3/b/'+jb.binid+'/latest',{
-      headers:{'X-Master-Key':jb.key}
-    });
-    if(!res.ok) throw new Error();
-    const data=await res.json();
-    if(data.record?.staff){
-      localStorage.setItem('iiv_staff',JSON.stringify(data.record.staff));
-      // Sync records too
-      if(data.record.records){
-        Object.entries(data.record.records).forEach(([k,v])=>{
-          localStorage.setItem('iiv_rec_'+k, JSON.stringify(v));
-        });
+window.scanFp = function() {
+  if(state.fpState!=='idle') return;
+  state.fpState='scanning'; render();
+  async function tryWebAuthn() {
+    try {
+      if(window.PublicKeyCredential){
+        const avail=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        if(avail){
+          await navigator.credentials.get({
+            publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),timeout:60000,userVerification:'required'}
+          });
+        }
       }
-      return data.record.staff;
-    }
-  }catch(e){}
-  return JSON.parse(localStorage.getItem('iiv_staff')||'[]');
-}
-
-// ══════════════════════════════════════════════
-//  PIN LOGIN
-// ══════════════════════════════════════════════
-let pinInput='', currentUser=null, pendingAction=null;
-
-function numPress(d, el){
-  if(pinInput.length>=4) return;
-  // Button press animation
-  if(el){ el.classList.add('pressed'); setTimeout(()=>el.classList.remove('pressed'),120); }
-  pinInput+=d;
-  updatePinDots();
-  if(pinInput.length===4) setTimeout(checkPin,150);
-}
-function numDel(){
-  if(!pinInput.length) return;
-  pinInput=pinInput.slice(0,-1);
-  updatePinDots(); clearLoginError();
-}
-function updatePinDots(state){
-  for(let i=0;i<4;i++){
-    const dot=document.getElementById('pd'+i);
-    dot.className='pin-dot'+(i<pinInput.length?' filled':'')+(state==='error'?' error':'');
+    } catch(e){}
+    finalizeAttendance();
   }
-}
-function clearLoginError(){ document.getElementById('login-error').textContent=''; }
+  setTimeout(tryWebAuthn,1200);
+};
 
-async function checkPin(){
-  const pin=pinInput;
-
-  // Staff ro'yxatini yukla (cloud yoki local)
-  const staffList = await fetchStaffFromCloud();
-  const found=staffList.find(s=>s.pin===pin);
-  
-  if(!found){ pinError('PIN noto\'g\'ri!'); return; }
-
-  // PIN to'g'ri → barmoq izi ekraniga o't
-  // Qurilma tekshiruvi barmoq izi ichida amalga oshiriladi
-  currentUser=found;
-  pinInput=''; updatePinDots(); clearLoginError();
-  openBiometricScreen();
-}
-
-function pinError(msg){
-  updatePinDots('error');
-  document.getElementById('login-error').textContent=msg;
-  setTimeout(()=>{ pinInput=''; updatePinDots(); clearLoginError(); },900);
-}
-
-// ══════════════════════════════════════════════
-//  WEBAUTHN — BARMOQ IZI / FACE ID
-// ══════════════════════════════════════════════
-
-// WebAuthn ishlayaptimi tekshirish
-function isWebAuthnSupported(){
-  return !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create);
-}
-
-// Har bir xodimga unikal credentialId saqlash (staffId bo'yicha)
-function getSavedCredentialId(staffId){
-  return localStorage.getItem('iiv_wacid_'+staffId);
-}
-function saveCredentialId(staffId, credId){
-  localStorage.setItem('iiv_wacid_'+staffId, credId);
-}
-
-// base64url yordamchi funksiyalar
-function b64urlToBuffer(b64url){
-  const b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
-  const bin = atob(b64);
-  return Uint8Array.from(bin, c=>c.charCodeAt(0)).buffer;
-}
-function bufferToB64url(buf){
-  const arr = new Uint8Array(buf);
-  let bin = '';
-  arr.forEach(b=>bin+=String.fromCharCode(b));
-  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-}
-
-// Animatsiya
-function animateFP(success){
-  const lines = document.querySelectorAll('.fp-line');
-  lines.forEach((l,i)=>{
-    setTimeout(()=>{
-      l.style.transition='opacity 0.3s';
-      l.style.opacity='1';
-      l.style.stroke = success ? 'var(--green)' : 'var(--red)';
-    }, i*80);
-  });
-}
-function resetFP(){
-  const fpSvg = document.getElementById('fp-svg');
-  if(fpSvg) fpSvg.classList.remove('fp-scanning');
-  document.querySelectorAll('.fp-line').forEach(l=>{
-    l.style.transition='none';
-    l.style.opacity='0';
-    l.style.stroke='var(--accent)';
-  });
-}
-
-// Biometrik ekranni ochish
-async function openBiometricScreen(){
-  const rec = JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
-  // Bugun ikkisi ham belgilangan — to'g'ri dashboard ga
-  if(rec.kelish && rec.ketish){ loginSuccess(); return; }
-
-  document.getElementById('bio-who').textContent =
-    currentUser.name.split(' ')[0] + ', barmoq izingiz bilan tasdiqlang';
-
-  showScreen('scr-biometric');
-  resetFP();
-
-  const bioBtn   = document.getElementById('btn-bio');
-  const bioStat  = document.getElementById('bio-status');
-  const bioHint  = document.getElementById('bio-hint');
-
-  if(!isWebAuthnSupported()){
-    bioStat.className='selfie-status err';
-    bioStat.textContent='✗ Qurilmangiz biometriyani qo\'llab-quvvatlamaydi';
-    bioBtn.textContent='DAVOM ETISH (biometriksiz)';
-    bioBtn.disabled=false;
-    bioBtn.onclick=()=>loginSuccess();
-    bioHint.textContent='Eski brauzer yoki qurilma. Admin bilan bog\'laning.';
-    return;
-  }
-
-  // Saqlangan credential bor yoki yo'q?
-  const savedCid = getSavedCredentialId(currentUser.id);
-
-  if(!savedCid){
-    // Birinchi marta — ro'yxatdan o'tkazish rejimi
-    bioStat.className='selfie-status info';
-    bioStat.textContent='Birinchi kirish — barmoq izini ro\'yxatga olish';
-    bioBtn.textContent='👆 BARMOQ IZI QO\'SHISH';
-    bioBtn.disabled=false;
-    bioHint.textContent='Bu qurilma sizning telefoningiz sifatida biriktiriladi.\nBoshqa telefondan kirish mumkin bo\'lmaydi.';
-  } else {
-    // Keyingi kirishlar — tekshirish rejimi
-    bioStat.className='selfie-status info';
-    bioStat.textContent='Barmoq izingizni skanerlang';
-    bioBtn.textContent='👆 BARMOQ IZI BILAN KIRISH';
-    bioBtn.disabled=false;
-    bioHint.textContent='Faqat bu qurilmadan kirish mumkin.';
-  }
-}
-
-async function startBiometric(){
-  const bioBtn  = document.getElementById('btn-bio');
-  const bioStat = document.getElementById('bio-status');
-  bioBtn.disabled = true;
-  resetFP();
-  // Scan animatsiyasi
-  const fpSvg = document.getElementById('fp-svg');
-  if(fpSvg) fpSvg.classList.add('fp-scanning');
-
-  const savedCid = getSavedCredentialId(currentUser.id);
-
-  if(!savedCid){
-    await registerBiometric(bioBtn, bioStat);
-  } else {
-    await verifyBiometric(bioBtn, bioStat, savedCid);
-  }
-}
-
-// Birinchi marta — credential yaratish (ro'yxatga olish)
-async function registerBiometric(bioBtn, bioStat){
-  bioStat.className='selfie-status info';
-  bioStat.textContent='⏳ Barmoq izini skanerlamoqda...';
-
-  // Challenge — random bytes (real app da serverdan keladi)
-  const challenge = crypto.getRandomValues(new Uint8Array(32));
-
-  // Foydalanuvchi ID — staffId dan hash
-  const encoder = new TextEncoder();
-  const userIdBuf = encoder.encode(currentUser.id).buffer;
-
-  const pubKeyOptions = {
-    challenge: challenge.buffer,
-    rp: {
-      name: 'IIV Surxondaryo Litsey',
-      id: location.hostname || 'localhost'
-    },
-    user: {
-      id: userIdBuf,
-      name: currentUser.pin,
-      displayName: currentUser.name
-    },
-    pubKeyCredParams: [
-      { alg: -7,  type: 'public-key' }, // ES256
-      { alg: -257, type: 'public-key'} // RS256
-    ],
-    authenticatorSelection: {
-      authenticatorAttachment: 'platform',   // faqat qurilma ichidagi (barmoq izi / Face ID)
-      userVerification: 'required',           // biometrika majburiy
-      requireResidentKey: false
-    },
-    timeout: 60000,
-    attestation: 'none'
+async function finalizeAttendance() {
+  const time = nowT();
+  const today = td();
+  const rec = {
+    id: Date.now(),
+    empId: state.empId,
+    empName: state.empName,
+    date: today,
+    status: state.type==='in'?'ishlayapti':'keldi',
   };
-
-  try{
-    const cred = await navigator.credentials.create({ publicKey: pubKeyOptions });
-    const credId = bufferToB64url(cred.rawId);
-
-    // Credential ID ni saqlash
-    saveCredentialId(currentUser.id, credId);
-    // Qurilma ID ni ham saqlash
-    localStorage.setItem('iiv_dev_'+currentUser.id, getDeviceId());
-
-    animateFP(true);
-    bioStat.className='selfie-status ok';
-    bioStat.textContent='✓ Barmoq izi biriktirildi! Keyingi kirishda ham shu barmoq bilan kirasi';
-    setTimeout(()=>loginSuccess(), 800);
-
-  } catch(e){
-    animateFP(false);
-    bioStat.className='selfie-status err';
-    bioBtn.disabled=false;
-
-    if(e.name==='NotAllowedError'){
-      bioStat.textContent='✗ Bekor qilindi yoki vaqt tugadi';
-    } else if(e.name==='InvalidStateError'){
-      bioStat.textContent='✗ Bu qurilmada allaqachon ro\'yxatga olingan';
-    } else {
-      bioStat.textContent='✗ Xato: ' + e.message;
-    }
-    bioBtn.disabled=false;
+  if(state.type==='in') rec.checkIn=time;
+  else rec.checkOut=time;
+  try {
+    await saveRecord(rec);
+    state.fpState='success';
+    state.result={type:state.type, empName:state.empName, time};
+    setTimeout(()=>{ state.step='done'; render(); }, 600);
+    render();
+  } catch(e) {
+    state.fpState='idle';
+    state.error='Saqlashda xato: '+e.message;
+    render();
   }
 }
 
-// Keyingi kirishlar — credential tekshirish
-async function verifyBiometric(bioBtn, bioStat, savedCid){
-  bioStat.className='selfie-status info';
-  bioStat.textContent='⏳ Barmoq izini skanerlamoqda...';
+// ── Utils ─────────────────────────────────────────
+function td(){ return new Date().toISOString().split('T')[0]; }
+function nowT(){ return new Date().toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'}); }
+function tMin(t){ const[h,m]=t.split(':').map(Number); return h*60+m; }
+function updateClock(){ const el=document.getElementById('clock'); if(el) el.textContent=nowT(); setTimeout(updateClock,30000); }
 
-  // Qurilma tekshiruvi: barmoq izi bor, lekin bu boshqa qurilmami?
-  const savedDevId = localStorage.getItem('iiv_dev_'+currentUser.id);
-  if(savedDevId && savedDevId !== getDeviceId()){
-    // Bu boshqa qurilma — blok
-    animateFP(false);
-    pinInput=''; updatePinDots();
-    showScreen('scr-locked');
+// ── Init ─────────────────────────────────────────
+(async function init() {
+  const cfg = getConfig();
+  if(!cfg){
+    document.getElementById('setup-screen').style.display='flex';
     return;
   }
-
-  const challenge = crypto.getRandomValues(new Uint8Array(32));
-
-  const assertionOptions = {
-    challenge: challenge.buffer,
-    allowCredentials: [{
-      id: b64urlToBuffer(savedCid),
-      type: 'public-key',
-      transports: ['internal']
-    }],
-    userVerification: 'required',
-    timeout: 60000
-  };
-
-  try{
-    const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
-
-    // Credential ID mos kelishini tekshirish
-    const returnedId = bufferToB64url(assertion.rawId);
-    if(returnedId !== savedCid){
-      throw new Error('credential_mismatch');
-    }
-
-    animateFP(true);
-    bioStat.className='selfie-status ok';
-    bioStat.textContent='✓ Tasdiqlandi!';
-    setTimeout(()=>loginSuccess(), 600);
-
-  } catch(e){
-    animateFP(false);
-    bioStat.className='selfie-status err';
-
-    if(e.name==='NotAllowedError'){
-      bioStat.textContent='✗ Barmoq izi mos kelmadi yoki bekor qilindi';
-      bioBtn.disabled=false;
-    } else if(e.message==='credential_mismatch'){
-      // Credential boshqa qurilmadan — blok
-      pinInput=''; updatePinDots();
-      showScreen('scr-locked');
-    } else {
-      bioStat.textContent='✗ Xato: '+e.message;
-      bioBtn.disabled=false;
-    }
-    setTimeout(()=>{ resetFP(); }, 1500);
-  }
-}
-
-function cancelBiometric(){
-  currentUser=null;
-  pinInput=''; updatePinDots();
-  showScreen('scr-login');
-}
-
-function loginSuccess(){
-  loadDashboard();
-  showScreen('scr-dash');
-}
-
-// ══════════════════════════════════════════════
-//  DASHBOARD
-// ══════════════════════════════════════════════
-function loadDashboard(){
-  if(!currentUser) return;
-  const name=escHtml(currentUser.name||'Noma\'lum');
-  
-  // Avatar: selfie bo'lsa ko'rsat
-  const avatarEl=document.getElementById('u-avatar');
-  const todayRec=JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
-  if(todayRec.kelishPhoto){
-    avatarEl.innerHTML=`<img src="${todayRec.kelishPhoto}" alt="foto">`;
-  } else {
-    avatarEl.textContent=(currentUser.name||'?')[0].toUpperCase();
-    avatarEl.style.fontSize='22px';
-  }
-  
-  document.getElementById('u-name').textContent=currentUser.name||'—';
-  document.getElementById('u-pos').textContent=escHtml(currentUser.position||'—');
-  
-  loadTodayRecord();
-  updateActionBtns();
-  updateTimeLbls();
-  updateCountdown(new Date());
-}
-
-function loadTodayRecord(){
-  if(!currentUser) return;
-  const rec=JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
-
-  // Kelish
-  if(rec.kelish){
-    document.getElementById('log-kelish').innerHTML='<span class="log-val ok">'+escHtml(rec.kelish)+'</span>';
-    // no photo log
-  } else {
-    document.getElementById('log-kelish').innerHTML='<span class="log-val none">—</span>';
-    document.getElementById('log-kelish-photo').style.display='none';
-  }
-
-  // Ketish
-  if(rec.ketish){
-    document.getElementById('log-ketish').innerHTML='<span class="log-val ok">'+escHtml(rec.ketish)+'</span>';
-    // no photo log
-  } else {
-    document.getElementById('log-ketish').innerHTML='<span class="log-val none">—</span>';
-    document.getElementById('log-ketish-photo').style.display='none';
-  }
-
-  setLogStatus('log-kelish-status', rec.kelishStatus||null);
-  setLogStatus('log-ketish-status', rec.ketishStatus||null);
-
-  const stat=document.getElementById('u-status');
-  const photoBadge=document.getElementById('photo-badge');
-  
-  if(rec.ketish){
-    stat.innerHTML='<div class="sdot sdot-g"></div><span style="font-family:var(--mono);font-size:10px;color:var(--green)">Ishdan chiqdi</span>';
-    photoBadge.style.display='none';
-  }else if(rec.kelish){
-    stat.innerHTML='<div class="sdot sdot-g"></div><span style="font-family:var(--mono);font-size:10px;color:var(--green)">Ishda</span>';
-    photoBadge.style.display='none';
-  }else{
-    stat.innerHTML='<div class="sdot sdot-a"></div><span style="font-family:var(--mono);font-size:10px;color:var(--text2)">Hali kelmagan</span>';
-    photoBadge.style.display='none';
-  }
-}
-
-function setLogStatus(id, status){
-  const el=document.getElementById(id);
-  if(!status){ el.innerHTML='<span class="log-val none">Belgilanmagan</span>'; return; }
-  if(status==='Kech'||status==='Erta ketdi'){
-    el.innerHTML='<span class="log-val late">'+escHtml(status)+'</span>';
-  }else{
-    el.innerHTML='<span class="log-val ok">'+escHtml(status)+'</span>';
-  }
-}
-
-function updateTimeLbls(){
-  const cfg=getCfg();
-  document.getElementById('kelish-time-lbl').textContent=cfg.workStart?(cfg.workStart+(cfg.workEnd?'–'+cfg.workEnd:'')):'';
-  document.getElementById('ketish-time-lbl').textContent=cfg.leaveStart?(cfg.leaveStart+(cfg.leaveEnd?'–'+cfg.leaveEnd:'')):'';
-}
-
-function updateActionBtns(){
-  if(!currentUser) return;
-  const rec=JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
-  const bK=document.getElementById('btn-kelish');
-  const bT=document.getElementById('btn-ketish');
-  if(!bK||!bT) return;
-  const cfg=getCfg();
-  const gpsNeeded=!!(cfg.lat&&cfg.lon);
-  const now=new Date();
-
-  // Dam olish kuni (0=Yakshanba, 6=Shanba)
-  if(now.getDay()===0||now.getDay()===6){ bK.disabled=true; bT.disabled=true; return; }
-
-  if(gpsNeeded&&!gpsAllowed){ bK.disabled=true; bT.disabled=true; return; }
-
-  const nowMin=now.getHours()*60+now.getMinutes();
-
-  // KELISH tugmasi
-  if(rec.kelish){
-    bK.disabled=true;
-  } else if(cfg.workStart){
-    // FIX: workStart dan workEnd gacha + 60 daqiqa tolerance
-    const [sh,sm]=cfg.workStart.split(':').map(Number);
-    const [eh,em]=(cfg.workEnd||cfg.workStart).split(':').map(Number);
-    const startMin=sh*60+sm;
-    const endMin=eh*60+em;
-    const winFrom=startMin-30;      // 30 daqiqa oldin faol
-    const winUntil=endMin+60;       // FIX: kech kelganlar uchun +60 daqiqa
-    bK.disabled=!(nowMin>=winFrom&&nowMin<=winUntil);
-  } else { bK.disabled=false; }
-
-  // KETISH tugmasi
-  if(!rec.kelish||rec.ketish){
-    bT.disabled=true;
-  } else if(cfg.leaveStart){
-    const [lh,lm]=cfg.leaveStart.split(':').map(Number);
-    const [leh,lem]=(cfg.leaveEnd||cfg.leaveStart).split(':').map(Number);
-    const leaveMin=lh*60+lm;
-    const leaveEndMin=leh*60+lem;
-    const winFrom=leaveMin-30;
-    const winUntil=leaveEndMin+60;
-    bT.disabled=!(nowMin>=winFrom&&nowMin<=winUntil);
-  } else { bT.disabled=false; }
-}
-
-// ══════════════════════════════════════════════
-//  COUNTDOWN WIDGET
-// ══════════════════════════════════════════════
-function updateCountdown(now){
-  if(!currentUser){ document.getElementById('countdown-wrap').style.display='none'; return; }
-  const rec=JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
-  const cfg=getCfg();
-  const wrap=document.getElementById('countdown-wrap');
-  const card=document.getElementById('countdown-card');
-  const lblEl=document.getElementById('cd-label');
-  const timeEl=document.getElementById('cd-time');
-  const subEl=document.getElementById('cd-sub');
-  const winEl=document.getElementById('cd-window');
-
-  function fmt(sec){
-    const s=Math.abs(Math.round(sec));
-    const hh=Math.floor(s/3600),mm=Math.floor((s%3600)/60),ss=s%60;
-    if(hh>0) return pad(hh)+':'+pad(mm)+':'+pad(ss);
-    return pad(mm)+':'+pad(ss);
-  }
-  const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
-
-  // Ikkalasi ham tugagan — yashir
-  if(rec.kelish&&rec.ketish){ wrap.style.display='none'; return; }
-
-  // KETISH rejimi
-  if(rec.kelish&&!rec.ketish){
-    wrap.style.display='block';
-    if(!cfg.leaveStart){
-      card.className='countdown-card phase-done';
-      lblEl.textContent='KETISH VAQTI'; timeEl.textContent=pad(now.getHours())+':'+pad(now.getMinutes());
-      subEl.textContent='Ish vaqti sozlanmagan'; winEl.textContent=''; return;
-    }
-    const [lsh,lsm]=cfg.leaveStart.split(':').map(Number);
-    const [leh,lem]=(cfg.leaveEnd||cfg.leaveStart).split(':').map(Number);
-    const leaveStartSec=lsh*3600+lsm*60, leaveEndSec=leh*3600+lem*60;
-    const activeFrom=leaveStartSec-3600, activeUntil=leaveEndSec+3600;
-    winEl.textContent='Ketish oynasi\n'+cfg.leaveStart+' – '+(cfg.leaveEnd||cfg.leaveStart);
-    if(nowSec<activeFrom){
-      card.className='countdown-card phase-done';
-      lblEl.textContent='REJALASHTIRILGAN KETISH'; timeEl.textContent=cfg.leaveStart;
-      subEl.textContent='Ketish vaqti';
-    } else if(nowSec<leaveStartSec){
-      card.className='countdown-card phase-before';
-      lblEl.textContent='KETISH VAQTIGACHA'; timeEl.textContent=fmt(leaveStartSec-nowSec);
-      subEl.textContent=cfg.leaveStart+' da boshlanadi';
-    } else if(nowSec<=leaveEndSec){
-      const diff=leaveEndSec-nowSec;
-      card.className='countdown-card phase-ok';
-      lblEl.textContent='KETISH OYNASI';
-      timeEl.className='cd-time'+(diff<300?' cd-pulse':'');
-      timeEl.textContent=fmt(diff); subEl.textContent=(cfg.leaveEnd||cfg.leaveStart)+' gacha keting';
-    } else if(nowSec<=activeUntil){
-      card.className='countdown-card phase-late';
-      lblEl.textContent="VAQT O'TDI";
-      timeEl.className='cd-time cd-pulse';
-      timeEl.textContent='+'+fmt(nowSec-leaveEndSec);
-      subEl.textContent='Iltimos darhol keting';
-    } else { wrap.style.display='none'; }
+  const ok = await initFirebase(cfg);
+  if(!ok){
+    document.getElementById('setup-screen').style.display='flex';
     return;
   }
-
-  // KELISH rejimi
-  wrap.style.display='block';
-  if(!cfg.workStart){
-    card.className='countdown-card phase-done';
-    lblEl.textContent='KELISH VAQTI'; timeEl.textContent=pad(now.getHours())+':'+pad(now.getMinutes());
-    subEl.textContent='Ish vaqti sozlanmagan'; winEl.textContent=''; return;
-  }
-  const [sh,sm]=cfg.workStart.split(':').map(Number);
-  const [eh,em]=(cfg.workEnd||cfg.workStart).split(':').map(Number);
-  const startSec=sh*3600+sm*60, endSec=eh*3600+em*60;
-  const activeFrom=startSec-3600, activeUntil=endSec+3600;
-  winEl.textContent='Kelish oynasi\n'+cfg.workStart+' – '+(cfg.workEnd||cfg.workStart);
-  if(nowSec<activeFrom){
-    card.className='countdown-card phase-done';
-    lblEl.textContent='KELISH VAQTI'; timeEl.textContent=cfg.workStart;
-    subEl.textContent='Rejalashtirilgan kelish';
-  } else if(nowSec<startSec){
-    card.className='countdown-card phase-before';
-    lblEl.textContent='KELISH VAQTIGACHA'; timeEl.textContent=fmt(startSec-nowSec);
-    subEl.textContent=cfg.workStart+' da boshlanadi';
-  } else if(nowSec<=endSec){
-    const diff=endSec-nowSec;
-    card.className='countdown-card phase-ok';
-    lblEl.textContent='KECH QOLISHGACHA';
-    timeEl.className='cd-time'+(diff<300?' cd-pulse':'');
-    timeEl.textContent=fmt(diff); subEl.textContent=(cfg.workEnd||cfg.workStart)+" gacha o'z vaqtida";
-  } else if(nowSec<=activeUntil){
-    card.className='countdown-card phase-late';
-    lblEl.textContent='KECHIKISH';
-    timeEl.className='cd-time cd-pulse';
-    timeEl.textContent='+'+fmt(nowSec-endSec);
-    subEl.textContent='Iltimos tezroq keling!';
-  } else { wrap.style.display='none'; }
-}
-
-// ══════════════════════════════════════════════
-//  ACTIONS
-// ══════════════════════════════════════════════
-function doAction(type){
-  if(gpsAllowed===false && getCfg().lat){
-    toast('GPS hudud tashqarisida! Harakat mumkin emas.',true); return;
-  }
-  const now=new Date();
-  const cfg=getCfg();
-  const timeStr=pad(now.getHours())+':'+pad(now.getMinutes());
-  let status='';
-  if(type==='kelish'){
-    status=computeKelishStatus(now,cfg);
-    const emoji=status==="O'z vaqtida"?'✓':'⚠';
-    pendingAction={type,timeStr,status};
-    showConfirm('KELISH TASDIQLASH',
-      currentUser.name.split(' ')[0]+', kelish vaqti:\n'+timeStr+'\n'+emoji+' '+status,'kelish');
-  } else {
-    status=computeKetishStatus(now,cfg);
-    const emoji=status==="O'z vaqtida ketdi"?'✓':'⚠';
-    pendingAction={type,timeStr,status};
-    showConfirm('KETISH TASDIQLASH',
-      currentUser.name.split(' ')[0]+', ketish vaqti:\n'+timeStr+'\n'+emoji+' '+status,'ketish');
-  }
-}
-
-// FIX: startMin ham tekshiriladi
-function computeKelishStatus(now,cfg){
-  if(!cfg.workStart) return 'Belgilanmagan';
-  const [sh,sm]=cfg.workStart.split(':').map(Number);
-  const [eh,em]=(cfg.workEnd||cfg.workStart).split(':').map(Number);
-  const nowMin=now.getHours()*60+now.getMinutes();
-  const startMin=sh*60+sm, endMin=eh*60+em;
-  if(nowMin>=startMin && nowMin<=endMin) return "O'z vaqtida";
-  if(nowMin<startMin) return 'Erta keldi';
-  return 'Kech';
-}
-
-function computeKetishStatus(now,cfg){
-  if(!cfg.leaveStart) return 'Belgilanmagan';
-  const [sh,sm]=cfg.leaveStart.split(':').map(Number);
-  const [eh,em]=(cfg.leaveEnd||cfg.leaveStart).split(':').map(Number);
-  const nowMin=now.getHours()*60+now.getMinutes();
-  const startMin=sh*60+sm, endMin=eh*60+em;
-  if(nowMin>=startMin && nowMin<=endMin) return "O'z vaqtida ketdi";
-  if(nowMin<startMin) return 'Erta ketdi';
-  return 'Kech ketdi';
-}
-
-function showConfirm(title,msg,actionType){
-  document.getElementById('cfm-title').textContent=title;
-  document.getElementById('cfm-msg').textContent=msg;
-  const gpsEl=document.getElementById('cfm-gps');
-  if(userLat){
-    gpsEl.textContent='📍 GPS: '+userLat.toFixed(5)+', '+userLon.toFixed(5);
-  } else { gpsEl.textContent=''; }
-  const yesBtn=document.getElementById('cfm-yes');
-  yesBtn.className='cfm-btn '+(actionType==='kelish'?'cfm-yes-kelish':'cfm-yes-ketish');
-  document.getElementById('overlay-bg').classList.add('active');
-}
-function closeConfirm(){
-  document.getElementById('overlay-bg').classList.remove('active');
-  pendingAction=null;
-}
-
-async function confirmAction(){
-  closeConfirm();
-  if(!pendingAction||!currentUser) return;
-  const {type,timeStr,status}=pendingAction;
-  pendingAction=null;
-
-  const today=todayKey();
-  const key='iiv_rec_'+currentUser.id+'_'+today;
-  const rec=JSON.parse(localStorage.getItem(key)||'{}');
-
-  if(type==='kelish'){
-    rec.kelish=timeStr; rec.kelishStatus=status;
-    // no photo
-    if(userLat){ rec.kelishLat=userLat; rec.kelishLon=userLon; }
-    rec.kelishDevice=getDeviceId();
-    rec.kelishAt=new Date().toISOString();
-  } else {
-    rec.ketish=timeStr; rec.ketishStatus=status;
-    // no photo
-    if(userLat){ rec.ketishLat=userLat; rec.ketishLon=userLon; }
-    rec.ketishDevice=getDeviceId();
-    rec.ketishAt=new Date().toISOString();
-  }
-  localStorage.setItem(key, JSON.stringify(rec));
-
-  // Cloud sync
-  await syncAttendanceToCloud(currentUser.id, today, rec);
-
-
-  const label=type==='kelish'?'Kelish':'Ketish';
-  toast('✓ '+label+' belgilandi: '+timeStr);
-  loadDashboard();
-}
-
-// ══════════════════════════════════════════════
-//  PHOTO VIEWER
-// ══════════════════════════════════════════════
-function showPhotoModal(type){
-  if(!currentUser) return;
-  const rec=JSON.parse(localStorage.getItem('iiv_rec_'+currentUser.id+'_'+todayKey())||'{}');
-  const photo=type==='kelish'?rec.kelishPhoto:rec.ketishPhoto;
-  if(!photo){ toast('Rasm topilmadi',true); return; }
-  const time=type==='kelish'?rec.kelish:rec.ketish;
-  const status=type==='kelish'?rec.kelishStatus:rec.ketishStatus;
-  const lat=type==='kelish'?rec.kelishLat:rec.ketishLat;
-  const lon=type==='kelish'?rec.kelishLon:rec.ketishLon;
-
-  document.getElementById('pm-title').textContent=type==='kelish'?'KELISH RASMI':'KETISH RASMI';
-  document.getElementById('pm-img').src=photo;
-  let info=currentUser.name+'\n';
-  info+='Vaqt: '+time+' — '+status+'\n';
-  if(lat) info+='GPS: '+lat.toFixed(5)+', '+lon.toFixed(5)+'\n';
-  info+='Sana: '+todayKey();
-  document.getElementById('pm-info').textContent=info;
-  document.getElementById('photo-modal-bg').classList.add('active');
-}
-function closePhotoModal(){
-  document.getElementById('photo-modal-bg').classList.remove('active');
-}
-
-// ══════════════════════════════════════════════
-//  LOGOUT
-// ══════════════════════════════════════════════
-function doLogout(){
-  capturedSelfie=null;
-  currentUser=null;
-  SESSION_DATE=null; // keyingi kirish yangi sanani oladi
-  pinInput=''; updatePinDots(); clearLoginError();
-  showScreen('scr-login');
-}
-
-// ══════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════
-startClock();
-startGPS();
+  document.getElementById('main-screen').style.display='block';
+  updateClock();
+  render();
+})();
 </script>
 </body>
 </html>
