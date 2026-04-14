@@ -241,8 +241,14 @@ let app = null;
 let unsubDash = null;
 
 function getConfig() {
-  const raw = localStorage.getItem('dav_fb_config');
-  return raw ? JSON.parse(raw) : null;
+  return {
+    apiKey: "AIzaSyBj8NERdHAsxTJ7dl-xaIKwDQWFNgCl8bU",
+    authDomain: "hodimlar-nazorati.firebaseapp.com",
+    projectId: "hodimlar-nazorati",
+    storageBucket: "hodimlar-nazorati.firebasestorage.app",
+    messagingSenderId: "539426574914",
+    appId: "1:539426574914:web:aef7f4787592bcece913db"
+  };
 }
 
 async function initFirebase(cfg) {
@@ -759,23 +765,23 @@ function bindEvents(v) {
 function td(){ return new Date().toISOString().split('T')[0]; }
 function nowT(){ return new Date().toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'}); }
 
-// ══════════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════════
 (async function init() {
-  const cfg = getConfig();
-  if(!cfg) {
-    document.getElementById('setup-screen').style.display='flex';
-    return;
-  }
+  const cfg = getConfig(); // endi har doim bor
+
   const ok = await initFirebase(cfg);
+
   if(!ok) {
-    document.getElementById('setup-screen').style.display='flex';
+    alert("Firebase ulanmadi");
     return;
   }
+
+  // setup-screen umuman ishlatilmaydi
+  document.getElementById('setup-screen').style.display='none';
+
   document.getElementById('auth-screen').style.display='flex';
   renderAuthPins();
   renderAuthKp();
+
   if(sessionStorage.getItem(SESSION_KEY)==='1') {
     document.getElementById('auth-screen').style.display='none';
     document.getElementById('app-screen').style.display='flex';
