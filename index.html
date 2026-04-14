@@ -493,7 +493,7 @@ function updateClock(){ const el=document.getElementById('clock'); if(el) el.tex
 
 // ── Init ─────────────────────────────────────────
 (async function init() {
-  const cfg = getConfig(); // endi har doim bor
+  const cfg = getConfig();
 
   const ok = await initFirebase(cfg);
 
@@ -502,18 +502,14 @@ function updateClock(){ const el=document.getElementById('clock'); if(el) el.tex
     return;
   }
 
-  // setup-screen umuman ishlatilmaydi
+  // setup o‘chadi
   document.getElementById('setup-screen').style.display='none';
 
-  document.getElementById('auth-screen').style.display='flex';
-  renderAuthPins();
-  renderAuthKp();
+  // asosiy ekran ochiladi
+  document.getElementById('main-screen').style.display='block';
 
-  if(sessionStorage.getItem(SESSION_KEY)==='1') {
-    document.getElementById('auth-screen').style.display='none';
-    document.getElementById('app-screen').style.display='flex';
-    startApp();
-  }
+  updateClock();
+  render();
 })();
 </script>
 </body>
