@@ -27,7 +27,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:#0d0f12;color:#e8e6e0;min
 .tb:active{transform:scale(.97)}
 .tb.in-sel{border-color:var(--g);background:rgba(74,222,128,.08)}
 .tb.out-sel{border-color:var(--w);background:rgba(251,191,36,.08)}
-.tb.off{opacity:.35;cursor:not-allowed}
+.tb.off{opacity:.35;cursor:not-allowed;pointer-events:none}
 .ti{font-size:32px;margin-bottom:8px}
 .tl{font-size:14px;font-weight:500}
 .tt{font-size:11px;color:var(--mu);margin-top:3px;font-family:var(--mono)}
@@ -72,7 +72,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:#0d0f12;color:#e8e6e0;min
 .done-t{font-family:var(--mono);font-size:36px;margin-bottom:4px}
 .done-d{font-size:12px;color:var(--mu);margin-bottom:28px}
 .mono{font-family:var(--mono)}
-/* Setup screen */
 .setup{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 20px;width:100%}
 .setup-card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:28px;width:100%;max-width:420px}
 .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
@@ -85,27 +84,6 @@ code{font-family:var(--mono);background:rgba(255,255,255,.08);padding:1px 5px;bo
 </head>
 <body>
 
-<!-- FIREBASE SETUP -->
-<div id="setup-screen" class="setup" style="display:none">
-  <div class="setup-card">
-    <div style="font-family:var(--mono);font-size:11px;color:var(--g);letter-spacing:.1em;margin-bottom:12px">DAVOMAT · XODIM</div>
-    <div style="font-size:18px;font-weight:500;margin-bottom:6px">🔥 Firebase ulash</div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:20px;line-height:1.6">
-      Admin siz bilan Firebase config ma'lumotlarini ulashishi kerak.<br>
-      Yoki admin <code>admin.html</code> ni birinchi sozlashi kerak.
-    </div>
-    <div class="fg"><label class="fl">API Key</label><input id="cfg-apiKey" placeholder="AIzaSy..."></div>
-    <div class="fg"><label class="fl">Auth Domain</label><input id="cfg-authDomain" placeholder="yourapp.firebaseapp.com"></div>
-    <div class="fg"><label class="fl">Project ID</label><input id="cfg-projectId" placeholder="your-project-id"></div>
-    <div class="fg"><label class="fl">Storage Bucket</label><input id="cfg-storageBucket" placeholder="yourapp.appspot.com"></div>
-    <div class="fg"><label class="fl">Messaging Sender ID</label><input id="cfg-messagingSenderId" placeholder="123456789"></div>
-    <div class="fg"><label class="fl">App ID</label><input id="cfg-appId" placeholder="1:123456789:web:abc..."></div>
-    <div id="cfg-err" class="alert al-e" style="display:none"></div>
-    <button class="btn bp" onclick="saveFirebaseConfig()" style="margin-top:4px">🔥 Ulanish</button>
-  </div>
-</div>
-
-<!-- MAIN APP -->
 <div id="main-screen" style="display:none;width:100%">
 <div class="wrap">
   <div class="hdr">
@@ -117,108 +95,155 @@ code{font-family:var(--mono);background:rgba(255,255,255,.08);padding:1px 5px;bo
 </div>
 </div>
 
-<!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc,
-  collection, getDocs, query, where
+  collection, getDocs, query, where, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ── Firebase config ──────────────────────────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBj8NERdHAsxTJ7dl-xaIKwDQWFNgCl8bU",
+  authDomain: "hodimlar-nazorati.firebaseapp.com",
+  projectId: "hodimlar-nazorati",
+  storageBucket: "hodimlar-nazorati.firebasestorage.app",
+  messagingSenderId: "539426574914",
+  appId: "1:539426574914:web:aef7f4787592bcece913db"
+};
 
 let db = null;
 
-function getConfig() {
-  return {
-    apiKey: "AIzaSyBj8NERdHAsxTJ7dl-xaIKwDQWFNgCl8bU",
-    authDomain: "hodimlar-nazorati.firebaseapp.com",
-    projectId: "hodimlar-nazorati",
-    storageBucket: "hodimlar-nazorati.firebasestorage.app",
-    messagingSenderId: "539426574914",
-    appId: "1:539426574914:web:aef7f4787592bcece913db"
-  };
-}
-
-async function initFirebase(cfg) {
+async function initFirebase() {
   try {
-    const app = initializeApp(cfg, 'davomat-emp');
+    const app = initializeApp(FIREBASE_CONFIG, 'davomat-emp');
     db = getFirestore(app);
-    await getDoc(doc(db,'settings','main'));
+    // Ulanishni tekshirish
+    await getDoc(doc(db, 'config', 'app'));
     return true;
   } catch(e) {
+    console.error('Firebase init xatosi:', e);
     db = null;
     return false;
   }
 }
 
-// ── Setup ────────────────────────────────────────
-window.saveFirebaseConfig = async function() {
-  const cfg = {
-    apiKey: document.getElementById('cfg-apiKey').value.trim(),
-    authDomain: document.getElementById('cfg-authDomain').value.trim(),
-    projectId: document.getElementById('cfg-projectId').value.trim(),
-    storageBucket: document.getElementById('cfg-storageBucket').value.trim(),
-    messagingSenderId: document.getElementById('cfg-messagingSenderId').value.trim(),
-    appId: document.getElementById('cfg-appId').value.trim(),
-  };
-  const errEl = document.getElementById('cfg-err');
-  if(!cfg.apiKey||!cfg.projectId){
-    errEl.textContent='API Key va Project ID majburiy'; errEl.style.display='block'; return;
-  }
-  const btn = document.querySelector('#setup-screen .bp');
-  btn.disabled=true; btn.textContent='Ulanmoqda...';
-  const ok = await initFirebase(cfg);
-  if(ok){
-    localStorage.setItem('dav_fb_config', JSON.stringify(cfg));
-    document.getElementById('setup-screen').style.display='none';
-    document.getElementById('main-screen').style.display='block';
-    updateClock();
-    render();
-  } else {
-    errEl.textContent='Firebase ga ulanib bo\'lmadi. Config ni tekshiring.';
-    errEl.style.display='block';
-    btn.disabled=false; btn.textContent='🔥 Ulanish';
-  }
-};
+// ── Firestore helpers ────────────────────────────────────────────────────────
 
-// ── Firestore helpers ────────────────────────────
+// FIX #1: Settings field nomlari admin.html bilan mos keltirildi
+// admin.html: workStart, workEnd, leaveStart, leaveEnd, lat, lon, radius
+// Eski kod arrivalStart, departureStart... ishlatgan — mos kelmagan!
 async function loadSettings() {
-  const snap = await getDoc(doc(db,'settings','main'));
-  if(snap.exists()) return snap.data();
-  return {arrivalStart:'07:00',arrivalEnd:'09:00',departureStart:'16:00',departureEnd:'20:00',locationLat:41.2995,locationLng:69.2401,locationName:'Ofis',radius:15};
-}
-
-async function loadEmployees() {
-  const snap = await getDocs(collection(db,'employees'));
-  return snap.docs.map(d=>({id:d.id,...d.data()}));
-}
-
-async function loadTodayRecord(empId, date) {
-  const q = query(collection(db,'records'), where('empId','==',empId), where('date','==',date));
-  const snap = await getDocs(q);
-  if(snap.empty) return null;
-  return {id:snap.docs[0].id,...snap.docs[0].data()};
-}
-
-async function saveRecord(rec) {
-  const existing = await loadTodayRecord(rec.empId, rec.date);
-  if(existing) {
-    await updateDoc(doc(db,'records',existing.id), rec);
-  } else {
-    await setDoc(doc(db,'records',rec.id.toString()), rec);
+  try {
+    const snap = await getDoc(doc(db, 'config', 'app'));
+    if (snap.exists()) {
+      const d = snap.data();
+      return {
+        // admin.html da saqlanadigan field nomlar:
+        arrivalStart:   d.workStart   || '08:00',
+        arrivalEnd:     d.workEnd     || '09:00',
+        departureStart: d.leaveStart  || '17:00',
+        departureEnd:   d.leaveEnd    || '18:00',
+        locationLat:    parseFloat(d.lat)    || 0,
+        locationLng:    parseFloat(d.lon)    || 0,
+        locationName:   d.locationName || 'Ish joyi',
+        radius:         parseInt(d.radius)   || 50,
+        // GPS yoqilganmi? lat/lon bo'lsa yoqilgan
+        gpsEnabled:     !!(d.lat && d.lon),
+      };
+    }
+  } catch(e) {
+    console.warn('Settings yuklanmadi, default ishlatiladi:', e.message);
   }
+  // Default — sozlamalar yo'q bo'lsa
+  return {
+    arrivalStart:'08:00', arrivalEnd:'09:00',
+    departureStart:'17:00', departureEnd:'18:00',
+    locationLat:0, locationLng:0, locationName:'Ish joyi',
+    radius:50, gpsEnabled:false
+  };
 }
 
-// ── State ────────────────────────────────────────
+// FIX #2: Xodimlar admin.html "staff" collectionida, lekin bu kod "employees" dan o'qigan
+async function loadEmployees() {
+  // admin.html "staff" collectioniga yozadi, field nomi: pin
+  const snap = await getDocs(collection(db, 'staff'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+// FIX #3: Attendance "attendance" collectionida, "records" emas
+// admin.html: doc ID = staffId + '_' + date, fieldlar: kelish, ketish
+async function loadTodayRecord(empId, date) {
+  const docId = empId + '_' + date;
+  const snap = await getDoc(doc(db, 'attendance', docId));
+  if (snap.exists()) return { id: docId, ...snap.data() };
+  return null;
+}
+
+async function saveRecord(empId, empName, empPos, date, type, time, lat, lon) {
+  const docId = empId + '_' + date;
+  const existing = await loadTodayRecord(empId, date);
+  const base = existing || { staffId: empId, staffName: empName, staffPos: empPos || '', date };
+
+  if (type === 'in') {
+    base.kelish       = time;
+    base.kelishAt     = new Date().toISOString();
+    base.kelishStatus = state._kelishStatus || "O'z vaqtida";
+    if (lat != null) { base.kelishLat = lat; base.kelishLon = lon; }
+  } else {
+    base.ketish       = time;
+    base.ketishAt     = new Date().toISOString();
+    base.ketishStatus = state._ketishStatus || "O'z vaqtida ketdi";
+    if (lat != null) { base.ketishLat = lat; base.ketishLon = lon; }
+  }
+  base.updatedAt = serverTimestamp();
+
+  await setDoc(doc(db, 'attendance', docId), base, { merge: true });
+}
+
+// ── State ────────────────────────────────────────────────────────────────────
 let state = {
   step: 'type', type: null, pin: '',
-  empId: null, empName: '',
+  empId: null, empName: '', empPos: '',
   gpsStatus: 'idle', gpsMsg: '',
+  gpsLat: null, gpsLon: null,
   fpState: 'idle',
   error: null, result: null,
   loading: false,
+  _kelishStatus: "O'z vaqtida",
+  _ketishStatus: "O'z vaqtida ketdi",
 };
 
-// ── Render ───────────────────────────────────────
+// ── Utils ────────────────────────────────────────────────────────────────────
+function td() { return new Date().toISOString().split('T')[0]; }
+function nowT() {
+  const n = new Date();
+  return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+}
+function tMin(t) {
+  if (!t) return 0;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+function updateClock() {
+  const el = document.getElementById('clock');
+  if (el) el.textContent = nowT();
+  setTimeout(updateClock, 10000);
+}
+
+// FIX #4: Kelish/ketish holati — admin.html bilan mos
+function calcKelishStatus(settings) {
+  const cur = new Date().getHours() * 60 + new Date().getMinutes();
+  const limit = tMin(settings.arrivalStart);
+  return cur <= limit ? "O'z vaqtida" : 'Kech';
+}
+function calcKetishStatus(settings) {
+  const cur = new Date().getHours() * 60 + new Date().getMinutes();
+  const limit = tMin(settings.departureStart);
+  return cur < limit ? 'Erta ketdi' : "O'z vaqtida ketdi";
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
 async function render() {
   let s;
   try {
@@ -229,54 +254,67 @@ async function render() {
   }
 
   const now = new Date();
-  const cur = now.getHours()*60+now.getMinutes();
-  const inOk  = cur>=tMin(s.arrivalStart)   && cur<=tMin(s.arrivalEnd);
-  const outOk = cur>=tMin(s.departureStart) && cur<=tMin(s.departureEnd);
+  const cur = now.getHours() * 60 + now.getMinutes();
+
+  // FIX #5: Vaqt oynasi KENG — test uchun: agar sozlanmagan bo'lsa HAMMA VAQT ishlaydi
+  const hasArrival   = !!(s.arrivalStart && s.arrivalEnd);
+  const hasDeparture = !!(s.departureStart && s.departureEnd);
+
+  const inOk  = !hasArrival  || (cur >= tMin(s.arrivalStart)   && cur <= tMin(s.arrivalEnd));
+  const outOk = !hasDeparture || (cur >= tMin(s.departureStart) && cur <= tMin(s.departureEnd));
 
   let steps = '';
-  if(state.step !== 'type' && state.step !== 'done') {
-    const names = ['Tur','Kod','GPS','Barmoq'];
-    const idx = ['type','pin','gps','fp'].indexOf(state.step);
-    steps = `<div class="steps">${names.map((n,i)=>`
+  if (state.step !== 'type' && state.step !== 'done') {
+    // GPS qadami: agar GPS yoqilmagan bo'lsa ko'rsatilmaydi
+    const stepList = s.gpsEnabled ? ['Tur','Kod','GPS','Tasdiqlash'] : ['Tur','Kod','Tasdiqlash'];
+    const stepKeys = s.gpsEnabled ? ['type','pin','gps','fp'] : ['type','pin','fp'];
+    const idx = stepKeys.indexOf(state.step);
+    steps = `<div class="steps">${stepList.map((n,i)=>`
       <div style="display:flex;align-items:center">
         <div class="sn ${i<idx?'dn':i===idx?'ac':''}">${i<idx?'✓':i+1}</div>
-        ${i<names.length-1?'<div class="sl"></div>':''}
+        ${i<stepList.length-1?'<div class="sl"></div>':''}
       </div>`).join('')}</div>`;
   }
 
-  const err = state.error ? `<div class="alert al-e">${state.error} <span onclick="clearErr()" style="float:right;cursor:pointer">✕</span></div>` : '';
+  const err = state.error
+    ? `<div class="alert al-e">${state.error} <span onclick="clearErr()" style="float:right;cursor:pointer">✕</span></div>`
+    : '';
   let content = '';
 
-  if(state.step === 'type') {
+  // ── STEP: type ───────────────────────────────────────────────────────────
+  if (state.step === 'type') {
     content = `
       <div class="card">
         <div class="ct">Davomat turi</div>
         <div class="cs">Kelayapsizmi yoki ketayapsizmi?</div>
         <div class="tg">
-          <div class="tb ${state.type==='in'?'in-sel':''} ${!inOk?'off':''}" onclick="${inOk?'selectType(\'in\')':''}">
+          <div class="tb ${!inOk?'off':''}" onclick="selectType('in')">
             <div class="ti">🏢</div>
             <div class="tl">Kelish</div>
-            <div class="tt">${s.arrivalStart}–${s.arrivalEnd}</div>
+            <div class="tt">${hasArrival ? s.arrivalStart+'–'+s.arrivalEnd : 'Har doim'}</div>
           </div>
-          <div class="tb ${state.type==='out'?'out-sel':''} ${!outOk?'off':''}" onclick="${outOk?'selectType(\'out\')':''}">
+          <div class="tb ${!outOk?'off':''}" onclick="selectType('out')">
             <div class="ti">🏠</div>
             <div class="tl">Ketish</div>
-            <div class="tt">${s.departureStart}–${s.departureEnd}</div>
+            <div class="tt">${hasDeparture ? s.departureStart+'–'+s.departureEnd : 'Har doim'}</div>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--mu);text-align:center">📍 ${s.locationName} · Radius: ${s.radius}m</div>
+        <div style="font-size:11px;color:var(--mu);text-align:center">
+          ${s.gpsEnabled ? '📍 '+s.locationName+' · Radius: '+s.radius+'m' : '📍 GPS tekshiruvsiz rejim'}
+        </div>
       </div>
     `;
   }
 
-  else if(state.step === 'pin') {
+  // ── STEP: pin ────────────────────────────────────────────────────────────
+  else if (state.step === 'pin') {
     content = `
       <div class="card">
         <div class="ct">${state.type==='in'?'🏢 Kelish':'🏠 Ketish'} — Kod kiriting</div>
-        <div class="cs">Sizga berilgan 4 xonali kodni kiriting</div>
-        <div class="pin-wrap" id="pin-display">
-          ${Array.from({length:4}).map((_,i)=>{
-            const d=state.pin[i]||'';
+        <div class="cs">Sizga berilgan 4 xonali PIN kodni kiriting</div>
+        <div class="pin-wrap">
+          ${Array.from({length:4}).map((_,i) => {
+            const d = state.pin[i] || '';
             return `<div class="pin-box ${i===state.pin.length?'ac':''} ${d?'fi':''}">${d?'●':''}</div>`;
           }).join('')}
         </div>
@@ -290,12 +328,13 @@ async function render() {
     `;
   }
 
-  else if(state.step === 'gps') {
-    const gClass = state.gpsStatus==='ok'?'ok':state.gpsStatus==='err'?'err':'loading';
+  // ── STEP: gps ────────────────────────────────────────────────────────────
+  else if (state.step === 'gps') {
+    const gClass   = state.gpsStatus==='ok'?'ok':state.gpsStatus==='err'?'err':'loading';
     const dotClass = state.gpsStatus==='ok'?'dg':state.gpsStatus==='err'?'dr':'dw';
-    const gMsg = state.gpsStatus==='loading'?'📡 Joylashuv aniqlanmoqda...'
-                :state.gpsStatus==='ok'?state.gpsMsg
-                :state.gpsMsg||'GPS xatosi';
+    const gMsg     = state.gpsStatus==='loading' ? '📡 Joylashuv aniqlanmoqda...'
+                   : state.gpsStatus==='ok'      ? state.gpsMsg
+                   : state.gpsMsg || 'GPS xatosi';
     content = `
       <div class="card">
         <div class="ct">📍 GPS tekshiruvi</div>
@@ -304,14 +343,15 @@ async function render() {
           <div class="dot ${dotClass}"></div>
           <span>${gMsg}</span>
         </div>
-        ${state.gpsStatus==='ok'?`<button class="btn bp" onclick="continueGps()">Davom etish →</button>`:''}
-        ${state.gpsStatus==='err'?`<button class="btn bo" style="margin-top:8px" onclick="startGps()">🔄 Qayta urinish</button>`:''}
+        ${state.gpsStatus==='ok' ? `<button class="btn bp" onclick="continueGps()">Davom etish →</button>` : ''}
+        ${state.gpsStatus==='err' ? `<button class="btn bo" style="margin-top:8px" onclick="startGps()">🔄 Qayta urinish</button>` : ''}
       </div>
       <button class="btn bo" onclick="goBack()" ${state.gpsStatus==='loading'?'disabled':''}>← Orqaga</button>
     `;
   }
 
-  else if(state.step === 'fp') {
+  // ── STEP: fp ─────────────────────────────────────────────────────────────
+  else if (state.step === 'fp') {
     content = `
       <div class="card">
         <div class="ct">🔐 Tasdiqlash</div>
@@ -327,7 +367,8 @@ async function render() {
     `;
   }
 
-  else if(state.step === 'done' && state.result) {
+  // ── STEP: done ───────────────────────────────────────────────────────────
+  else if (state.step === 'done' && state.result) {
     content = `
       <div class="done">
         <div class="done-ic">${state.result.type==='in'?'✅':'👋'}</div>
@@ -344,170 +385,216 @@ async function render() {
   document.getElementById('root').innerHTML = steps + err + content;
 }
 
-// ── Actions ──────────────────────────────────────
-window.clearErr = function() { state.error=null; render(); };
+// ── Actions ──────────────────────────────────────────────────────────────────
+window.clearErr = function() { state.error = null; render(); };
+
 window.goBack = function() {
-  const order=['type','pin','gps','fp'];
-  const idx=order.indexOf(state.step);
-  if(idx>0){ state.step=order[idx-1]; state.error=null; render(); }
+  const order = ['type','pin','gps','fp'];
+  const idx = order.indexOf(state.step);
+  if (idx > 0) { state.step = order[idx-1]; state.error = null; render(); }
 };
+
 window.resetState = function() {
-  state={step:'type',type:null,pin:'',empId:null,empName:'',gpsStatus:'idle',gpsMsg:'',fpState:'idle',error:null,result:null,loading:false};
+  state = {
+    step:'type', type:null, pin:'',
+    empId:null, empName:'', empPos:'',
+    gpsStatus:'idle', gpsMsg:'',
+    gpsLat:null, gpsLon:null,
+    fpState:'idle', error:null, result:null, loading:false,
+    _kelishStatus:"O'z vaqtida", _ketishStatus:"O'z vaqtida ketdi"
+  };
   render();
 };
 
+// FIX #6: selectType — vaqt tekshiruvi to'g'irlandi
+// Eski kod: buttons.off klassi bor bo'lsa ham onclick ishlardi!
+// Endi .off klassi pointer-events:none bilan bloklanadi (CSS da ham to'g'irlandi)
 window.selectType = async function(type) {
   const s = await loadSettings();
-  const cur=new Date().getHours()*60+new Date().getMinutes();
-  if(type==='in'&&(cur<tMin(s.arrivalStart)||cur>tMin(s.arrivalEnd))){
-    state.error=`Kelish vaqti ${s.arrivalStart}–${s.arrivalEnd} orasida`; render(); return;
+  const cur = new Date().getHours() * 60 + new Date().getMinutes();
+
+  if (type === 'in' && s.arrivalStart && s.arrivalEnd) {
+    if (cur < tMin(s.arrivalStart) || cur > tMin(s.arrivalEnd)) {
+      state.error = `Kelish vaqti ${s.arrivalStart}–${s.arrivalEnd} orasida`;
+      render(); return;
+    }
   }
-  if(type==='out'&&(cur<tMin(s.departureStart)||cur>tMin(s.departureEnd))){
-    state.error=`Ketish vaqti ${s.departureStart}–${s.departureEnd} orasida`; render(); return;
+  if (type === 'out' && s.departureStart && s.departureEnd) {
+    if (cur < tMin(s.departureStart) || cur > tMin(s.departureEnd)) {
+      state.error = `Ketish vaqti ${s.departureStart}–${s.departureEnd} orasida`;
+      render(); return;
+    }
   }
-  state.type=type; state.step='pin'; state.error=null; render();
+
+  // Holat hisoblash
+  state._kelishStatus = calcKelishStatus(s);
+  state._ketishStatus = calcKetishStatus(s);
+  state.type = type; state.step = 'pin'; state.error = null;
+  render();
 };
 
 window.pinKey = function(k) {
-  if(k==='del'){ state.pin=state.pin.slice(0,-1); render(); return; }
-  if(k==='ok'){ if(state.pin.length>=4) submitPin(); return; }
-  if(state.pin.length<4){ state.pin+=k; render(); if(state.pin.length===4) setTimeout(submitPin,150); }
+  if (k === 'del') { state.pin = state.pin.slice(0,-1); render(); return; }
+  if (k === 'ok')  { if (state.pin.length >= 4) submitPin(); return; }
+  if (state.pin.length < 4) { state.pin += k; render(); if (state.pin.length === 4) setTimeout(submitPin, 150); }
 };
 
 async function submitPin() {
-  if(state.loading) return;
-  state.loading=true;
+  if (state.loading) return;
+  state.loading = true;
+
   try {
     const emps = await loadEmployees();
-    if(!emps||emps.length===0){
-      state.error='Tizimda xodimlar ro\'yxati yo\'q. Admin panelida xodim qo\'shing.';
-      state.pin=''; state.loading=false; render(); return;
+    if (!emps || emps.length === 0) {
+      state.error = "Tizimda xodimlar yo'q. Admin panelida xodim qo'shing.";
+      state.pin = ''; state.loading = false; render(); return;
     }
-    const emp = emps.find(e=>e.code===state.pin);
-    if(!emp){
-      state.error='Noto\'g\'ri kod. Qayta urinib ko\'ring.';
-      state.pin=''; state.loading=false; render(); return;
+
+    // FIX #7: admin.html da field nomi "pin" (e.code emas, e.pin)
+    const emp = emps.find(e => e.pin === state.pin);
+    if (!emp) {
+      state.error = "Noto'g'ri PIN. Qayta urinib ko'ring.";
+      state.pin = ''; state.loading = false; render(); return;
     }
+
     const today = td();
     const existing = await loadTodayRecord(emp.id, today);
-    if(state.type==='in'&&existing?.checkIn){
-      state.error=`${emp.name} bugun allaqachon kelgan.`; state.pin=''; state.loading=false; render(); return;
+
+    // FIX #8: field nomlar admin bilan mos — kelish/ketish (checkIn/checkOut emas)
+    if (state.type === 'in' && existing?.kelish) {
+      state.error = `${emp.name} bugun allaqachon kelgan (${existing.kelish}).`;
+      state.pin = ''; state.loading = false; render(); return;
     }
-    if(state.type==='out'&&existing?.checkOut){
-      state.error=`${emp.name} bugun allaqachon ketgan.`; state.pin=''; state.loading=false; render(); return;
+    if (state.type === 'out' && existing?.ketish) {
+      state.error = `${emp.name} bugun allaqachon ketgan (${existing.ketish}).`;
+      state.pin = ''; state.loading = false; render(); return;
     }
-    if(state.type==='out'&&!existing?.checkIn){
-      state.error='Avval kelish qayd etilmagan.'; state.pin=''; state.loading=false; render(); return;
+    if (state.type === 'out' && !existing?.kelish) {
+      state.error = 'Avval kelish qayd etilmagan.';
+      state.pin = ''; state.loading = false; render(); return;
     }
-    state.empId=emp.id; state.empName=emp.name; state.step='gps'; state.error=null; state.loading=false;
-    render();
-    startGps();
+
+    state.empId   = emp.id;
+    state.empName = emp.name;
+    state.empPos  = emp.position || '';
+    state.loading = false;
+
+    const s = await loadSettings();
+    if (s.gpsEnabled) {
+      // GPS yoqilgan — GPS qadamiga o'tish
+      state.step = 'gps'; state.error = null;
+      render();
+      startGps();
+    } else {
+      // GPS yo'q — to'g'ridan-to'g'ri tasdiqlashga o'tish
+      state.step = 'fp'; state.error = null;
+      render();
+    }
+
   } catch(e) {
-    state.error='Firebase xatosi: '+e.message; state.pin=''; state.loading=false; render();
+    state.error = 'Firebase xatosi: ' + e.message;
+    state.pin = ''; state.loading = false; render();
   }
 }
 
 window.startGps = function() {
-  state.gpsStatus='loading'; state.gpsMsg=''; render();
-  if(!navigator.geolocation){
-    state.gpsStatus='err'; state.gpsMsg='Qurilmangiz GPS ni qo\'llamaydi'; render(); return;
+  state.gpsStatus = 'loading'; state.gpsMsg = ''; render();
+  if (!navigator.geolocation) {
+    state.gpsStatus = 'err'; state.gpsMsg = "Qurilmangiz GPS ni qo'llamaydi"; render(); return;
   }
   navigator.geolocation.getCurrentPosition(
     async pos => {
       const s = await loadSettings();
-      const R=6371000,dLat=(pos.coords.latitude-s.locationLat)*Math.PI/180,dLon=(pos.coords.longitude-s.locationLng)*Math.PI/180;
-      const a=Math.sin(dLat/2)**2+Math.cos(s.locationLat*Math.PI/180)*Math.cos(pos.coords.latitude*Math.PI/180)*Math.sin(dLon/2)**2;
-      const dist=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-      if(dist<=s.radius){
-        state.gpsStatus='ok';
-        state.gpsMsg=`✓ Hududda (${Math.round(dist)}m, ruxsat: ${s.radius}m)`;
+      const R=6371000,
+        dLat=(pos.coords.latitude - s.locationLat)*Math.PI/180,
+        dLon=(pos.coords.longitude - s.locationLng)*Math.PI/180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(s.locationLat*Math.PI/180)*Math.cos(pos.coords.latitude*Math.PI/180)*Math.sin(dLon/2)**2;
+      const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      state.gpsLat = pos.coords.latitude;
+      state.gpsLon = pos.coords.longitude;
+      if (dist <= s.radius) {
+        state.gpsStatus = 'ok';
+        state.gpsMsg = `✓ Hududda (${Math.round(dist)}m, ruxsat: ${s.radius}m)`;
       } else {
-        state.gpsStatus='err';
-        state.gpsMsg=`Hududdan ${Math.round(dist-s.radius)}m tashqaridasiz`;
+        state.gpsStatus = 'err';
+        state.gpsMsg = `Hududdan ${Math.round(dist - s.radius)}m tashqaridasiz`;
       }
       render();
     },
     err => {
-      state.gpsStatus='err';
-      state.gpsMsg=err.code===1?'Joylashuvga ruxsat berilmagan (sozlamalarda yoqing)':'GPS signali topilmadi';
+      state.gpsStatus = 'err';
+      state.gpsMsg = err.code===1
+        ? 'Joylashuvga ruxsat berilmagan (sozlamalarda yoqing)'
+        : 'GPS signali topilmadi';
       render();
     },
-    {enableHighAccuracy:true,timeout:10000,maximumAge:0}
+    {enableHighAccuracy:true, timeout:10000, maximumAge:0}
   );
 };
 
 window.continueGps = function() {
-  if(state.gpsStatus!=='ok') return;
-  state.step='fp'; render();
+  if (state.gpsStatus !== 'ok') return;
+  state.step = 'fp'; render();
 };
 
 window.scanFp = function() {
-  if(state.fpState!=='idle') return;
-  state.fpState='scanning'; render();
+  if (state.fpState !== 'idle') return;
+  state.fpState = 'scanning'; render();
   async function tryWebAuthn() {
     try {
-      if(window.PublicKeyCredential){
-        const avail=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-        if(avail){
+      if (window.PublicKeyCredential) {
+        const avail = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        if (avail) {
           await navigator.credentials.get({
-            publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),timeout:60000,userVerification:'required'}
+            publicKey:{
+              challenge: crypto.getRandomValues(new Uint8Array(32)),
+              timeout: 60000,
+              userVerification: 'required'
+            }
           });
         }
       }
-    } catch(e){}
+    } catch(e) {
+      // WebAuthn muvaffaqiyatsiz bo'lsa ham davom etamiz (ixtiyoriy)
+    }
     finalizeAttendance();
   }
-  setTimeout(tryWebAuthn,1200);
+  setTimeout(tryWebAuthn, 1200);
 };
 
 async function finalizeAttendance() {
-  const time = nowT();
+  const time  = nowT();
   const today = td();
-  const rec = {
-    id: Date.now(),
-    empId: state.empId,
-    empName: state.empName,
-    date: today,
-    status: state.type==='in'?'ishlayapti':'keldi',
-  };
-  if(state.type==='in') rec.checkIn=time;
-  else rec.checkOut=time;
   try {
-    await saveRecord(rec);
-    state.fpState='success';
-    state.result={type:state.type, empName:state.empName, time};
-    setTimeout(()=>{ state.step='done'; render(); }, 600);
+    await saveRecord(
+      state.empId, state.empName, state.empPos,
+      today, state.type, time,
+      state.gpsLat, state.gpsLon
+    );
+    state.fpState = 'success';
+    state.result  = { type: state.type, empName: state.empName, time };
     render();
+    setTimeout(() => { state.step = 'done'; render(); }, 600);
   } catch(e) {
-    state.fpState='idle';
-    state.error='Saqlashda xato: '+e.message;
+    state.fpState = 'idle';
+    state.error   = 'Saqlashda xato: ' + e.message;
     render();
   }
 }
 
-// ── Utils ─────────────────────────────────────────
-function td(){ return new Date().toISOString().split('T')[0]; }
-function nowT(){ return new Date().toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'}); }
-function tMin(t){ const[h,m]=t.split(':').map(Number); return h*60+m; }
-function updateClock(){ const el=document.getElementById('clock'); if(el) el.textContent=nowT(); setTimeout(updateClock,30000); }
-
-// ── Init ─────────────────────────────────────────
+// ── Init ─────────────────────────────────────────────────────────────────────
 (async function init() {
-  const cfg = getConfig();
-
-  const ok = await initFirebase(cfg);
-
-  if(!ok) {
-    alert("Firebase ulanmadi");
+  const ok = await initFirebase();
+  if (!ok) {
+    document.body.innerHTML = `
+      <div style="padding:32px;max-width:400px;margin:auto;text-align:center">
+        <div style="font-size:40px;margin-bottom:16px">🔥</div>
+        <div style="color:#f87171;font-family:IBM Plex Mono,monospace;font-size:13px;margin-bottom:8px">FIREBASE ULANMADI</div>
+        <div style="color:#8a8a8a;font-size:12px;line-height:1.7">Firebase config yoki internet ulanishini tekshiring.</div>
+      </div>`;
     return;
   }
-
-  // setup o‘chadi
-  document.getElementById('setup-screen').style.display='none';
-
-  // asosiy ekran ochiladi
-  document.getElementById('main-screen').style.display='block';
-
+  document.getElementById('main-screen').style.display = 'block';
   updateClock();
   render();
 })();
