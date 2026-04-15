@@ -140,6 +140,74 @@ const COL_STAFF      = 'staff';
 const COL_ATTENDANCE = 'attendance';
 
 // ════════════════════════════════════════════════════
+//  1. FAQAT MOBIL QURILMA TEKSHIRUVI
+//  Kompyuter/noutbukdan kirish to'liq bloklanadi
+// ════════════════════════════════════════════════════
+function isMobileDevice() {
+  const ua = navigator.userAgent || '';
+  const hasTouchPoints = navigator.maxTouchPoints > 1;
+  const mobileUA = /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua);
+
+  // iPad iOS 13+ da userAgent "Macintosh" ko'rinadi — touchPoints bilan ajratamiz
+  const isIpadOS = /Macintosh/i.test(ua) && hasTouchPoints && navigator.platform === 'MacIntel';
+
+  // Windows plansheti (Surface va h.k.)
+  const isWinTablet = /Windows/i.test(ua) && hasTouchPoints && /Touch/i.test(ua);
+
+  return mobileUA || isIpadOS || isWinTablet;
+}
+
+function checkMobileOnly() {
+  if (!isMobileDevice()) {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('error-screen').style.display = 'block';
+    document.getElementById('err-msg').innerHTML =
+      `<div style="font-size:32px;margin-bottom:12px">📱</div>
+       <strong style="color:#f87171">Faqat mobil qurilmalardan foydalanish mumkin</strong><br><br>
+       Bu tizim faqat smartfon yoki planshetdan ishlaydi.<br>
+       Kompyuter va noutbukdan kirish ruxsat etilmagan.`;
+    return false;
+  }
+  return true;
+}
+
+// ════════════════════════════════════════════════════
+//  2. QURILMA FINGERPRINT (Device ID)
+//  Birinchi kirishda qurilma ID saqlanadi,
+//  keyingi safar bir xil qurilmadan kelishini tekshiradi
+// ════════════════════════════════════════════════════
+const DEVICE_KEY = 'dav_device_id_v1';
+
+async function getOrCreateDeviceId() {
+  // Mavjud ID ni tekshir
+  let id = localStorage.getItem(DEVICE_KEY);
+  if (id) return id;
+
+  // Yangi noyob ID yaratish — brauzer + qurilma ma'lumotlaridan
+  const raw = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + 'x' + screen.height + 'x' + screen.colorDepth,
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+    navigator.hardwareConcurrency || '',
+    navigator.platform || '',
+  ].join('|');
+
+  // SHA-256 hash
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw + Date.now()));
+  id = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('').slice(0, 32);
+  localStorage.setItem(DEVICE_KEY, id);
+  return id;
+}
+
+// deviceId ni global saqlash
+let currentDeviceId = null;
+
+async function initDeviceId() {
+  currentDeviceId = await getOrCreateDeviceId();
+}
+
+// ════════════════════════════════════════════════════
 //  XAVFSIZLIK: Brute-force himoya (sessionStorage)
 // ════════════════════════════════════════════════════
 const MAX_ATTEMPTS = 5;
@@ -211,7 +279,8 @@ async function loadConfig() {
         locationLng:  parseFloat(d.lon)    || 0,
         locationName: d.locationName || 'Ish joyi',
         radius:       parseInt(d.radius)   || 50,
-        gpsEnabled:   d.gpsEnabled !== false && !!(d.lat && d.lon),
+        // GPS HAR DOIM MAJBURIY — o'chirib bo'lmaydi
+        gpsEnabled:   true,
       };
     }
   } catch(e) {
@@ -221,7 +290,9 @@ async function loadConfig() {
     workStart:'08:00', workEnd:'09:00',
     leaveStart:'17:00', leaveEnd:'18:00',
     locationLat:0, locationLng:0,
-    locationName:'Ish joyi', radius:50, gpsEnabled:false
+    locationName:'Ish joyi', radius:50,
+    // GPS HAR DOIM MAJBURIY
+    gpsEnabled: true,
   };
 }
 
@@ -256,11 +327,20 @@ async function saveAttendance(staffId, staffName, staffPos, date, type, time, la
     base.kelishAt     = new Date().toISOString();
     base.kelishStatus = kelishStatus || "O'z vaqtida";
     if (lat != null) { base.kelishLat = lat; base.kelishLon = lon; }
+    // Qurilma ID saqlash
+    if (currentDeviceId) {
+      base.deviceId     = currentDeviceId;
+      base.deviceUA     = (navigator.userAgent || '').slice(0, 120);
+    }
   } else {
     base.ketish       = time;
     base.ketishAt     = new Date().toISOString();
     base.ketishStatus = ketishStatus || "O'z vaqtida ketdi";
     if (lat != null) { base.ketishLat = lat; base.ketishLon = lon; }
+    // Ketish qurilmasi ham saqlanadi
+    if (currentDeviceId) {
+      base.ketishDeviceId = currentDeviceId;
+    }
   }
   base.updatedAt = serverTimestamp();
 
@@ -423,7 +503,7 @@ async function render() {
       : state.gpsStatus==='ok' ? state.gpsMsg : (state.gpsMsg || 'GPS xatosi');
     content = `
       <div class="card">
-        <div class="ct">📍 GPS tekshiruvi</div>
+        <div class="ct">📍 GPS tekshiruvi — Majburiy</div>
         <div class="cs">${state.staffName} — ${state.type==='in'?'Kelish':'Ketish'}</div>
         <div class="gps ${gClass}">
           <div class="dot ${dotClass}"></div>
@@ -433,9 +513,17 @@ async function render() {
           ? `<button class="btn bp" onclick="continueGps()">Davom etish →</button>`
           : ''}
         ${state.gpsStatus==='err'
-          ? `<div class="alert al-w" style="font-size:12px">Joylashuvga ruxsat berish: Brauzer sozlamalari → Bu sayt → Joylashuv → Ruxsat</div>
-             <button class="btn bo" onclick="startGps()">🔄 Qayta urinish</button>`
+          ? `<div class="alert al-e" style="font-size:12px;margin-top:8px">
+               ⛔ GPS tasdiqlanmasa davomat qayd etib bo'lmaydi.<br><br>
+               <strong>Ruxsat berish uchun:</strong><br>
+               Brauzer manzil satrida 🔒 belgisiga bosing → Joylashuv → Ruxsat bering
+             </div>
+             <button class="btn bo" style="margin-top:8px" onclick="startGps()">🔄 Qayta urinish</button>`
           : ''}
+        ${state.gpsStatus==='loading'
+          ? `<div style="font-size:11px;color:var(--mu);text-align:center;margin-top:8px">
+               Joylashuv so'rovi paydo bo'lsa — "Ruxsat berish" tugmasini bosing
+             </div>` : ''}
       </div>
       <button class="btn bo" onclick="goBack()" ${state.gpsStatus==='loading'?'disabled':''}>← Orqaga</button>
     `;
@@ -443,6 +531,7 @@ async function render() {
 
   // ── TASDIQLASH ──────────────────────────────────
   else if (state.step === 'confirm') {
+    const devShort = currentDeviceId ? currentDeviceId.slice(0,8).toUpperCase() : '——';
     content = `
       <div class="card">
         <div class="ct">🔐 Tasdiqlash</div>
@@ -453,6 +542,7 @@ async function render() {
           <div style="font-family:var(--mono);font-size:24px;margin-top:8px">${nowT()}</div>
           <div style="font-size:12px;color:var(--mu);margin-top:2px">${td()}</div>
           ${state.gpsLat ? `<div style="font-size:11px;color:var(--g);margin-top:6px">📍 GPS tasdiqlangan</div>` : ''}
+          <div style="font-size:10px;color:var(--mu);margin-top:6px;font-family:var(--mono)">📱 Qurilma: ${devShort}</div>
         </div>
         <div class="fp-area">
           <div class="fp-btn ${state.fpState==='scanning'?'sc':state.fpState==='success'?'ok':''}" onclick="scanFp()">
@@ -755,6 +845,13 @@ async function finalizeAttendance() {
 //  INIT
 // ════════════════════════════════════════════════════
 (async function init() {
+  // 1. Birinchi navbatda — faqat mobil tekshiruvi
+  if (!checkMobileOnly()) return;
+
+  // 2. Qurilma ID ni yaratish/olish
+  await initDeviceId();
+
+  // 3. Firebase ulanish
   const ok = await initFirebase();
 
   if (!ok) {
