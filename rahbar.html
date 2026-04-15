@@ -152,11 +152,18 @@ input[type=date]:focus{border-color:var(--g)}
   </div>
 
   <div class="ct">
-    <div class="page-title">Bugungi davomat</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+      <div class="page-title" style="margin-bottom:0">Bugungi davomat</div>
+      <button class="btn bs" id="refresh-btn" onclick="window.manualRefresh()" style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:var(--g);font-size:11px;gap:5px">
+        <span id="refresh-icon">🔄</span> Yangilash
+        <span id="refresh-countdown" style="color:var(--mu);font-family:var(--mono);margin-left:2px"></span>
+      </button>
+    </div>
     <div class="page-date">
       <span id="page-date-text"></span>
       <span class="live-dot"></span>
       <span style="color:var(--g)">LIVE</span>
+      <span id="last-refresh-time" style="color:var(--mu)"></span>
     </div>
 
     <!-- Metrikalar -->
@@ -421,6 +428,7 @@ async function verifyPin() {
 window.logout = function() {
   sessionStorage.removeItem(SESSION_KEY);
   if (unsubLive) { unsubLive(); unsubLive = null; }
+  stopAutoRefresh();
   authPin = '';
   document.getElementById('app-screen').style.display = 'none';
   document.getElementById('auth-screen').style.display = 'flex';
@@ -447,6 +455,9 @@ function startApp() {
 
   // Staff cache + live yangilanish
   loadAndListen();
+
+  // Avtomatik yangilash — har 30 soniyada
+  startAutoRefresh();
 }
 
 function updateClock() {
@@ -518,6 +529,54 @@ function renderTable(allRecs) {
     </tr>`;
   }).join('');
 }
+
+// ════════════════════════════════════════════════
+//  AUTO REFRESH — har 30 soniyada
+// ════════════════════════════════════════════════
+let autoRefreshTimer = null;
+let countdownTimer = null;
+let secondsLeft = 30;
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  secondsLeft = 30;
+  updateCountdown();
+
+  countdownTimer = setInterval(() => {
+    secondsLeft--;
+    updateCountdown();
+    if (secondsLeft <= 0) {
+      doRefresh();
+    }
+  }, 1000);
+}
+
+function stopAutoRefresh() {
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+}
+
+function updateCountdown() {
+  const el = document.getElementById('refresh-countdown');
+  if (el) el.textContent = `(${secondsLeft}s)`;
+}
+
+function doRefresh() {
+  secondsLeft = 30;
+  const icon = document.getElementById('refresh-icon');
+  if (icon) { icon.textContent = '⏳'; setTimeout(() => { if(icon) icon.textContent = '🔄'; }, 800); }
+
+  // staffCache va attendance'ni qayta yuklash
+  loadAndListen();
+
+  // Yangilangan vaqtni ko'rsatish
+  const tEl = document.getElementById('last-refresh-time');
+  if (tEl) tEl.textContent = `· yangilandi ${nowT()}`;
+}
+
+window.manualRefresh = function() {
+  secondsLeft = 30;
+  doRefresh();
+};
 
 window.onDateChange = function() {
   const v = document.getElementById('filter-date').value;
