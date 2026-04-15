@@ -641,7 +641,10 @@ async function buildStaff() {
       <button class="btn bp" onclick="addStaff()">+ Xodim qo'shish</button>
     </div>
     <div class="card">
-      <div class="card-title">Ro'yxat (${staffList.length} ta)</div>
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Ro'yxat (${staffList.length} ta)</span>
+        <button class="btn bs bp" onclick="showBulkImport()" style="font-size:11px">📥 Ro'yxatdan import</button>
+      </div>
       <div class="tw">
         <table>
           <thead><tr><th>Ism</th><th>Bo'lim</th><th>Lavozim</th><th>Holat</th><th>Amal</th></tr></thead>
@@ -704,6 +707,153 @@ window.deleteStaff = async function(id, name) {
   if (!confirm(`"${name}" xodimini o'chirishni tasdiqlaysizmi?\n\nDavomat yozuvlari saqlanib qoladi.`)) return;
   await deleteDoc(doc(db, COL_STAFF, id));
   showView('staff');
+};
+
+// ── BULK IMPORT ────────────────────────────────────
+const IMPORT_LIST = [
+  { name: "Muzrapov Shukur",         position: "OIBDO'",           pin: "0002" },
+  { name: "Abdinazarov O'tkir",      position: "Kafedra mudiri",   pin: "4551" },
+  { name: "Abdishukurova Orzigul",   position: "o'qituvchi",       pin: "3130" },
+  { name: "Abdullayev Alisher",      position: "texnik hodim",     pin: "7020" },
+  { name: "Abduraxmonova Nafisa",    position: "o'qituvchi",       pin: "1111" },
+  { name: "Aliqo'lov Komil",         position: "o'qituvchi",       pin: "7731" },
+  { name: "Aliqo'lovа Xoliniso",     position: "o'qituvchi",       pin: "4743" },
+  { name: "Allanazarov Murod",       position: "Kafedra mudiri",   pin: "4765" },
+  { name: "Allanazarova Sojida",     position: "Kotiba",           pin: "5251" },
+  { name: "Allayorov Ibragim",       position: "texnik hodim",     pin: "3867" },
+  { name: "Amonov Baxtiyor",         position: "texnik hodim",     pin: "7104" },
+  { name: "Axmedov Oybek",           position: "o'qituvchi",       pin: "8973" },
+  { name: "Axmedova Fotima",         position: "texnik hodim",     pin: "9300" },
+  { name: "Bazarov Shuxrat",         position: "texnik hodim",     pin: "5910" },
+  { name: "Begimova Mavjuda",        position: "texnik hodim",     pin: "8083" },
+  { name: "Bekmurodova Xalima",      position: "psixolog",         pin: "1400" },
+  { name: "Boboqulova Gulsara",      position: "texnik hodim",     pin: "1889" },
+  { name: "Boboqulova Shaxnoza",     position: "Kadr",             pin: "1285" },
+  { name: "Boysariyeva Manzura",     position: "o'qituvchi",       pin: "1521" },
+  { name: "Djurayeva Nasiba",        position: "Kafedra mudiri",   pin: "5521" },
+  { name: "Dursoatova Sayyora",      position: "texnik hodim",     pin: "8730" },
+  { name: "Erdanayeva Xurshida",     position: "texnik hodim",     pin: "9782" },
+  { name: "Eshmirzayev Abdinazar",   position: "texnik hodim",     pin: "3502" },
+  { name: "Eshonqo'lov Mirbek",      position: "Kurs tarbiyachisi",pin: "9891" },
+  { name: "Esonov Otabek",           position: "o'qituvchi",       pin: "1235" },
+  { name: "Islomova Maftuna",        position: "o'qituvchi",       pin: "7281" },
+  { name: "Jumayeva Shaxnoza",       position: "texnik hodim",     pin: "2665" },
+  { name: "Juraeva Gulchexra",       position: "texnik hodim",     pin: "5969" },
+  { name: "Karimov Islom",           position: "o'qituvchi",       pin: "1702" },
+  { name: "Kuchkeldiyeva Adolat",    position: "Kutubxonachi",     pin: "8686" },
+  { name: "Kulliyev Azamat",         position: "o'qituvchi",       pin: "2561" },
+  { name: "Kuziyev Urol",            position: "texnik hodim",     pin: "2221" },
+  { name: "Mamadiyorov Muhammad",    position: "o'qituvchi",       pin: "7010" },
+  { name: "Mamatxolov Aziz",         position: "o'qituvchi",       pin: "6101" },
+  { name: "Mirzayusupov Shoxrux",    position: "o'qituvchi",       pin: "1607" },
+  { name: "Murodova Dilbar",         position: "o'qituvchi",       pin: "2655" },
+  { name: "Norboyev Sirojiddin",     position: "o'qituvchi",       pin: "7000" },
+  { name: "Nuraliyeva Zarina",       position: "o'qituvchi",       pin: "4818" },
+  { name: "Odilov Eshdavlat",        position: "Hisobchi",         pin: "5021" },
+  { name: "Ortiqov Asliddin",        position: "texnik hodim",     pin: "7169" },
+  { name: "Pardayeva Orzigul",       position: "texnik hodim",     pin: "4583" },
+  { name: "Po'latov Begali",         position: "texnik hodim",     pin: "2022" },
+  { name: "Qarshiyeva Nozik",        position: "o'qituvchi",       pin: "9599" },
+  { name: "Qodirov Navruz",          position: "o'qituvchi",       pin: "7221" },
+  { name: "Qorayev Bobomurod",       position: "texnik hodim",     pin: "1330" },
+  { name: "Qorayev Elmurod",         position: "texnik hodim",     pin: "1433" },
+  { name: "Rasulov Fazliddin",       position: "texnik hodim",     pin: "2244" },
+  { name: "Raximova Dilfuza",        position: "texnik hodim",     pin: "7500" },
+  { name: "Raxmatullayeva Gulnoz",   position: "o'qituvchi",       pin: "2605" },
+  { name: "Shadiyev Orazmurat",      position: "o'qituvchi",       pin: "7478" },
+  { name: "Taxirova Marxabo",        position: "Kadr nazoratchi",  pin: "1592" },
+  { name: "Tilavova Dilbar",         position: "o'qituvchi",       pin: "6164" },
+  { name: "Tillayeva Shoxsanam",     position: "o'qituvchi",       pin: "3912" },
+  { name: "To'raqulov Boybo'ri",     position: "o'qituvchi",       pin: "1987" },
+  { name: "Toshboltayev Islom",      position: "o'qituvchi",       pin: "9908" },
+  { name: "Toshpulatova Mavjuda",    position: "texnik hodim",     pin: "6989" },
+  { name: "To'xliyeva Madina",       position: "o'qituvchi",       pin: "0825" },
+  { name: "Turdiyev Rustam",         position: "o'qituvchi",       pin: "8844" },
+  { name: "Umarova Vazira",          position: "o'qituvchi",       pin: "9299" },
+  { name: "Xabibullayeva Gulsaram",  position: "o'qituvchi",       pin: "3390" },
+  { name: "Xasanov Muhiddin",        position: "o'qituvchi",       pin: "8771" },
+  { name: "Xo'daymo'rodov Yigitali", position: "Kurs tarbiyachisi",pin: "1188" },
+  { name: "Xo'janov Ixtiyor",        position: "Bosh hisobchi",    pin: "1000" },
+  { name: "Xoliyorova Yulduz",       position: "texnik hodim",     pin: "7654" },
+  { name: "Xujayorova Gulxayo",      position: "Kutubxonachi",     pin: "9036" },
+  { name: "Xurramov Bobur",          position: "texnik hodim",     pin: "2901" },
+  { name: "Yangiboyev Farxod",       position: "o'qituvchi",       pin: "5891" },
+];
+
+window.showBulkImport = async function() {
+  const existing = await getStaff();
+  const existingPins = new Set(existing.map(e => e.pin));
+  const existingNames = new Set(existing.map(e => e.name));
+
+  const toImport = IMPORT_LIST.filter(s => !existingPins.has(s.pin) && !existingNames.has(s.name));
+  const duplicates = IMPORT_LIST.filter(s => existingPins.has(s.pin) || existingNames.has(s.name));
+
+  const dupRows = duplicates.map(s =>
+    `<tr style="opacity:.5"><td>${esc(s.name)}</td><td>${esc(s.position)}</td><td class="mono">${s.pin}</td><td style="color:var(--w)">⚠ Mavjud</td></tr>`
+  ).join('');
+  const newRows = toImport.map(s =>
+    `<tr><td>${esc(s.name)}</td><td>${esc(s.position)}</td><td class="mono">${s.pin}</td><td style="color:var(--g)">✓ Yangi</td></tr>`
+  ).join('');
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="row" style="margin-bottom:4px">
+      <div class="modal-title">📥 Ro'yxatdan import</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-sub">Jami ${IMPORT_LIST.length} ta xodim · ${toImport.length} ta yangi · ${duplicates.length} ta mavjud</div>
+    ${toImport.length === 0
+      ? '<div class="alert al-w">⚠️ Barcha xodimlar allaqachon tizimda mavjud!</div>'
+      : `<div class="alert al-s" style="margin-bottom:10px">✅ ${toImport.length} ta yangi xodim qo'shiladi</div>`
+    }
+    <div id="import-msg" style="display:none;margin-bottom:8px"></div>
+    <div class="tw" style="max-height:320px;overflow-y:auto;margin-bottom:14px">
+      <table>
+        <thead><tr><th>Ism</th><th>Bo'lim/Lavozim</th><th>PIN</th><th>Holat</th></tr></thead>
+        <tbody>${newRows}${dupRows}</tbody>
+      </table>
+    </div>
+    ${toImport.length > 0 ? `
+    <button class="btn bp bfull" id="import-btn" onclick="doBulkImport()">
+      ⬆ ${toImport.length} ta xodimni Firebase'ga yuklash
+    </button>` : ''}
+  `;
+  document.getElementById('modal').style.display = 'flex';
+};
+
+window.doBulkImport = async function() {
+  const existing = await getStaff();
+  const existingPins = new Set(existing.map(e => e.pin));
+  const existingNames = new Set(existing.map(e => e.name));
+  const toImport = IMPORT_LIST.filter(s => !existingPins.has(s.pin) && !existingNames.has(s.name));
+
+  const btn = document.getElementById('import-btn');
+  const msg = document.getElementById('import-msg');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Yuklanmoqda...'; }
+
+  let success = 0, failed = 0;
+  for (const s of toImport) {
+    try {
+      await addDoc(collection(db, COL_STAFF), {
+        name: s.name,
+        dept: s.position,
+        position: s.position,
+        pin: s.pin,
+        createdAt: serverTimestamp(),
+        active: true
+      });
+      success++;
+    } catch(e) {
+      failed++;
+    }
+  }
+
+  msg.className = failed > 0 ? 'alert al-w' : 'alert al-s';
+  msg.textContent = failed > 0
+    ? `✅ ${success} ta qo'shildi, ❌ ${failed} ta xato`
+    : `✅ ${success} ta xodim muvaffaqiyatli qo'shildi!`;
+  msg.style.display = 'block';
+  if (btn) btn.style.display = 'none';
+  setTimeout(() => { closeModal(); showView('staff'); }, 2000);
 };
 
 window.showCodeModal = function(id, name, pin) {
