@@ -158,6 +158,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="ns">Boshqaruv</div>
       <div class="ni act" onclick="showView('dashboard')" id="nav-dashboard">📊 Dashboard</div>
       <div class="ni" onclick="showView('staff')" id="nav-staff">👥 Xodimlar</div>
+      <div class="ni" onclick="showView('proxy')" id="nav-proxy">📱 Xodim nomidan</div>
       <div class="ni" onclick="showView('settings')" id="nav-settings">⚙️ Sozlamalar</div>
       <div class="ni" onclick="showView('reports')" id="nav-reports">📋 Hisobotlar</div>
       <div class="ns" style="margin-top:12px">Tizim</div>
@@ -458,6 +459,7 @@ let currentView = 'dashboard';
 const viewTitles = {
   dashboard: '📊 Dashboard',
   staff:     '👥 Xodimlar',
+  proxy:     '📱 Xodim nomidan kirish/chiqish',
   settings:  '⚙️ Sozlamalar',
   reports:   '📋 Hisobotlar'
 };
@@ -510,7 +512,7 @@ async function renderView(v) {
   try {
     if (v === 'dashboard') ct.innerHTML = await buildDashboard();
     else if (v === 'staff')    ct.innerHTML = await buildStaff();
-    else if (v === 'settings') ct.innerHTML = await buildSettings();
+    else if (v === 'proxy')    ct.innerHTML = await buildProxy();
     else if (v === 'reports')  ct.innerHTML = await buildReports();
     bindEvents(v);
   } catch(e) {
@@ -534,7 +536,18 @@ async function buildDashboard() {
     const el = document.getElementById('dash-tbody');
     if (!el) { if (unsubDash) unsubDash(); return; }
     const live = snap.docs.map(d => d.data()).filter(r => r.date === today);
-    el.innerHTML = staffList.map(e => {
+    const liveStaff = [...staffList].sort((a, b) => {
+      const ra = live.find(x => x.staffId === a.id);
+      const rb = live.find(x => x.staffId === b.id);
+      // Oxirgi kelgan birinchi — kelishAt bo'yicha desc tartib
+      const ta = ra?.kelishAt || '';
+      const tb = rb?.kelishAt || '';
+      if (ta && tb) return tb.localeCompare(ta);
+      if (ta) return -1;
+      if (tb) return 1;
+      return 0;
+    });
+    el.innerHTML = liveStaff.map(e => {
       const r = live.find(x => x.staffId === e.id);
       const kelish  = r?.kelish  || '<span style="color:var(--mu)">—</span>';
       const ketish  = r?.ketish  || '<span style="color:var(--mu)">—</span>';
@@ -560,7 +573,17 @@ async function buildDashboard() {
     const el2 = document.getElementById('dash-m2'); if(el2) el2.textContent = l2;
   });
 
-  const rows = staffList.map(e => {
+  const sortedStaff = [...staffList].sort((a, b) => {
+    const ra = recs.find(x => x.staffId === a.id);
+    const rb = recs.find(x => x.staffId === b.id);
+    const ta = ra?.kelishAt || '';
+    const tb = rb?.kelishAt || '';
+    if (ta && tb) return tb.localeCompare(ta);
+    if (ta) return -1;
+    if (tb) return 1;
+    return 0;
+  });
+  const rows = sortedStaff.map(e => {
     const r = recs.find(x => x.staffId === e.id);
     const kelish = r?.kelish  || '<span style="color:var(--mu)">—</span>';
     const ketish = r?.ketish  || '<span style="color:var(--mu)">—</span>';
@@ -761,6 +784,7 @@ const IMPORT_LIST = [
   { name: "Raximova Dilfuza",        position: "texnik hodim",     pin: "7500" },
   { name: "Raxmatullayeva Gulnoz",   position: "o'qituvchi",       pin: "2605" },
   { name: "Shadiyev Orazmurat",      position: "o'qituvchi",       pin: "7478" },
+  { name: "Shadiyev Orazmurat",      position: "texnik hodim",     pin: "5074" },
   { name: "Taxirova Marxabo",        position: "Kadr nazoratchi",  pin: "1592" },
   { name: "Tilavova Dilbar",         position: "o'qituvchi",       pin: "6164" },
   { name: "Tillayeva Shoxsanam",     position: "o'qituvchi",       pin: "3912" },
@@ -770,14 +794,14 @@ const IMPORT_LIST = [
   { name: "To'xliyeva Madina",       position: "o'qituvchi",       pin: "0825" },
   { name: "Turdiyev Rustam",         position: "o'qituvchi",       pin: "8844" },
   { name: "Umarova Vazira",          position: "o'qituvchi",       pin: "9299" },
-  { name: "Xabibullayeva Gulsanam",  position: "o'qituvchi",       pin: "3390" },
+  { name: "Xabibullayeva Gulsaram",  position: "o'qituvchi",       pin: "3390" },
   { name: "Xasanov Muhiddin",        position: "o'qituvchi",       pin: "8771" },
   { name: "Xo'daymo'rodov Yigitali", position: "Kurs tarbiyachisi",pin: "1188" },
   { name: "Xo'janov Ixtiyor",        position: "Bosh hisobchi",    pin: "1000" },
   { name: "Xoliyorova Yulduz",       position: "texnik hodim",     pin: "7654" },
   { name: "Xujayorova Gulxayo",      position: "Kutubxonachi",     pin: "9036" },
   { name: "Xurramov Bobur",          position: "texnik hodim",     pin: "2901" },
-  { name: "Yangiboyev Farxod",       position: "o'qituvchi",       pin: "1989" },
+  { name: "Yangiboyev Farxod",       position: "o'qituvchi",       pin: "5891" },
 ];
 
 window.showBulkImport = async function() {
@@ -1045,6 +1069,138 @@ window.changeAdminPin = async function() {
   setTimeout(() => window.logout(), 2000);
 };
 
+// ── XODIM NOMIDAN KIRISH/CHIQISH (PROXY) ──────────
+async function buildProxy() {
+  const staffList = await getStaff();
+  const today = td();
+
+  // Config
+  let cfg = {};
+  try {
+    const snap = await getDoc(doc(db, 'config', 'app'));
+    if (snap.exists()) cfg = snap.data();
+  } catch(e) {}
+
+  const workStart   = cfg.workStart   || '08:00';
+  const workEnd     = cfg.workEnd     || '09:00';
+  const leaveStart  = cfg.leaveStart  || '17:00';
+  const leaveEnd    = cfg.leaveEnd    || '18:00';
+
+  const rows = staffList.map(e => `
+    <option value="${esc(e.id)}" data-pin="${esc(e.pin)}">${esc(e.name)} — ${esc(e.position||e.dept||'')}</option>
+  `).join('');
+
+  return `
+    <div style="font-size:16px;font-weight:500;margin-bottom:6px">Xodim nomidan kelish / ketishni qayd etish</div>
+    <div class="alert al-w" style="margin-bottom:16px;font-size:12px">
+      ⚠️ Bu bo'lim faqat istisno holatlarda — telefoni ishlamay qolgan yoki quvvati tugagan xodimlar uchun ishlatilsin.<br>
+      Admin xodim nomidan cheksiz marta kelish va ketishni qayd eta oladi (kompyuter yoki telefondan farqi yo'q).
+    </div>
+    <div id="proxy-msg" style="display:none;margin-bottom:12px"></div>
+    <div class="card">
+      <div class="card-title">Xodimni tanlang</div>
+      <div class="fg" style="margin-bottom:14px">
+        <label class="fl">Xodim</label>
+        <select id="proxy-staff">
+          <option value="">— Xodimni tanlang —</option>
+          ${rows}
+        </select>
+      </div>
+      <div class="fg" style="margin-bottom:14px">
+        <label class="fl">Amal turi</label>
+        <select id="proxy-type">
+          <option value="in">🏢 Keldi (Kelish)</option>
+          <option value="out">🏠 Ketdi (Ketish)</option>
+        </select>
+      </div>
+      <div class="fg" style="margin-bottom:14px">
+        <label class="fl">Sana (default: bugun)</label>
+        <input type="date" id="proxy-date" value="${today}">
+      </div>
+      <div class="fg" style="margin-bottom:14px">
+        <label class="fl">Vaqt (default: hozir)</label>
+        <input type="time" id="proxy-time" value="${new Date().toTimeString().slice(0,5)}">
+      </div>
+      <div id="proxy-status-info" style="margin-bottom:12px;font-size:12px;color:var(--mu)">
+        Vaqt oynasi: Kelish <span class="mono">${workStart}–${workEnd}</span> | Ketish <span class="mono">${leaveStart}–${leaveEnd}</span>
+      </div>
+      <button class="btn bp" onclick="doProxyAttendance()" style="font-size:14px;padding:11px 20px">✅ Qayd etish</button>
+    </div>
+  `;
+}
+
+window.doProxyAttendance = async function() {
+  const staffId = document.getElementById('proxy-staff').value;
+  const type    = document.getElementById('proxy-type').value;
+  const date    = document.getElementById('proxy-date').value;
+  const time    = document.getElementById('proxy-time').value;
+  const msg     = document.getElementById('proxy-msg');
+
+  if (!staffId) {
+    msg.className = 'alert al-e'; msg.textContent = '❌ Xodimni tanlang'; msg.style.display = 'block'; return;
+  }
+  if (!date || !time) {
+    msg.className = 'alert al-e'; msg.textContent = '❌ Sana va vaqtni kiriting'; msg.style.display = 'block'; return;
+  }
+
+  // Xodim ma'lumotlarini olish
+  const staffList = await getStaff();
+  const emp = staffList.find(e => e.id === staffId);
+  if (!emp) {
+    msg.className = 'alert al-e'; msg.textContent = '❌ Xodim topilmadi'; msg.style.display = 'block'; return;
+  }
+
+  // Holat hisoblash
+  const cfg_snap = await getDoc(doc(db, 'config', 'app'));
+  const cfg = cfg_snap.exists() ? cfg_snap.data() : {};
+  const workStart  = cfg.workStart  || '08:00';
+  const leaveStart = cfg.leaveStart || '17:00';
+
+  let kelishStatus = null, ketishStatus = null;
+  if (type === 'in') {
+    kelishStatus = time <= workStart ? "O'z vaqtida" : 'Kech';
+  } else {
+    ketishStatus = time < leaveStart ? 'Erta ketdi' : "O'z vaqtida ketdi";
+  }
+
+  // Firestore yozuv
+  const docId = emp.id + '_' + date;
+  const { doc: docRef, getDoc: gd, setDoc: sd } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+  const existingSnap = await getDoc(doc(db, 'attendance', docId));
+  const base = existingSnap.exists() ? existingSnap.data() : {
+    staffId: emp.id, staffName: emp.name,
+    staffPos: emp.position || emp.dept || '',
+    date,
+    createdAt: serverTimestamp(),
+    proxyByAdmin: true
+  };
+
+  if (type === 'in') {
+    base.kelish       = time;
+    base.kelishAt     = new Date().toISOString();
+    base.kelishStatus = kelishStatus;
+    base.proxyKelish  = true;
+  } else {
+    base.ketish       = time;
+    base.ketishAt     = new Date().toISOString();
+    base.ketishStatus = ketishStatus;
+    base.proxyKetish  = true;
+  }
+  base.updatedAt    = serverTimestamp();
+  base.proxyByAdmin = true;
+
+  await setDoc(doc(db, 'attendance', docId), base, { merge: true });
+
+  const label = type === 'in' ? 'keldi' : 'ketdi';
+  msg.className = 'alert al-s';
+  msg.textContent = `✅ ${emp.name} — ${date} kuni soat ${time} da ${label} deb qayd etildi. (Admin tomonidan)`;
+  msg.style.display = 'block';
+
+  // Reset
+  document.getElementById('proxy-staff').value = '';
+  document.getElementById('proxy-time').value = new Date().toTimeString().slice(0,5);
+};
+
 // ── HISOBOTLAR ─────────────────────────────────────
 async function buildReports() {
   return `
@@ -1137,6 +1293,10 @@ window.exportCSV = function() {
 
 function bindEvents(v) {
   if (v === 'reports') setTimeout(() => renderReportTable(), 50);
+  if (v === 'proxy') {
+    const timeEl = document.getElementById('proxy-time');
+    if (timeEl) timeEl.value = new Date().toTimeString().slice(0,5);
+  }
 }
 
 // ════════════════════════════════════════════════════
