@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Davomat — Admin</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:#0d0f12;color:#e8e6e0;min-height:100vh}
+:root{
+  --bg:#0d0f12;--s1:#141720;--s2:#1c2030;
+  --bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.14);
+  --g:#4ade80;--g2:#22c55e;--r:#f87171;--w:#fbbf24;--b:#60a5fa;
+  --mu:#8a8a8a;--mono:'IBM Plex Mono',monospace
+}
+.app{display:flex;min-height:100vh}
+.sb{width:200px;background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:10;transition:transform .25s}
+.sb.hidden{transform:translateX(-100%)}
+.sb-logo{padding:20px 16px 14px;border-bottom:1px solid var(--bd)}
+.sb-title{font-family:var(--mono);font-size:11px;color:var(--g);letter-spacing:.08em}
+.sb-sub{font-size:10px;color:var(--mu);margin-top:2px}
+nav{flex:1;padding:10px 0}
+.ns{padding:8px 16px 4px;font-size:9px;color:var(--mu);letter-spacing:.12em;text-transform:uppercase}
+.ni{display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;font-size:13px;color:var(--mu);transition:all .15s;border-left:2px solid transparent}
+.ni:hover{color:#e8e6e0;background:rgba(255,255,255,.04)}
+.ni.act{color:var(--g);border-left-color:var(--g);background:rgba(74,222,128,.07)}
+.main{flex:1;margin-left:200px;display:flex;flex-direction:column;min-height:100vh;transition:margin .25s}
+.tb{padding:14px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:var(--s1);position:sticky;top:0;z-index:5}
+.tb-t{font-size:14px;font-weight:500}
+.tb-r{font-family:var(--mono);font-size:11px;color:var(--mu);display:flex;align-items:center;gap:8px}
+.fb-dot{width:7px;height:7px;border-radius:50%;background:var(--g);display:inline-block}
+.fb-dot.off{background:var(--r)}
+.ct{padding:20px;flex:1}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:18px;margin-bottom:14px}
+.card-title{font-size:10px;font-weight:500;color:var(--mu);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.met{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:14px}
+.ml{font-size:11px;color:var(--mu);margin-bottom:4px}
+.mv{font-family:var(--mono);font-size:26px;font-weight:500}
+.mv.g{color:var(--g)}.mv.r{color:var(--r)}.mv.w{color:var(--w)}.mv.b{color:var(--b)}
+.ms{font-size:10px;color:var(--mu);margin-top:2px}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.fl{font-size:11px;color:var(--mu)}
+input,select{background:var(--s2);border:1px solid var(--bd2);border-radius:6px;padding:8px 11px;color:#e8e6e0;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;transition:border-color .15s;width:100%}
+input:focus,select:focus{border-color:var(--g)}
+input::placeholder{color:var(--mu)}
+input[type=range]{padding:0;accent-color:var(--g)}
+input[type=time],input[type=date],input[type=month]{color-scheme:dark}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:'IBM Plex Sans',sans-serif}
+.bp{background:var(--g2);color:#0d1a0f}.bp:hover{background:var(--g)}
+.bo{background:transparent;border:1px solid var(--bd2);color:#e8e6e0}.bo:hover{border-color:var(--g);color:var(--g)}
+.br{background:transparent;border:1px solid var(--r);color:var(--r)}.br:hover{background:rgba(248,113,113,.1)}
+.bs{padding:5px 10px;font-size:11px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.bfull{width:100%;margin-top:8px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:8px 12px;font-size:10px;color:var(--mu);font-weight:500;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--bd)}
+td{padding:10px 12px;border-bottom:1px solid var(--bd);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.b{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;font-family:var(--mono)}
+.bg-b{background:rgba(74,222,128,.12);color:var(--g);border:1px solid rgba(74,222,128,.25)}
+.br-b{background:rgba(248,113,113,.12);color:var(--r);border:1px solid rgba(248,113,113,.25)}
+.bw-b{background:rgba(251,191,36,.12);color:var(--w);border:1px solid rgba(251,191,36,.25)}
+.bb-b{background:rgba(96,165,250,.12);color:var(--b);border:1px solid rgba(96,165,250,.25)}
+.bmu-b{background:rgba(138,138,138,.12);color:var(--mu);border:1px solid rgba(138,138,138,.2)}
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px}
+.al-s{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);color:var(--g)}
+.al-e{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:var(--r)}
+.al-w{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--w)}
+.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:32px 28px;width:100%;max-width:380px;text-align:center}
+.pin-wrap{display:flex;gap:8px;justify-content:center;margin:14px 0}
+.pin-box{width:50px;height:58px;background:var(--s2);border:1.5px solid var(--bd2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:24px;color:var(--g);transition:border-color .15s}
+.pin-box.ac{border-color:var(--g)}.pin-box.fi{border-color:rgba(74,222,128,.4)}
+.pin-box.err{border-color:var(--r);animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:210px;margin:0 auto}
+.key{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;padding:13px;text-align:center;font-size:18px;cursor:pointer;font-family:var(--mono);transition:all .1s;user-select:none;-webkit-tap-highlight-color:transparent}
+.key:hover,.key:active{background:var(--s1)}
+.key.dl{font-size:13px;color:var(--r)}
+.key.ok{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:var(--g)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal{background:var(--s1);border:1px solid var(--bd2);border-radius:12px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--mu);margin-bottom:18px}
+.modal-close{float:right;background:none;border:none;color:var(--mu);font-size:18px;cursor:pointer;margin-top:-2px}
+.code-big{font-family:var(--mono);font-size:36px;letter-spacing:8px;color:var(--g);text-align:center;padding:16px;background:var(--s2);border-radius:8px;border:1px solid rgba(74,222,128,.3);margin:12px 0}
+.row{display:flex;align-items:center;gap:8px}
+.sp{flex:1}
+.mono{font-family:var(--mono)}
+.sec{font-size:11px;color:var(--mu);line-height:1.6;padding:10px 12px;background:var(--s2);border-radius:6px;border-left:2px solid rgba(251,191,36,.4)}
+.menu-btn{display:none;background:none;border:none;color:#e8e6e0;font-size:20px;cursor:pointer;padding:4px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9}
+.lockout{color:var(--r);font-size:12px;margin-top:8px;font-family:var(--mono)}
+@media(max-width:700px){
+  .sb{transform:translateX(-100%)}
+  .sb.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .grid4{grid-template-columns:1fr 1fr}
+  .menu-btn{display:block}
+  .overlay.show{display:block}
+  td:nth-child(3),th:nth-child(3){display:none}
+}
+@media print{.sb,.tb{display:none}.main{margin:0}.ct{padding:10px}}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="auth" style="display:none">
+  <div class="auth-card">
+    <div style="font-size:28px;margin-bottom:12px">🔐</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--g);letter-spacing:.1em;margin-bottom:8px">DAVOMAT · ADMIN</div>
+    <div style="font-size:20px;font-weight:500;margin-bottom:6px">Admin kirish</div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:20px">4 xonali PIN kodingizni kiriting</div>
+    <div id="auth-err" class="alert al-e" style="display:none"></div>
+    <div id="lockout-msg" class="lockout" style="display:none"></div>
+    <div class="pin-wrap" id="auth-pins"></div>
+    <div class="kp" id="auth-kp"></div>
+    <div class="sec" style="margin-top:20px;text-align:left">
+      🔒 PIN SHA-256 hash bilan tekshiriladi<br>
+      <span id="fb-status" style="color:var(--mu)">⏳ Firebase ulanmoqda...</span>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
+  <div style="text-align:center">
+    <div style="font-size:32px;margin-bottom:12px">🔥</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--g);letter-spacing:.1em">ULANMOQDA...</div>
+  </div>
+</div>
+
+<!-- ERROR SCREEN -->
+<div id="error-screen" style="min-height:100vh;display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="text-align:center;max-width:380px">
+    <div style="font-size:40px;margin-bottom:16px">⚠️</div>
+    <div style="color:var(--r);font-family:var(--mono);font-size:13px;margin-bottom:8px">FIREBASE ULANMADI</div>
+    <div id="error-msg" style="color:var(--mu);font-size:12px;line-height:1.7;margin-bottom:20px"></div>
+    <button class="btn bp" onclick="location.reload()">🔄 Qayta urinish</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-screen" class="app" style="display:none">
+  <div class="overlay" id="sb-overlay" onclick="closeSb()"></div>
+  <div class="sb" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-title">DAVOMAT</div>
+      <div class="sb-sub">Admin paneli</div>
+    </div>
+    <nav>
+      <div class="ns">Boshqaruv</div>
+      <div class="ni act" onclick="showView('dashboard')" id="nav-dashboard">📊 Dashboard</div>
+      <div class="ni" onclick="showView('staff')" id="nav-staff">👥 Xodimlar</div>
+      <div class="ni" onclick="showView('settings')" id="nav-settings">⚙️ Sozlamalar</div>
+      <div class="ni" onclick="showView('reports')" id="nav-reports">📋 Hisobotlar</div>
+      <div class="ns" style="margin-top:12px">Tizim</div>
+      <div class="ni" onclick="logout()" style="color:var(--r)">🚪 Chiqish</div>
+    </nav>
+  </div>
+  <div class="main" id="main">
+    <div class="tb">
+      <div class="row">
+        <button class="menu-btn" onclick="openSb()">☰</button>
+        <div class="tb-t" id="tb-title">📊 Dashboard</div>
+      </div>
+      <div class="tb-r">
+        <span id="fb-conn-dot" class="fb-dot"></span>
+        <span id="fb-conn-lbl" style="font-size:10px;color:var(--mu)">Firebase</span>
+        <span id="tb-time"></span>
+      </div>
+    </div>
+    <div class="ct" id="content"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal" style="display:none">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
+  collection, getDocs, addDoc, query, where, orderBy,
+  onSnapshot, serverTimestamp, limit
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ════════════════════════════════════════════════════
+//  FIREBASE CONFIG — shu yerdan o'zgartiring
+// ════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBj8NERdHAsxTJ7dl-xaIKwDQWFNgCl8bU",
+  authDomain: "hodimlar-nazorati.firebaseapp.com",
+  projectId: "hodimlar-nazorati",
+  storageBucket: "hodimlar-nazorati.firebasestorage.app",
+  messagingSenderId: "539426574914",
+  appId: "1:539426574914:web:aef7f4787592bcece913db"
+};
+
+// ════════════════════════════════════════════════════
+//  COLLECTION NOMLARI — employee.html bilan mos
+//  staff       → xodimlar ro'yxati  (field: pin, name, position, dept)
+//  attendance  → davomat yozuvlari  (field: kelish, ketish, ...)
+//  config/app  → sozlamalar
+// ════════════════════════════════════════════════════
+const COL_STAFF      = 'staff';
+const COL_ATTENDANCE = 'attendance';
+const DOC_CONFIG     = 'config/app';  // collection: config, doc: app
+
+// ════════════════════════════════════════════════════
+//  XAVFSIZLIK: Brute-force himoya
+// ════════════════════════════════════════════════════
+const MAX_ATTEMPTS  = 5;
+const LOCKOUT_MS    = 5 * 60 * 1000; // 5 daqiqa
+const SESSION_KEY   = 'dav_admin_sess_v2';
+const LOCKOUT_KEY   = 'dav_admin_lock_v2';
+
+function checkLockout() {
+  try {
+    const raw = sessionStorage.getItem(LOCKOUT_KEY);
+    if (!raw) return false;
+    const lock = JSON.parse(raw);
+    if (Date.now() < lock.until) return lock;
+    sessionStorage.removeItem(LOCKOUT_KEY);
+  } catch(e) { sessionStorage.removeItem(LOCKOUT_KEY); }
+  return false;
+}
+
+function recordFailedAttempt() {
+  let attempts = 0;
+  try {
+    const raw = sessionStorage.getItem(LOCKOUT_KEY);
+    if (raw) { const d = JSON.parse(raw); attempts = d.attempts || 0; }
+  } catch(e) {}
+  attempts++;
+  if (attempts >= MAX_ATTEMPTS) {
+    sessionStorage.setItem(LOCKOUT_KEY, JSON.stringify({ until: Date.now() + LOCKOUT_MS, attempts }));
+    return { locked: true, until: Date.now() + LOCKOUT_MS };
+  }
+  sessionStorage.setItem(LOCKOUT_KEY, JSON.stringify({ attempts, until: 0 }));
+  return { locked: false, attempts, remaining: MAX_ATTEMPTS - attempts };
+}
+
+function clearAttempts() {
+  sessionStorage.removeItem(LOCKOUT_KEY);
+}
+
+// ════════════════════════════════════════════════════
+//  SHA-256
+// ════════════════════════════════════════════════════
+async function sha256(msg) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ════════════════════════════════════════════════════
+//  FIREBASE INIT
+// ════════════════════════════════════════════════════
+let db = null;
+
+async function initFirebase() {
+  try {
+    const app = initializeApp(FIREBASE_CONFIG, 'davomat-admin-v2');
+    db = getFirestore(app);
+    // Ulanishni real tekshirish
+    await getDoc(doc(db, 'config', 'app'));
+    return true;
+  } catch(e) {
+    console.error('Firebase init xatosi:', e);
+    db = null;
+    return false;
+  }
+}
+
+// ════════════════════════════════════════════════════
+//  FIRESTORE HELPERS — barcha operatsiyalar
+// ════════════════════════════════════════════════════
+
+// Sozlamalar o'qish (field nomlar employee.html bilan mos)
+async function getConfig() {
+  const snap = await getDoc(doc(db, 'config', 'app'));
+  if (snap.exists()) return snap.data();
+  // Birinchi marta: default sozlamalarni yozish
+  const def = {
+    workStart: '08:00',  // Kelish boshlanishi
+    workEnd:   '09:00',  // Kelish tugashi
+    leaveStart:'17:00',  // Ketish boshlanishi
+    leaveEnd:  '18:00',  // Ketish tugashi
+    lat: '41.2995',
+    lon: '69.2401',
+    locationName: "Toshkent, O'zbekiston",
+    radius: '50',
+    gpsEnabled: true,
+    adminPinHash: await sha256('0000')
+  };
+  await setDoc(doc(db, 'config', 'app'), def);
+  return def;
+}
+
+async function saveConfig(data) {
+  await setDoc(doc(db, 'config', 'app'), data, { merge: true });
+}
+
+// Xodimlar (field: pin, name, position, dept, createdAt)
+async function getStaff() {
+  const snap = await getDocs(collection(db, COL_STAFF));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+// Bugungi davomat yozuvlari
+// doc ID format: staffId_YYYY-MM-DD
+async function getAttendanceByDate(date) {
+  const snap = await getDocs(collection(db, COL_ATTENDANCE));
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(r => r.date === date);
+}
+
+async function getAttendanceByMonth(month) {
+  const snap = await getDocs(collection(db, COL_ATTENDANCE));
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(r => r.date && r.date.startsWith(month));
+}
+
+// ════════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════════
+let authPin = '';
+let configCache = null;
+let lockoutTimer = null;
+
+function renderAuthPins(errMode = false) {
+  const w = document.getElementById('auth-pins');
+  if (!w) return;
+  w.innerHTML = Array.from({ length: 4 }).map((_, i) => {
+    const d = authPin[i] || '';
+    const cls = errMode ? 'err' : (i === authPin.length ? 'ac' : (d ? 'fi' : ''));
+    return `<div class="pin-box ${cls}">${d ? '●' : ''}</div>`;
+  }).join('');
+}
+
+function renderAuthKp() {
+  const w = document.getElementById('auth-kp');
+  if (!w) return;
+  w.innerHTML = ['1','2','3','4','5','6','7','8','9','del','0','ok'].map(k => `
+    <div class="key ${k==='del'?'dl':''} ${k==='ok'?'ok':''}" onclick="authKey('${k}')">${k==='del'?'⌫':k==='ok'?'✓':k}</div>
+  `).join('');
+}
+
+window.authKey = function(k) {
+  // Lockout tekshirish
+  const lock = checkLockout();
+  if (lock && lock.locked) { showLockoutMsg(lock.until); return; }
+
+  const errEl = document.getElementById('auth-err');
+  errEl.style.display = 'none';
+
+  if (k === 'del') { authPin = authPin.slice(0, -1); renderAuthPins(); return; }
+  if (k === 'ok')  { if (authPin.length >= 4) verifyPin(); return; }
+  if (authPin.length < 4) {
+    authPin += k;
+    renderAuthPins();
+    if (authPin.length === 4) setTimeout(verifyPin, 150);
+  }
+};
+
+function showLockoutMsg(until) {
+  const remaining = Math.ceil((until - Date.now()) / 1000);
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+  const el = document.getElementById('lockout-msg');
+  el.textContent = `🔒 ${MAX_ATTEMPTS} ta noto'g'ri urinish. ${mins}:${String(secs).padStart(2,'0')} kuting`;
+  el.style.display = 'block';
+  if (lockoutTimer) clearInterval(lockoutTimer);
+  lockoutTimer = setInterval(() => {
+    const r = Math.ceil((until - Date.now()) / 1000);
+    if (r <= 0) {
+      clearInterval(lockoutTimer);
+      el.style.display = 'none';
+      clearAttempts();
+    } else {
+      const m = Math.floor(r / 60), s = r % 60;
+      el.textContent = `🔒 ${MAX_ATTEMPTS} ta noto'g'ri urinish. ${m}:${String(s).padStart(2,'0')} kuting`;
+    }
+  }, 1000);
+}
+
+async function verifyPin() {
+  const lock = checkLockout();
+  if (lock && lock.locked) { showLockoutMsg(lock.until); authPin = ''; renderAuthPins(); return; }
+
+  const pinToCheck = authPin;
+  authPin = '';
+
+  try {
+    configCache = await getConfig();
+    const h = await sha256(pinToCheck);
+
+    if (h === configCache.adminPinHash) {
+      clearAttempts();
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ts: Date.now() }));
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display = 'flex';
+      startApp();
+    } else {
+      const result = recordFailedAttempt();
+      renderAuthPins(true);
+      const errEl = document.getElementById('auth-err');
+      if (result.locked) {
+        errEl.textContent = `${MAX_ATTEMPTS} ta noto'g'ri urinish. 5 daqiqa bloklandingiz.`;
+        showLockoutMsg(result.until);
+      } else {
+        errEl.textContent = `Noto'g'ri PIN. Qolgan urinish: ${result.remaining}`;
+      }
+      errEl.style.display = 'block';
+      setTimeout(() => { renderAuthPins(false); renderAuthPins(); }, 600);
+    }
+  } catch(e) {
+    const errEl = document.getElementById('auth-err');
+    errEl.textContent = 'Firebase xatosi: ' + e.message;
+    errEl.style.display = 'block';
+    renderAuthPins();
+  }
+}
+
+// Session tekshirish (30 daqiqa)
+function isSessionValid() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return false;
+    const sess = JSON.parse(raw);
+    return (Date.now() - sess.ts) < 30 * 60 * 1000;
+  } catch(e) { return false; }
+}
+
+window.logout = function() {
+  sessionStorage.removeItem(SESSION_KEY);
+  authPin = '';
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  renderAuthPins();
+  closeSb();
+};
+
+// ════════════════════════════════════════════════════
+//  NAV
+// ════════════════════════════════════════════════════
+let currentView = 'dashboard';
+const viewTitles = {
+  dashboard: '📊 Dashboard',
+  staff:     '👥 Xodimlar',
+  settings:  '⚙️ Sozlamalar',
+  reports:   '📋 Hisobotlar'
+};
+
+window.showView = function(v) {
+  if (!isSessionValid()) { window.logout(); return; }
+  currentView = v;
+  document.querySelectorAll('.ni').forEach(el => el.classList.remove('act'));
+  const el = document.getElementById('nav-' + v);
+  if (el) el.classList.add('act');
+  document.getElementById('tb-title').textContent = viewTitles[v] || v;
+  renderView(v);
+  closeSb();
+};
+
+window.openSb = function() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sb-overlay').classList.add('show');
+};
+window.closeSb = function() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('show');
+};
+
+function startApp() {
+  updateClock();
+  showView('dashboard');
+  updateFbStatus(true);
+}
+
+function updateClock() {
+  document.getElementById('tb-time').textContent = nowT();
+  setTimeout(updateClock, 30000);
+}
+function updateFbStatus(ok) {
+  const dot = document.getElementById('fb-conn-dot');
+  const lbl = document.getElementById('fb-conn-lbl');
+  if (dot) dot.className = 'fb-dot' + (ok ? '' : ' off');
+  if (lbl) lbl.textContent = ok ? 'Firebase' : 'Offline';
+}
+
+// ════════════════════════════════════════════════════
+//  VIEWS
+// ════════════════════════════════════════════════════
+let unsubDash = null;
+
+async function renderView(v) {
+  const ct = document.getElementById('content');
+  ct.innerHTML = '<div style="color:var(--mu);padding:20px;font-size:13px">⏳ Yuklanmoqda...</div>';
+  try {
+    if (v === 'dashboard') ct.innerHTML = await buildDashboard();
+    else if (v === 'staff')    ct.innerHTML = await buildStaff();
+    else if (v === 'settings') ct.innerHTML = await buildSettings();
+    else if (v === 'reports')  ct.innerHTML = await buildReports();
+    bindEvents(v);
+  } catch(e) {
+    ct.innerHTML = `<div class="alert al-e">❌ Xato: ${e.message}</div>`;
+    updateFbStatus(false);
+  }
+}
+
+// ── DASHBOARD ──────────────────────────────────────
+async function buildDashboard() {
+  const today = td();
+  const [staffList, recs] = await Promise.all([getStaff(), getAttendanceByDate(today)]);
+
+  const present = recs.filter(r => r.kelish).length;
+  const left    = recs.filter(r => r.ketish).length;
+  const absent  = staffList.length - present;
+
+  // Real-time yangilash
+  if (unsubDash) unsubDash();
+  unsubDash = onSnapshot(collection(db, COL_ATTENDANCE), snap => {
+    const el = document.getElementById('dash-tbody');
+    if (!el) { if (unsubDash) unsubDash(); return; }
+    const live = snap.docs.map(d => d.data()).filter(r => r.date === today);
+    el.innerHTML = staffList.map(e => {
+      const r = live.find(x => x.staffId === e.id);
+      const kelish  = r?.kelish  || '<span style="color:var(--mu)">—</span>';
+      const ketish  = r?.ketish  || '<span style="color:var(--mu)">—</span>';
+      const kelSt   = r?.kelishStatus  || '';
+      const ketSt   = r?.ketishStatus  || '';
+      let badge = '<span class="b br-b">Kelmadi</span>';
+      if (r?.ketish) badge = '<span class="b bmu-b">Ketdi</span>';
+      else if (r?.kelish) badge = '<span class="b bg-b">Keldi</span>';
+      return `<tr>
+        <td>${esc(e.name)}</td>
+        <td class="mono">${kelish}</td>
+        <td>${kelSt ? `<span class="b ${kelSt==='Kech'?'bw-b':'bg-b'}">${kelSt}</span>` : '—'}</td>
+        <td class="mono">${ketish}</td>
+        <td>${ketSt ? `<span class="b ${ketSt==='Erta ketdi'?'bw-b':'bb-b'}">${ketSt}</span>` : '—'}</td>
+        <td>${badge}</td>
+      </tr>`;
+    }).join('');
+    // Metrikalar
+    const p2 = live.filter(r => r.kelish).length;
+    const l2 = live.filter(r => r.ketish).length;
+    const el0 = document.getElementById('dash-m0'); if(el0) el0.textContent = p2;
+    const el1 = document.getElementById('dash-m1'); if(el1) el1.textContent = staffList.length - p2;
+    const el2 = document.getElementById('dash-m2'); if(el2) el2.textContent = l2;
+  });
+
+  const rows = staffList.map(e => {
+    const r = recs.find(x => x.staffId === e.id);
+    const kelish = r?.kelish  || '<span style="color:var(--mu)">—</span>';
+    const ketish = r?.ketish  || '<span style="color:var(--mu)">—</span>';
+    const kelSt  = r?.kelishStatus || '';
+    const ketSt  = r?.ketishStatus || '';
+    let badge = '<span class="b br-b">Kelmadi</span>';
+    if (r?.ketish) badge = '<span class="b bmu-b">Ketdi</span>';
+    else if (r?.kelish) badge = '<span class="b bg-b">Keldi</span>';
+    return `<tr>
+      <td>${esc(e.name)}</td>
+      <td class="mono">${kelish}</td>
+      <td>${kelSt ? `<span class="b ${kelSt==='Kech'?'bw-b':'bg-b'}">${kelSt}</span>` : '—'}</td>
+      <td class="mono">${ketish}</td>
+      <td>${ketSt ? `<span class="b ${ketSt==='Erta ketdi'?'bw-b':'bb-b'}">${ketSt}</span>` : '—'}</td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div style="font-size:16px;font-weight:500;margin-bottom:16px">
+      Bugun — <span class="mono" style="font-size:12px;color:var(--mu)">${today}</span>
+      <span style="font-size:10px;color:var(--g);margin-left:8px;font-family:var(--mono)">● LIVE</span>
+    </div>
+    <div class="grid4">
+      <div class="met"><div class="ml">Kelganlar</div><div class="mv g" id="dash-m0">${present}</div><div class="ms">xodim</div></div>
+      <div class="met"><div class="ml">Kelmagan</div><div class="mv r" id="dash-m1">${absent}</div><div class="ms">xodim</div></div>
+      <div class="met"><div class="ml">Ketganlar</div><div class="mv w" id="dash-m2">${left}</div><div class="ms">xodim</div></div>
+      <div class="met"><div class="ml">Jami</div><div class="mv b">${staffList.length}</div><div class="ms">ro'yxatda</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Bugungi davomat <span style="color:var(--g)">· Real vaqt</span></div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Xodim</th><th>Kelish</th><th>Holat</th><th>Ketish</th><th>Holat</th><th>Status</th></tr></thead>
+          <tbody id="dash-tbody">${rows || '<tr><td colspan="6" style="text-align:center;color:var(--mu);padding:20px">Hali xodim qo\'shilmagan</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ── XODIMLAR ───────────────────────────────────────
+async function buildStaff() {
+  const staffList = await getStaff();
+  const rows = staffList.map(e => `<tr>
+    <td>${esc(e.name)}</td>
+    <td><span class="b bmu-b">${esc(e.dept||'Umumiy')}</span></td>
+    <td><span class="b bmu-b mono">${esc(e.position||'—')}</span></td>
+    <td><span class="b bg-b">✓ Faol</span></td>
+    <td>
+      <div class="row" style="gap:6px">
+        <button class="btn bs bo" onclick="showCodeModal('${e.id}','${esc(e.name)}','${e.pin}')">📋 Kod</button>
+        <button class="btn bs br" onclick="deleteStaff('${e.id}','${esc(e.name)}')">🗑</button>
+      </div>
+    </td>
+  </tr>`).join('');
+
+  return `
+    <div style="font-size:16px;font-weight:500;margin-bottom:16px">Xodimlar boshqaruvi</div>
+    <div class="card">
+      <div class="card-title">Yangi xodim qo'shish</div>
+      <div class="grid2">
+        <div class="fg"><label class="fl">Ism familiya *</label><input id="s-name" placeholder="Alisher Karimov" autocomplete="off"></div>
+        <div class="fg"><label class="fl">Bo'lim</label><input id="s-dept" placeholder="IT, HR, Moliya..." autocomplete="off"></div>
+      </div>
+      <div class="grid2">
+        <div class="fg"><label class="fl">Lavozim</label><input id="s-pos" placeholder="Dasturchi, Manager..." autocomplete="off"></div>
+        <div class="fg">
+          <label class="fl">4 xonali unikal PIN *</label>
+          <div class="row">
+            <input id="s-pin" placeholder="Masalan: 4821" maxlength="4"
+              oninput="this.value=this.value.replace(/\\D/g,'').slice(0,4)"
+              autocomplete="off" type="text" style="letter-spacing:4px;font-family:var(--mono)">
+            <button class="btn bo bs" onclick="genPin()" style="white-space:nowrap;flex-shrink:0">🎲 Auto</button>
+          </div>
+        </div>
+      </div>
+      <div id="s-msg" style="display:none;margin-bottom:8px"></div>
+      <button class="btn bp" onclick="addStaff()">+ Xodim qo'shish</button>
+    </div>
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Ro'yxat (${staffList.length} ta)</span>
+        <button class="btn bs bp" onclick="showBulkImport()" style="font-size:11px">📥 Ro'yxatdan import</button>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Ism</th><th>Bo'lim</th><th>Lavozim</th><th>Holat</th><th>Amal</th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:var(--mu);padding:20px">Hali xodim qo\'shilmagan</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+window.genPin = async function() {
+  // Mavjud PIN larni yuklab, unikal generatsiya
+  const staffList = await getStaff();
+  const existing = new Set(staffList.map(e => e.pin));
+  let pin;
+  let tries = 0;
+  do {
+    pin = String(Math.floor(1000 + Math.random() * 9000));
+    tries++;
+  } while (existing.has(pin) && tries < 100);
+  document.getElementById('s-pin').value = pin;
+};
+
+window.addStaff = async function() {
+  const name = document.getElementById('s-name').value.trim();
+  const dept = document.getElementById('s-dept').value.trim() || 'Umumiy';
+  const pos  = document.getElementById('s-pos').value.trim()  || '';
+  const pin  = document.getElementById('s-pin').value.trim();
+  const msg  = document.getElementById('s-msg');
+
+  if (!name) {
+    msg.className = 'alert al-e'; msg.textContent = '❌ Ism majburiy'; msg.style.display = 'block'; return;
+  }
+  if (!/^\d{4}$/.test(pin)) {
+    msg.className = 'alert al-e'; msg.textContent = '❌ 4 raqamli PIN kiriting'; msg.style.display = 'block'; return;
+  }
+
+  // Takroriy PIN tekshirish
+  const staffList = await getStaff();
+  if (staffList.find(e => e.pin === pin)) {
+    msg.className = 'alert al-e'; msg.textContent = '❌ Bu PIN allaqachon ishlatilmoqda'; msg.style.display = 'block'; return;
+  }
+
+  await addDoc(collection(db, COL_STAFF), {
+    name, dept, position: pos, pin,
+    createdAt: serverTimestamp(),
+    active: true
+  });
+
+  msg.className = 'alert al-s';
+  msg.textContent = `✅ ${name} qo'shildi! PIN: ${pin}`;
+  msg.style.display = 'block';
+  document.getElementById('s-name').value = '';
+  document.getElementById('s-dept').value = '';
+  document.getElementById('s-pos').value  = '';
+  document.getElementById('s-pin').value  = '';
+  setTimeout(() => showView('staff'), 1500);
+};
+
+window.deleteStaff = async function(id, name) {
+  if (!confirm(`"${name}" xodimini o'chirishni tasdiqlaysizmi?\n\nDavomat yozuvlari saqlanib qoladi.`)) return;
+  await deleteDoc(doc(db, COL_STAFF, id));
+  showView('staff');
+};
+
+// ── BULK IMPORT ────────────────────────────────────
+const IMPORT_LIST = [
+  { name: "Muzrapov Shukur",         position: "OIBDO'",           pin: "0002" },
+  { name: "Abdinazarov O'tkir",      position: "Kafedra mudiri",   pin: "4551" },
+  { name: "Abdishukurova Orzigul",   position: "o'qituvchi",       pin: "3130" },
+  { name: "Abdullayev Alisher",      position: "texnik hodim",     pin: "7020" },
+  { name: "Abduraxmonova Nafisa",    position: "o'qituvchi",       pin: "1111" },
+  { name: "Aliqo'lov Komil",         position: "o'qituvchi",       pin: "7731" },
+  { name: "Aliqo'lovа Xoliniso",     position: "o'qituvchi",       pin: "4743" },
+  { name: "Allanazarov Murod",       position: "Kafedra mudiri",   pin: "4765" },
+  { name: "Allanazarova Sojida",     position: "Kotiba",           pin: "5251" },
+  { name: "Allayorov Ibragim",       position: "texnik hodim",     pin: "3867" },
+  { name: "Amonov Baxtiyor",         position: "texnik hodim",     pin: "7104" },
+  { name: "Axmedov Oybek",           position: "o'qituvchi",       pin: "8973" },
+  { name: "Axmedova Fotima",         position: "texnik hodim",     pin: "9300" },
+  { name: "Bazarov Shuxrat",         position: "texnik hodim",     pin: "5910" },
+  { name: "Begimova Mavjuda",        position: "texnik hodim",     pin: "8083" },
+  { name: "Bekmurodova Xalima",      position: "psixolog",         pin: "1400" },
+  { name: "Boboqulova Gulsara",      position: "texnik hodim",     pin: "1889" },
+  { name: "Boboqulova Shaxnoza",     position: "Kadr",             pin: "1285" },
+  { name: "Boysariyeva Manzura",     position: "o'qituvchi",       pin: "1521" },
+  { name: "Djurayeva Nasiba",        position: "Kafedra mudiri",   pin: "5521" },
+  { name: "Dursoatova Sayyora",      position: "texnik hodim",     pin: "8730" },
+  { name: "Erdanayeva Xurshida",     position: "texnik hodim",     pin: "9782" },
+  { name: "Eshmirzayev Abdinazar",   position: "texnik hodim",     pin: "3502" },
+  { name: "Eshonqo'lov Mirbek",      position: "Kurs tarbiyachisi",pin: "9891" },
+  { name: "Esonov Otabek",           position: "o'qituvchi",       pin: "1235" },
+  { name: "Islomova Maftuna",        position: "o'qituvchi",       pin: "7281" },
+  { name: "Jumayeva Shaxnoza",       position: "texnik hodim",     pin: "2665" },
+  { name: "Juraeva Gulchexra",       position: "texnik hodim",     pin: "5969" },
+  { name: "Karimov Islom",           position: "o'qituvchi",       pin: "1702" },
+  { name: "Kuchkeldiyeva Adolat",    position: "Kutubxonachi",     pin: "8686" },
+  { name: "Kulliyev Azamat",         position: "o'qituvchi",       pin: "2561" },
+  { name: "Kuziyev Urol",            position: "texnik hodim",     pin: "2221" },
+  { name: "Mamadiyorov Muhammad",    position: "o'qituvchi",       pin: "7010" },
+  { name: "Mamatxolov Aziz",         position: "o'qituvchi",       pin: "6101" },
+  { name: "Mirzayusupov Shoxrux",    position: "o'qituvchi",       pin: "1607" },
+  { name: "Murodova Dilbar",         position: "o'qituvchi",       pin: "2655" },
+  { name: "Norboyev Sirojiddin",     position: "o'qituvchi",       pin: "7000" },
+  { name: "Nuraliyeva Zarina",       position: "o'qituvchi",       pin: "4818" },
+  { name: "Odilov Eshdavlat",        position: "Hisobchi",         pin: "5021" },
+  { name: "Ortiqov Asliddin",        position: "texnik hodim",     pin: "7169" },
+  { name: "Pardayeva Orzigul",       position: "texnik hodim",     pin: "4583" },
+  { name: "Po'latov Begali",         position: "texnik hodim",     pin: "2022" },
+  { name: "Qarshiyeva Nozik",        position: "o'qituvchi",       pin: "9599" },
+  { name: "Qodirov Navruz",          position: "o'qituvchi",       pin: "7221" },
+  { name: "Qorayev Bobomurod",       position: "texnik hodim",     pin: "1330" },
+  { name: "Qorayev Elmurod",         position: "texnik hodim",     pin: "1433" },
+  { name: "Rasulov Fazliddin",       position: "texnik hodim",     pin: "2244" },
+  { name: "Raximova Dilfuza",        position: "texnik hodim",     pin: "7500" },
+  { name: "Raxmatullayeva Gulnoz",   position: "o'qituvchi",       pin: "2605" },
+  { name: "Shadiyev Orazmurat",      position: "o'qituvchi",       pin: "7478" },
+  { name: "Shadiyev Orazmurat",      position: "texnik hodim",     pin: "5074" },
+  { name: "Taxirova Marxabo",        position: "Kadr nazoratchi",  pin: "1592" },
+  { name: "Tilavova Dilbar",         position: "o'qituvchi",       pin: "6164" },
+  { name: "Tillayeva Shoxsanam",     position: "o'qituvchi",       pin: "3912" },
+  { name: "To'raqulov Boybo'ri",     position: "o'qituvchi",       pin: "1987" },
+  { name: "Toshboltayev Islom",      position: "o'qituvchi",       pin: "9908" },
+  { name: "Toshpulatova Mavjuda",    position: "texnik hodim",     pin: "6989" },
+  { name: "To'xliyeva Madina",       position: "o'qituvchi",       pin: "0825" },
+  { name: "Turdiyev Rustam",         position: "o'qituvchi",       pin: "8844" },
+  { name: "Umarova Vazira",          position: "o'qituvchi",       pin: "9299" },
+  { name: "Xabibullayeva Gulsaram",  position: "o'qituvchi",       pin: "3390" },
+  { name: "Xasanov Muhiddin",        position: "o'qituvchi",       pin: "8771" },
+  { name: "Xo'daymo'rodov Yigitali", position: "Kurs tarbiyachisi",pin: "1188" },
+  { name: "Xo'janov Ixtiyor",        position: "Bosh hisobchi",    pin: "1000" },
+  { name: "Xoliyorova Yulduz",       position: "texnik hodim",     pin: "7654" },
+  { name: "Xujayorova Gulxayo",      position: "Kutubxonachi",     pin: "9036" },
+  { name: "Xurramov Bobur",          position: "texnik hodim",     pin: "2901" },
+  { name: "Yangiboyev Farxod",       position: "o'qituvchi",       pin: "5891" },
+];
+
+window.showBulkImport = async function() {
+  const existing = await getStaff();
+  const existingPins = new Set(existing.map(e => e.pin));
+  const existingNames = new Set(existing.map(e => e.name));
+
+  const toImport = IMPORT_LIST.filter(s => !existingPins.has(s.pin) && !existingNames.has(s.name));
+  const duplicates = IMPORT_LIST.filter(s => existingPins.has(s.pin) || existingNames.has(s.name));
+
+  const dupRows = duplicates.map(s =>
+    `<tr style="opacity:.5"><td>${esc(s.name)}</td><td>${esc(s.position)}</td><td class="mono">${s.pin}</td><td style="color:var(--w)">⚠ Mavjud</td></tr>`
+  ).join('');
+  const newRows = toImport.map(s =>
+    `<tr><td>${esc(s.name)}</td><td>${esc(s.position)}</td><td class="mono">${s.pin}</td><td style="color:var(--g)">✓ Yangi</td></tr>`
+  ).join('');
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="row" style="margin-bottom:4px">
+      <div class="modal-title">📥 Ro'yxatdan import</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-sub">Jami ${IMPORT_LIST.length} ta xodim · ${toImport.length} ta yangi · ${duplicates.length} ta mavjud</div>
+    ${toImport.length === 0
+      ? '<div class="alert al-w">⚠️ Barcha xodimlar allaqachon tizimda mavjud!</div>'
+      : `<div class="alert al-s" style="margin-bottom:10px">✅ ${toImport.length} ta yangi xodim qo'shiladi</div>`
+    }
+    <div id="import-msg" style="display:none;margin-bottom:8px"></div>
+    <div class="tw" style="max-height:320px;overflow-y:auto;margin-bottom:14px">
+      <table>
+        <thead><tr><th>Ism</th><th>Bo'lim/Lavozim</th><th>PIN</th><th>Holat</th></tr></thead>
+        <tbody>${newRows}${dupRows}</tbody>
+      </table>
+    </div>
+    ${toImport.length > 0 ? `
+    <button class="btn bp bfull" id="import-btn" onclick="doBulkImport()">
+      ⬆ ${toImport.length} ta xodimni Firebase'ga yuklash
+    </button>` : ''}
+  `;
+  document.getElementById('modal').style.display = 'flex';
+};
+
+window.doBulkImport = async function() {
+  const existing = await getStaff();
+  const existingPins = new Set(existing.map(e => e.pin));
+  const existingNames = new Set(existing.map(e => e.name));
+  const toImport = IMPORT_LIST.filter(s => !existingPins.has(s.pin) && !existingNames.has(s.name));
+
+  const btn = document.getElementById('import-btn');
+  const msg = document.getElementById('import-msg');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Yuklanmoqda...'; }
+
+  let success = 0, failed = 0;
+  for (const s of toImport) {
+    try {
+      await addDoc(collection(db, COL_STAFF), {
+        name: s.name,
+        dept: s.position,
+        position: s.position,
+        pin: s.pin,
+        createdAt: serverTimestamp(),
+        active: true
+      });
+      success++;
+    } catch(e) {
+      failed++;
+    }
+  }
+
+  msg.className = failed > 0 ? 'alert al-w' : 'alert al-s';
+  msg.textContent = failed > 0
+    ? `✅ ${success} ta qo'shildi, ❌ ${failed} ta xato`
+    : `✅ ${success} ta xodim muvaffaqiyatli qo'shildi!`;
+  msg.style.display = 'block';
+  if (btn) btn.style.display = 'none';
+  setTimeout(() => { closeModal(); showView('staff'); }, 2000);
+};
+
+window.showCodeModal = function(id, name, pin) {
+  document.getElementById('modal-content').innerHTML = `
+    <div class="row">
+      <div class="modal-title">PIN kod</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-sub">${esc(name)}</div>
+    <div class="code-big">${pin}</div>
+    <div class="alert al-w" style="font-size:12px">⚠️ Bu kodni faqat xodimga shaxsan bildiring</div>
+    <div class="fg" style="margin-top:14px"><label class="fl">Yangi PIN</label>
+      <div class="row">
+        <input id="new-pin" placeholder="4 raqam" maxlength="4"
+          oninput="this.value=this.value.replace(/\\D/g,'').slice(0,4)"
+          style="letter-spacing:4px;font-family:var(--mono)" autocomplete="off">
+        <button class="btn bo bs" onclick="genPinModal('${id}')" style="white-space:nowrap;flex-shrink:0">🎲</button>
+      </div>
+    </div>
+    <div id="pin-modal-msg" style="display:none;margin-bottom:8px"></div>
+    <button class="btn bp bfull" onclick="updatePin('${id}')">💾 Yangilash</button>
+  `;
+  document.getElementById('modal').style.display = 'flex';
+};
+
+window.genPinModal = async function(excludeId) {
+  const staffList = await getStaff();
+  const existing  = new Set(staffList.filter(e => e.id !== excludeId).map(e => e.pin));
+  let pin, tries = 0;
+  do { pin = String(Math.floor(1000 + Math.random() * 9000)); tries++; }
+  while (existing.has(pin) && tries < 100);
+  document.getElementById('new-pin').value = pin;
+};
+
+window.updatePin = async function(id) {
+  const pin = document.getElementById('new-pin').value.trim();
+  const msg = document.getElementById('pin-modal-msg');
+  if (!/^\d{4}$/.test(pin)) {
+    msg.className = 'alert al-e'; msg.textContent = '❌ 4 raqamli PIN kiriting'; msg.style.display = 'block'; return;
+  }
+  const staffList = await getStaff();
+  if (staffList.find(e => e.pin === pin && e.id !== id)) {
+    msg.className = 'alert al-e'; msg.textContent = '❌ Bu PIN boshqa xodimda bor'; msg.style.display = 'block'; return;
+  }
+  await updateDoc(doc(db, COL_STAFF, id), { pin });
+  closeModal();
+  showView('staff');
+};
+
+window.closeModal = function() { document.getElementById('modal').style.display = 'none'; };
+
+// ── SOZLAMALAR ─────────────────────────────────────
+async function buildSettings() {
+  const s = await getConfig();
+  configCache = s;
+  const gpsOn = s.gpsEnabled !== false;
+  const lat = s.lat || '41.2995';
+  const lon = s.lon || '69.2401';
+
+  return `
+    <div style="font-size:16px;font-weight:500;margin-bottom:16px">Tizim sozlamalari</div>
+    <div id="set-msg" style="display:none"></div>
+    <div class="card">
+      <div class="card-title">⏰ Vaqt oynalari</div>
+      <div style="font-size:12px;color:var(--mu);margin-bottom:12px">Xodimlar faqat shu vaqt oraliqlarida davomat belgilashi mumkin</div>
+      <div style="font-size:12px;color:var(--g);margin-bottom:8px;font-weight:500">Kelish vaqti:</div>
+      <div class="grid2">
+        <div class="fg"><label class="fl">Boshlanishi</label><input type="time" id="workStart" value="${s.workStart||'08:00'}"></div>
+        <div class="fg"><label class="fl">Tugashi</label><input type="time" id="workEnd" value="${s.workEnd||'09:00'}"></div>
+      </div>
+      <div style="font-size:12px;color:var(--w);margin-bottom:8px;font-weight:500">Ketish vaqti:</div>
+      <div class="grid2">
+        <div class="fg"><label class="fl">Boshlanishi</label><input type="time" id="leaveStart" value="${s.leaveStart||'17:00'}"></div>
+        <div class="fg"><label class="fl">Tugashi</label><input type="time" id="leaveEnd" value="${s.leaveEnd||'18:00'}"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📍 GPS hudud sozlamalari</div>
+      <div class="fg" style="margin-bottom:10px">
+        <label class="fl">GPS tekshiruvi</label>
+        <select id="gpsEnabled">
+          <option value="true" ${gpsOn?'selected':''}>✅ Yoqilgan — xodim belgilangan hududda bo'lishi shart</option>
+          <option value="false" ${!gpsOn?'selected':''}>❌ O'chirilgan — hudud tekshiruvisiz ishlash</option>
+        </select>
+      </div>
+      <div id="gps-fields" style="${!gpsOn?'opacity:.4;pointer-events:none':''}">
+        <div class="grid2">
+          <div class="fg"><label class="fl">Kenglik (Lat)</label><input type="number" id="lat" step="0.0001" value="${lat}" placeholder="41.2995"></div>
+          <div class="fg"><label class="fl">Uzunlik (Lng)</label><input type="number" id="lon" step="0.0001" value="${lon}" placeholder="69.2401"></div>
+        </div>
+        <div class="fg"><label class="fl">Hudud nomi</label><input id="locationName" value="${esc(s.locationName||'Ish joyi')}" placeholder="Kompaniya nomi"></div>
+        <div style="background:var(--s2);border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin-bottom:14px">
+          <iframe id="map-frame"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(lon)-0.002}%2C${parseFloat(lat)-0.002}%2C${parseFloat(lon)+0.002}%2C${parseFloat(lat)+0.002}&layer=mapnik&marker=${lat}%2C${lon}"
+            style="width:100%;height:200px;border:none;display:block"></iframe>
+          <div style="padding:8px 12px;font-size:11px;color:var(--mu)">
+            📌 Google Maps → joy ustida o'ng tugma → koordinatalarni ko'chiring
+          </div>
+        </div>
+        <div class="fg">
+          <div class="row"><label class="fl">Radius</label><span class="mono" style="color:var(--g);font-size:14px" id="rad-val">${s.radius||50} m</span></div>
+          <input type="range" min="10" max="200" step="5" value="${s.radius||50}" id="radius"
+            oninput="document.getElementById('rad-val').textContent=this.value+' m'">
+          <div class="row" style="margin-top:3px">
+            <span style="font-size:10px;color:var(--mu)">10m (aniq)</span>
+            <div class="sp"></div>
+            <span style="font-size:10px;color:var(--mu)">200m (keng)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔐 Admin PIN o'zgartirish</div>
+      <div class="sec" style="margin-bottom:12px">⚠️ PIN o'zgartirilgandan so'ng qayta kirishingiz kerak bo'ladi. Default PIN: <b>0000</b></div>
+      <div class="grid2">
+        <div class="fg"><label class="fl">Yangi PIN</label><input type="password" id="np1" placeholder="4 raqam" maxlength="4" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,4)" autocomplete="new-password"></div>
+        <div class="fg"><label class="fl">Tasdiqlash</label><input type="password" id="np2" placeholder="Qayta kiriting" maxlength="4" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,4)" autocomplete="new-password"></div>
+      </div>
+      <div id="pin-msg" style="display:none;margin-bottom:8px"></div>
+      <button class="btn bo" onclick="changeAdminPin()">🔒 PIN ni yangilash</button>
+    </div>
+    <button class="btn bp bfull" style="font-size:14px;padding:12px" onclick="doSaveSettings()">💾 Sozlamalarni saqlash</button>
+  `;
+}
+
+// GPS toggle
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'gpsEnabled') {
+    const gpsFields = document.getElementById('gps-fields');
+    if (gpsFields) {
+      gpsFields.style.opacity   = e.target.value === 'true' ? '1' : '.4';
+      gpsFields.style.pointerEvents = e.target.value === 'true' ? '' : 'none';
+    }
+  }
+});
+
+window.doSaveSettings = async function() {
+  const data = {
+    workStart:    document.getElementById('workStart').value,
+    workEnd:      document.getElementById('workEnd').value,
+    leaveStart:   document.getElementById('leaveStart').value,
+    leaveEnd:     document.getElementById('leaveEnd').value,
+    gpsEnabled:   document.getElementById('gpsEnabled').value === 'true',
+    lat:          document.getElementById('lat')?.value || '41.2995',
+    lon:          document.getElementById('lon')?.value || '69.2401',
+    locationName: document.getElementById('locationName')?.value || 'Ish joyi',
+    radius:       parseInt(document.getElementById('radius')?.value || 50),
+  };
+
+  // Validatsiya
+  if (data.workStart >= data.workEnd) {
+    const msg = document.getElementById('set-msg');
+    msg.className = 'alert al-e'; msg.textContent = '❌ Kelish vaqti: boshlanishi tugashidan kichik bo\'lishi kerak'; msg.style.display = 'block';
+    return;
+  }
+  if (data.leaveStart >= data.leaveEnd) {
+    const msg = document.getElementById('set-msg');
+    msg.className = 'alert al-e'; msg.textContent = '❌ Ketish vaqti: boshlanishi tugashidan kichik bo\'lishi kerak'; msg.style.display = 'block';
+    return;
+  }
+
+  await saveConfig(data);
+  configCache = { ...configCache, ...data };
+
+  const msg = document.getElementById('set-msg');
+  msg.className = 'alert al-s'; msg.textContent = '✅ Sozlamalar saqlandi!'; msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+
+  // Xaritani yangilash
+  const f = document.getElementById('map-frame');
+  if (f) f.src = `https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(data.lon)-0.002}%2C${parseFloat(data.lat)-0.002}%2C${parseFloat(data.lon)+0.002}%2C${parseFloat(data.lat)+0.002}&layer=mapnik&marker=${data.lat}%2C${data.lon}`;
+};
+
+window.changeAdminPin = async function() {
+  const p1 = document.getElementById('np1').value;
+  const p2 = document.getElementById('np2').value;
+  const msg = document.getElementById('pin-msg');
+  if (!/^\d{4}$/.test(p1)) {
+    msg.className = 'alert al-e'; msg.textContent = '❌ 4 raqamli PIN kiriting'; msg.style.display = 'block'; return;
+  }
+  if (p1 !== p2) {
+    msg.className = 'alert al-e'; msg.textContent = '❌ PIN lar mos kelmadi'; msg.style.display = 'block'; return;
+  }
+  const h = await sha256(p1);
+  await saveConfig({ adminPinHash: h });
+  // Sessiyani tozalash — qayta kirish kerak bo'ladi
+  sessionStorage.removeItem(SESSION_KEY);
+  msg.className = 'alert al-s'; msg.textContent = '✅ PIN yangilandi. Qayta kirish kerak.'; msg.style.display = 'block';
+  setTimeout(() => window.logout(), 2000);
+};
+
+// ── HISOBOTLAR ─────────────────────────────────────
+async function buildReports() {
+  return `
+    <div style="font-size:16px;font-weight:500;margin-bottom:16px">Hisobotlar</div>
+    <div class="card">
+      <div class="row" style="flex-wrap:wrap;gap:8px">
+        <button class="btn bs bp" id="rp-kun" onclick="setRpPeriod('kunlik')">📅 Kunlik</button>
+        <button class="btn bs bo" id="rp-oy"  onclick="setRpPeriod('oylik')">🗓 Oylik</button>
+        <input type="date"  id="rp-date"  value="${td()}"              onchange="renderReportTable()" style="width:150px">
+        <input type="month" id="rp-month" value="${td().slice(0,7)}"   onchange="renderReportTable()" style="width:150px;display:none">
+        <div class="sp"></div>
+        <button class="btn bs bo" onclick="exportCSV()">⬇ CSV</button>
+        <button class="btn bs bo" onclick="window.print()">🖨 Chop</button>
+      </div>
+    </div>
+    <div class="card" id="rp-card">
+      <div class="card-title" id="rp-count">Yuklanmoqda...</div>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr>
+              <th>Xodim</th><th>Sana</th>
+              <th>Kelish</th><th>Kelish holati</th>
+              <th>Ketish</th><th>Ketish holati</th>
+              <th>GPS</th>
+            </tr>
+          </thead>
+          <tbody id="rp-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+let rpPeriod = 'kunlik';
+let rpRecords = [];
+
+window.setRpPeriod = async function(p) {
+  rpPeriod = p;
+  document.getElementById('rp-kun').className = `btn bs ${p==='kunlik'?'bp':'bo'}`;
+  document.getElementById('rp-oy').className  = `btn bs ${p==='oylik' ?'bp':'bo'}`;
+  document.getElementById('rp-date').style.display  = p === 'kunlik' ? '' : 'none';
+  document.getElementById('rp-month').style.display = p === 'oylik'  ? '' : 'none';
+  await renderReportTable();
+};
+
+window.renderReportTable = async function() {
+  let recs;
+  if (rpPeriod === 'kunlik') {
+    const d = document.getElementById('rp-date')?.value || td();
+    recs = await getAttendanceByDate(d);
+  } else {
+    const m = document.getElementById('rp-month')?.value || td().slice(0,7);
+    recs = await getAttendanceByMonth(m);
+  }
+  rpRecords = recs;
+  const tbody = document.getElementById('rp-tbody');
+  const count = document.getElementById('rp-count');
+  if (!tbody) return;
+  count.textContent = `${recs.length} ta yozuv`;
+
+  if (recs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--mu);padding:20px">Ma\'lumot topilmadi</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = recs
+    .sort((a, b) => (a.date > b.date ? -1 : 1))
+    .map(r => `<tr>
+      <td>${esc(r.staffName||'—')}</td>
+      <td class="mono" style="font-size:11px">${r.date||'—'}</td>
+      <td class="mono">${r.kelish||'—'}</td>
+      <td>${r.kelishStatus ? `<span class="b ${r.kelishStatus==='Kech'?'bw-b':'bg-b'}">${r.kelishStatus}</span>` : '—'}</td>
+      <td class="mono">${r.ketish||'—'}</td>
+      <td>${r.ketishStatus ? `<span class="b ${r.ketishStatus==='Erta ketdi'?'bw-b':'bb-b'}">${r.ketishStatus}</span>` : '—'}</td>
+      <td style="font-size:11px">${r.kelishLat ? `📍 ${(+r.kelishLat).toFixed(4)}, ${(+r.kelishLon).toFixed(4)}` : '—'}</td>
+    </tr>`).join('');
+};
+
+window.exportCSV = function() {
+  const header = 'Xodim,Sana,Kelish,Kelish holati,Ketish,Ketish holati\n';
+  const rows = rpRecords.map(r =>
+    `${r.staffName||''},${r.date||''},${r.kelish||''},${r.kelishStatus||''},${r.ketish||''},${r.ketishStatus||''}`
+  ).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(header + rows);
+  a.download = `davomat-${td()}.csv`;
+  a.click();
+};
+
+function bindEvents(v) {
+  if (v === 'reports') setTimeout(() => renderReportTable(), 50);
+}
+
+// ════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════
+function td() { return new Date().toISOString().split('T')[0]; }
+function nowT() {
+  return new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
+}
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════
+(async function init() {
+  const ok = await initFirebase();
+
+  if (!ok) {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('error-screen').style.display = 'flex';
+    document.getElementById('error-msg').textContent =
+      'Firebase ga ulanib bo\'lmadi. Internet ulanishingizni va Firebase config ni tekshiring.';
+    return;
+  }
+
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('fb-status').textContent = '🔥 Firebase ulangan';
+  document.getElementById('fb-status').style.color = 'var(--g)';
+  document.getElementById('auth-screen').style.display = 'flex';
+  renderAuthPins();
+  renderAuthKp();
+
+  // Sessiya hali ham amal qilsa — to'g'ridan o'tish
+  if (isSessionValid()) {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'flex';
+    startApp();
+  }
+})();
+</script>
+</body>
+</html>
