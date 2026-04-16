@@ -271,11 +271,19 @@ async function initFirebase() {
   try {
     const app = initializeApp(FIREBASE_CONFIG, 'davomat-admin-v2');
     db = getFirestore(app);
-    // Ulanishni real tekshirish
-    await getDoc(doc(db, 'config', 'app'));
+    // Ulanishni timeout bilan tekshirish (8 soniya)
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Firebase ulanish 8 soniyadan oshdi (timeout)')), 8000)
+    );
+    await Promise.race([
+      getDoc(doc(db, 'config', 'app')),
+      timeoutPromise
+    ]);
     return true;
   } catch(e) {
     console.error('Firebase init xatosi:', e);
+    // Xato xabarini ekranda ko'rsatish uchun saqlash
+    window._firebaseError = e.message || String(e);
     db = null;
     return false;
   }
@@ -1321,7 +1329,7 @@ function esc(str) {
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('error-screen').style.display = 'flex';
     document.getElementById('error-msg').textContent =
-      'Firebase ga ulanib bo\'lmadi. Internet ulanishingizni va Firebase config ni tekshiring.';
+      (window._firebaseError ? ('Firebase xatosi: ' + window._firebaseError) : 'Firebase ga ulanib bo\'lmadi. Internet ulanishingizni va Firebase config ni tekshiring.');
     return;
   }
 
