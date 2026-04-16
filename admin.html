@@ -299,14 +299,14 @@ async function getConfig() {
   if (snap.exists()) return snap.data();
   // Birinchi marta: default sozlamalarni yozish
   const def = {
-    workStart: '08:00',  // Kelish boshlanishi
+    workStart: '07:00',  // Kelish boshlanishi
     workEnd:   '09:00',  // Kelish tugashi
-    leaveStart:'17:00',  // Ketish boshlanishi
-    leaveEnd:  '18:00',  // Ketish tugashi
-    lat: '41.2995',
-    lon: '69.2401',
-    locationName: "Toshkent, O'zbekiston",
-    radius: '50',
+    leaveStart:'16:00',  // Ketish boshlanishi
+    leaveEnd:  '20:00',  // Ketish tugashi
+    lat: '37.481448',
+    lon: '67.409789',
+    locationName: "Surxondaryo, Jarqo'rg'on tumani",
+    radius: '20',
     gpsEnabled: true,
     adminPinHash: await sha256('0000')
   };
