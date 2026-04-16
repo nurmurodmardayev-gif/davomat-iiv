@@ -271,19 +271,11 @@ async function initFirebase() {
   try {
     const app = initializeApp(FIREBASE_CONFIG, 'davomat-admin-v2');
     db = getFirestore(app);
-    // Ulanishni timeout bilan tekshirish (8 soniya)
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Firebase ulanish 8 soniyadan oshdi (timeout)')), 8000)
-    );
-    await Promise.race([
-      getDoc(doc(db, 'config', 'app')),
-      timeoutPromise
-    ]);
+    // Ulanishni real tekshirish
+    await getDoc(doc(db, 'config', 'app'));
     return true;
   } catch(e) {
     console.error('Firebase init xatosi:', e);
-    // Xato xabarini ekranda ko'rsatish uchun saqlash
-    window._firebaseError = e.message || String(e);
     db = null;
     return false;
   }
@@ -305,7 +297,7 @@ async function getConfig() {
     leaveEnd:  '20:00',  // Ketish tugashi
     lat: '37.481448',
     lon: '67.409789',
-    locationName: "Surxondaryo, Jarqo'rg'on tumani",
+    locationName: "Surkhandarya, Dzharkurgan",
     radius: '20',
     gpsEnabled: true,
     adminPinHash: await sha256('0000')
@@ -318,26 +310,47 @@ async function saveConfig(data) {
   await setDoc(doc(db, 'config', 'app'), data, { merge: true });
 }
 
-// Xodimlar (field: pin, name, position, dept, createdAt)
-async function getStaff() {
+// Xodimlar — in-memory cache (sahifalar arasi qayta ishlatiladi)
+let staffCache = null;
+let staffCacheTime = 0;
+const STAFF_CACHE_TTL = 5 * 60 * 1000; // 5 daqiqa
+
+async function getStaff(forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && staffCache && (now - staffCacheTime) < STAFF_CACHE_TTL) {
+    return staffCache;
+  }
   const snap = await getDocs(collection(db, COL_STAFF));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  staffCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  staffCacheTime = now;
+  return staffCache;
+}
+
+function invalidateStaffCache() {
+  staffCache = null;
+  staffCacheTime = 0;
 }
 
 // Bugungi davomat yozuvlari
 // doc ID format: staffId_YYYY-MM-DD
 async function getAttendanceByDate(date) {
-  const snap = await getDocs(collection(db, COL_ATTENDANCE));
-  return snap.docs
-    .map(d => ({ id: d.id, ...d.data() }))
-    .filter(r => r.date === date);
+  // Firestore where() — faqat shu sanani o'qiydi
+  const q = query(collection(db, COL_ATTENDANCE), where('date', '==', date));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
 async function getAttendanceByMonth(month) {
-  const snap = await getDocs(collection(db, COL_ATTENDANCE));
-  return snap.docs
-    .map(d => ({ id: d.id, ...d.data() }))
-    .filter(r => r.date && r.date.startsWith(month));
+  // Firestore where() — faqat shu oyni o'qiydi (startsWith ~)
+  const startDate = month + '-01';
+  const endDate   = month + '-31';
+  const q = query(
+    collection(db, COL_ATTENDANCE),
+    where('date', '>=', startDate),
+    where('date', '<=', endDate)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
 // ════════════════════════════════════════════════════
@@ -540,7 +553,9 @@ async function buildDashboard() {
 
   // Real-time yangilash
   if (unsubDash) unsubDash();
-  unsubDash = onSnapshot(collection(db, COL_ATTENDANCE), snap => {
+  // onSnapshot — faqat bugungi yozuvlarni kuzatadi (butun kolleksiya emas)
+  const todayQ = query(collection(db, COL_ATTENDANCE), where('date', '==', today));
+  unsubDash = onSnapshot(todayQ, snap => {
     const el = document.getElementById('dash-tbody');
     if (!el) { if (unsubDash) unsubDash(); return; }
     const live = snap.docs.map(d => d.data()).filter(r => r.date === today);
@@ -723,6 +738,7 @@ window.addStaff = async function() {
     createdAt: serverTimestamp(),
     active: true
   });
+  invalidateStaffCache(); // Cache tozalash — yangi xodim qo'shildi
 
   msg.className = 'alert al-s';
   msg.textContent = `✅ ${name} qo'shildi! PIN: ${pin}`;
@@ -737,6 +753,7 @@ window.addStaff = async function() {
 window.deleteStaff = async function(id, name) {
   if (!confirm(`"${name}" xodimini o'chirishni tasdiqlaysizmi?\n\nDavomat yozuvlari saqlanib qoladi.`)) return;
   await deleteDoc(doc(db, COL_STAFF, id));
+  invalidateStaffCache(); // Cache tozalash — xodim o'chirildi
   showView('staff');
 };
 
@@ -931,6 +948,7 @@ window.updatePin = async function(id) {
     msg.className = 'alert al-e'; msg.textContent = '❌ Bu PIN boshqa xodimda bor'; msg.style.display = 'block'; return;
   }
   await updateDoc(doc(db, COL_STAFF, id), { pin });
+  invalidateStaffCache(); // Cache tozalash — PIN yangilandi
   closeModal();
   showView('staff');
 };
@@ -1082,11 +1100,10 @@ async function buildProxy() {
   const staffList = await getStaff();
   const today = td();
 
-  // Config
+  // Config — cache dan olinadi (Firestore chaqiruvi yo'q)
   let cfg = {};
   try {
-    const snap = await getDoc(doc(db, 'config', 'app'));
-    if (snap.exists()) cfg = snap.data();
+    cfg = await getConfig();
   } catch(e) {}
 
   const workStart   = cfg.workStart   || '08:00';
@@ -1329,7 +1346,7 @@ function esc(str) {
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('error-screen').style.display = 'flex';
     document.getElementById('error-msg').textContent =
-      (window._firebaseError ? ('Firebase xatosi: ' + window._firebaseError) : 'Firebase ga ulanib bo\'lmadi. Internet ulanishingizni va Firebase config ni tekshiring.');
+      'Firebase ga ulanib bo\'lmadi. Internet ulanishingizni va Firebase config ni tekshiring.';
     return;
   }
 
