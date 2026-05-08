@@ -80,33 +80,19 @@ body{font-family:'IBM Plex Sans',sans-serif;background:#0d0f12;color:#e8e6e0;min
 .done-t{font-family:var(--mono);font-size:36px;margin-bottom:4px}
 .done-d{font-size:12px;color:var(--mu);margin-bottom:28px}
 .mono{font-family:var(--mono)}
-/* ── FULLSCREEN STATUS EKRANI ── */
-.st-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:background .4s}
-.st-screen.lunch-bg { background:linear-gradient(160deg,#1a0f00 0%,#2a1500 50%,#1a0a00 100%) }
-.st-screen.leave-bg { background:linear-gradient(160deg,#0d001a 0%,#160028 50%,#0a0014 100%) }
-.st-screen.shift-bg { background:linear-gradient(160deg,#001020 0%,#001830 50%,#000d1a 100%) }
-.st-screen.trip-bg  { background:linear-gradient(160deg,#1a1400 0%,#2a2000 50%,#141000 100%) }
-.st-screen-inner{display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 24px;width:100%;max-width:380px}
-.st-big-ic{font-size:72px;margin-bottom:20px;animation:st-pop .5s cubic-bezier(.34,1.56,.64,1)}
-@keyframes st-pop{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
-.st-label{font-size:16px;font-weight:500;letter-spacing:.06em;margin-bottom:6px;text-transform:uppercase}
-.st-label.o{color:var(--o)}.st-label.p{color:var(--p)}.st-label.b{color:var(--b)}.st-label.w{color:var(--w)}
-.st-name{font-size:13px;margin-bottom:32px;opacity:.6}
-/* Joriy vaqt */
-.st-clock-wrap{margin-bottom:8px}
-.st-clock{font-family:var(--mono);font-size:52px;font-weight:500;letter-spacing:.04em;line-height:1}
-.st-clock-lbl{font-size:10px;opacity:.45;letter-spacing:.12em;text-transform:uppercase;margin-top:4px}
-/* Sekundomer */
-.st-timer-wrap{margin-bottom:40px;margin-top:20px}
-.st-timer{font-family:var(--mono);font-size:32px;font-weight:400;letter-spacing:.08em;line-height:1}
-.st-timer-lbl{font-size:10px;opacity:.45;letter-spacing:.12em;text-transform:uppercase;margin-top:4px}
-.st-timer.o{color:var(--o)}.st-timer.p{color:var(--p)}.st-timer.b{color:var(--b)}.st-timer.w{color:var(--w)}
-/* Pulse halqa */
-.st-pulse{position:absolute;border-radius:50%;animation:st-pulse-anim 2s ease-in-out infinite;opacity:.12}
-@keyframes st-pulse-anim{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
-/* O'chirish tugmasi */
-.st-close-btn{padding:14px 32px;border-radius:10px;border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#e8e6e0;font-size:14px;font-weight:500;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:all .18s;-webkit-tap-highlight-color:transparent}
-.st-close-btn:active{transform:scale(.97);background:rgba(255,255,255,.1)}
+/* ── TABRIQ TOAST ── */
+.greet-toast{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;pointer-events:none;padding:24px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
+.greet-box{background:linear-gradient(135deg,rgba(20,24,32,.98),rgba(28,34,44,.98));border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:40px 32px;text-align:center;max-width:300px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.7);animation:greet-in .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes greet-in{0%{transform:scale(.65) translateY(40px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+.greet-box.greet-out{animation:greet-fade .35s ease forwards}
+@keyframes greet-fade{0%{transform:scale(1);opacity:1}100%{transform:scale(.88) translateY(-16px);opacity:0}}
+.greet-emoji{font-size:72px;margin-bottom:18px;display:block;animation:greet-bounce .9s ease infinite alternate}
+@keyframes greet-bounce{0%{transform:translateY(0) rotate(-4deg)}100%{transform:translateY(-10px) rotate(4deg)}}
+.greet-text{font-size:22px;font-weight:600;color:#f0ede8;line-height:1.35;margin-bottom:10px}
+.greet-sub{font-size:12px;color:rgba(255,255,255,.35);font-family:var(--mono);letter-spacing:.04em}
+.greet-bar{width:100%;height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:20px;overflow:hidden}
+.greet-bar-fill{height:100%;border-radius:2px;animation:greet-bar-anim 4.6s linear forwards}
+@keyframes greet-bar-anim{0%{width:100%}100%{width:0%}}
 /* ── STATUS TUGMALAR ── */
 .st-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .st-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 10px;border-radius:10px;border:1.5px solid var(--bd2);background:var(--s1);cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent;user-select:none}
@@ -522,8 +508,6 @@ let state = {
   shiftActive: false,   // Smenada
   tripActive:  false,   // Xizmat safari
   _statusPending: null, // { key, active } — PIN kutish
-  _statusActive: null,  // { key, emoji, label, color, startTs } — faol status ekrani
-  _statusTick: null,    // setInterval handle — sekundomer
 };
 
 // ════════════════════════════════════════════════════
@@ -770,73 +754,6 @@ async function render() {
   }
 
   root.innerHTML = steps + errBlock + content;
-
-  // ── FULLSCREEN STATUS EKRANI ─────────────────────
-  // Eski ekranni o'chiramiz
-  const oldScreen = document.getElementById('status-active-screen');
-  if (oldScreen) oldScreen.remove();
-
-  if (state.step === 'status-active' && state._statusActive) {
-    const sa = state._statusActive;
-
-    // Vaqt o'lchagich: startTs dan hozirga qadar
-    function elapsedStr() {
-      const diff = Math.floor((Date.now() - sa.startTs) / 1000);
-      const h = Math.floor(diff / 3600);
-      const m = Math.floor((diff % 3600) / 60);
-      const s = diff % 60;
-      if (h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    }
-
-    // Joriy vaqt
-    function currentTimeStr() {
-      const n = new Date();
-      return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0') + ':' + String(n.getSeconds()).padStart(2,'0');
-    }
-
-    // Boshlangan vaqt (HH:MM)
-    const startedAt = (() => {
-      const d = new Date(sa.startTs);
-      return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-    })();
-
-    const screen = document.createElement('div');
-    screen.id = 'status-active-screen';
-    screen.className = `st-screen ${sa.bgClass}`;
-    screen.innerHTML = `
-      <div class="st-screen-inner">
-        <div class="st-big-ic">${sa.emoji}</div>
-        <div class="st-label ${sa.color}">${sa.label}</div>
-        <div class="st-name">${state.staffName || ''}</div>
-
-        <div class="st-clock-wrap">
-          <div class="st-clock" id="st-cur-time">${currentTimeStr()}</div>
-          <div class="st-clock-lbl">JORIY VAQT</div>
-        </div>
-
-        <div class="st-timer-wrap">
-          <div class="st-timer ${sa.color}" id="st-elapsed">${elapsedStr()}</div>
-          <div class="st-clock-lbl">${startedAt} DAN BERI</div>
-        </div>
-
-        <button class="st-close-btn" onclick="closeStatusScreen()">✕ &nbsp; Statusni tugatish</button>
-      </div>
-    `;
-    document.body.appendChild(screen);
-
-    // Eski tick ni to'xtatamiz
-    if (state._statusTick) { clearInterval(state._statusTick); state._statusTick = null; }
-
-    // Har soniyada yangilash
-    state._statusTick = setInterval(() => {
-      const el = document.getElementById('st-elapsed');
-      const ct = document.getElementById('st-cur-time');
-      if (!el || !ct) { clearInterval(state._statusTick); state._statusTick = null; return; }
-      el.textContent = elapsedStr();
-      ct.textContent = currentTimeStr();
-    }, 1000);
-  }
 }
 
 // ════════════════════════════════════════════════════
@@ -928,18 +845,6 @@ function requestStatusPin(key, active, emoji, label) {
   render();
 }
 
-// Fullscreen status ekranidan "Tugatish" bosilganda
-window.closeStatusScreen = function() {
-  if (!state._statusActive) return;
-  // Qaysi key aktiv ekanini aniqlaymiz
-  const keyMap = { 'Tushlikda':'lunch', 'Javoblashgan':'leave', 'Smenada':'shift', 'Xizmat safari':'trip' };
-  const key = keyMap[state._statusActive.label] || 'lunch';
-  // Tickni to'xtatamiz — PIN ekranida ticker shart emas
-  if (state._statusTick) { clearInterval(state._statusTick); state._statusTick = null; }
-  // PIN orqali o'chirish
-  requestStatusPin(key, false, state._statusActive.emoji, state._statusActive.label + ' — tugatish');
-};
-
 window.toggleLunch = function() {
   const newVal = !state.lunchActive;
   const label = newVal ? 'Tushlikda yoqish' : 'Tushlikdan qaytish';
@@ -967,7 +872,7 @@ window.toggleTrip = function() {
 // Sahifa ochilganda qurilma statusini Firebase dan yuklash
 async function loadDeviceStatus() {
   const docId = await getTodayDocIdForDevice();
-  if (!docId) return;
+  if (!docId) return; // Qurilma tizimda yo'q — jimgina o'tamiz
   try {
     const snap = await getDoc(doc(db, COL_ATTENDANCE, docId));
     if (snap.exists()) {
@@ -976,31 +881,9 @@ async function loadDeviceStatus() {
       state.leaveActive = d.liveStatus  === 'Javoblashgan';
       state.shiftActive = d.shiftStatus === 'Smenada';
       state.tripActive  = d.tripStatus  === 'Xizmat safari';
-
-      // Agar aktiv status bo'lsa — fullscreen ekranni qayta tiklash
-      const META = {
-        lunch: { key:'lunch', bgClass:'lunch-bg', color:'o', emoji:'🍽️', label:'Tushlikda',    atField:'lunchAt'       },
-        leave: { key:'leave', bgClass:'leave-bg', color:'p', emoji:'🏃', label:'Javoblashgan', atField:'liveStatusAt'  },
-        shift: { key:'shift', bgClass:'shift-bg', color:'b', emoji:'🔄', label:'Smenada',      atField:'shiftAt'       },
-        trip:  { key:'trip',  bgClass:'trip-bg',  color:'w', emoji:'✈️', label:'Xizmat safari',atField:'tripAt'        },
-      };
-      const activeKey = Object.keys(META).find(k => {
-        if (k==='lunch') return state.lunchActive;
-        if (k==='leave') return state.leaveActive;
-        if (k==='shift') return state.shiftActive;
-        if (k==='trip')  return state.tripActive;
-      });
-      if (activeKey) {
-        const m = META[activeKey];
-        // startTs: Firebase dan saqlangan ISO vaqt, yo'q bo'lsa hozir
-        const atRaw = d[m.atField];
-        const startTs = atRaw ? new Date(atRaw).getTime() : Date.now();
-        state._statusActive = { ...m, startTs };
-        state.step = 'status-active';
-      }
-
       render();
     }
+    // Doc yo'q bo'lsa — statuslar false (default) qoladi, hech narsa ko'rsatmaymiz
   } catch(e) { /* jimgina o'tamiz */ }
 }
 
@@ -1027,9 +910,6 @@ window.goBack = function() {
 window.resetState = function() {
   if (state._gpsTimerInterval) clearInterval(state._gpsTimerInterval);
   if (state._gpsAutoTimer) clearTimeout(state._gpsAutoTimer);
-  if (state._statusTick) { clearInterval(state._statusTick); }
-  const old = document.getElementById('status-active-screen');
-  if (old) old.remove();
   state = {
     step:'type', type:null, pin:'',
     staffId:null, staffName:'', staffPos:'',
@@ -1047,8 +927,6 @@ window.resetState = function() {
     shiftActive: false,
     tripActive:  false,
     _statusPending: null,
-    _statusActive: null,
-    _statusTick: null,
   };
   render();
 };
@@ -1168,40 +1046,18 @@ async function submitPin() {
 
     // ── STATUS-PIN rejimi: GPS yo'q, to'g'ridan status saqlab qaytamiz ──
     if (state.step === 'status-pin' && state._statusPending) {
-      const { key, active, emoji, label } = state._statusPending;
+      const { key, active } = state._statusPending;
       const docId = `${emp.id}_${td()}`;
       try {
         await upsertStatusDoc(docId, buildStatusFields(key, active));
         applyStatusToState(key, active);
       } catch(e2) {
         state.error = 'Status saqlashda xato: ' + e2.message;
-        state._statusPending = null;
-        state.step = 'type';
-        state.pin = '';
-        render();
-        return;
       }
       state._statusPending = null;
+      state.step = 'type';
       state.pin = '';
       state._pinErr = false;
-
-      if (active) {
-        // Status yoqildi — fullscreen ekran ko'rsatamiz
-        const META = {
-          lunch: { bgClass:'lunch-bg', color:'o', emoji:'🍽️', label:'Tushlikda' },
-          leave: { bgClass:'leave-bg', color:'p', emoji:'🏃', label:'Javoblashgan' },
-          shift: { bgClass:'shift-bg', color:'b', emoji:'🔄', label:'Smenada'     },
-          trip:  { bgClass:'trip-bg',  color:'w', emoji:'✈️', label:'Xizmat safari'},
-        };
-        const m = META[key] || { bgClass:'leave-bg', color:'p', emoji:'📋', label };
-        state._statusActive = { ...m, startTs: Date.now() };
-        state.step = 'status-active';
-      } else {
-        // Status o'chirildi — oddiy ekranga qaytamiz
-        if (state._statusTick) { clearInterval(state._statusTick); state._statusTick = null; }
-        state._statusActive = null;
-        state.step = 'type';
-      }
       render();
       return;
     }
@@ -1244,10 +1100,22 @@ window.startGps = function() {
   }, 1000);
 
   // ── 10 soniyalik navbatchi bypass ──
+  // MUHIM: faqat network location hududda yoki aniqlanmagan bo'lsa ishlaydi
+  // Agar network location hududdan tashqari ko'rsatsa — bypass O'CHIRILADI
   if (state._gpsAutoTimer) clearTimeout(state._gpsAutoTimer);
+  state._networkOutOfArea = false; // network location hududdan tashqari belgisi
+
   state._gpsAutoTimer = setTimeout(() => {
-    // Faqat hali GPS OK bo'lmagan va hali gps bosqichida bo'lsa
     if (state.step === 'gps' && state.gpsStatus !== 'ok') {
+      // Agar network location hududdan tashqari ekanligini aniqlagan bo'lsa — bypass yo'q
+      if (state._networkOutOfArea) {
+        state.gpsMsg = 'Ish hududidan tashqaridasiz. Ishxona yaqiniga keling.';
+        state.gpsStatus = 'err';
+        clearInterval(state._gpsTimerInterval);
+        render();
+        return;
+      }
+      // Hududda yoki aniqlanmagan — bypass ishlaydi
       clearInterval(state._gpsTimerInterval);
       state._gpsBypassed = true;
       state.gpsLat = null;
@@ -1267,7 +1135,7 @@ window.startGps = function() {
   navigator.geolocation.getCurrentPosition(
     async pos => {
       const cfg = state.config || await loadConfig();
-      const accuracy = pos.coords.accuracy; // metrda GPS aniqligi
+      if (state.step !== 'gps') return; // allaqachon o'tgan
 
       const R = 6371000;
       const dLat = (pos.coords.latitude  - cfg.locationLat) * Math.PI / 180;
@@ -1277,26 +1145,24 @@ window.startGps = function() {
         * Math.cos(pos.coords.latitude * Math.PI/180)
         * Math.sin(dLon/2)**2;
       const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const accuracy = pos.coords.accuracy;
 
-      // GPS aniqligi juda past bo'lsa (masalan, 200m) va hali retry qolgan bo'lsa —
-      // bir marta avtomatik qayta urinib ko'ramiz
-      if (accuracy > 100 && state._gpsRetry < 1) {
-        state._gpsRetry = 1;
-        state.gpsMsg = `📡 Aniqlik past (±${Math.round(accuracy)}m), qayta aniqlanmoqda...`;
-        render();
-        setTimeout(() => {
-          navigator.geolocation.getCurrentPosition(
-            pos2 => processGpsResult(pos2, cfg),
-            () => processGpsResult(pos, cfg), // ikkinchi urinish ham xato bo'lsa — birinchi natijani ishlatamiz
-            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-          );
-        }, 1500);
-        return;
+      // Network location aniq bo'lsa (±150m ichida) va hududdan tashqari ko'rsatsa —
+      // bypass ni bloklaydi
+      if (accuracy <= 300 && dist > cfg.radius + accuracy) {
+        state._networkOutOfArea = true;
       }
-
-      processGpsResult(pos, cfg);
+      // Agar hududda bo'lsa — GPS ni kutmasdan ham o'tish mumkin (GPS o'zi keladi)
     },
+    () => { /* network location ishlamasa — GPS ga topshiramiz */ },
+    { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 }
+  );
+
+  // Aniq GPS so'rovi
+  navigator.geolocation.getCurrentPosition(
+    async pos => { const cfg = state.config || await loadConfig(); processGpsResult(pos, cfg); },
     err => {
+      if (state.step !== 'gps') return;
       state.gpsStatus = 'err';
       state.gpsMsg = err.code === 1
         ? "Joylashuvga ruxsat berilmagan. Brauzer sozlamalarida ruxsat bering."
@@ -1306,7 +1172,7 @@ window.startGps = function() {
       state._gpsRetry = 0;
       render();
     },
-    { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 }
+    { enableHighAccuracy: true, timeout: 22000, maximumAge: 15000 }
   );
 };
 
@@ -1382,6 +1248,39 @@ window.scanFp = function() {
   setTimeout(tryBiometric, 800);
 };
 
+// ── TABRIQ TOAST ────────────────────────────────────
+function showGreetToast(type) {
+  const isIn = type === 'in';
+  const emoji = isIn ? '☀️' : '🌙';
+  const text  = isIn ? 'Xayrli kun, charchamang!' : 'Halol mehnatingiz uchun rahmat!';
+  const sub   = isIn ? 'Bugungi kuningiz samarali o\'tsin' : 'Uyga omon-eson boring';
+  const barColor = isIn ? 'var(--g)' : 'var(--b)';
+
+  // Eski toast bo'lsa olib tashlaymiz
+  const old = document.getElementById('greet-toast');
+  if (old) old.remove();
+
+  const el = document.createElement('div');
+  el.id = 'greet-toast';
+  el.className = 'greet-toast';
+  el.innerHTML = `
+    <div class="greet-box" id="greet-box">
+      <span class="greet-emoji">${emoji}</span>
+      <div class="greet-text">${text}</div>
+      <div class="greet-sub">${sub}</div>
+      <div class="greet-bar"><div class="greet-bar-fill" style="background:${barColor}"></div></div>
+    </div>
+  `;
+  document.body.appendChild(el);
+
+  // 4.6 soniyada yashiramiz (progress bar bilan sinxron)
+  setTimeout(() => {
+    const box = document.getElementById('greet-box');
+    if (box) box.classList.add('greet-out');
+    setTimeout(() => { el.remove(); }, 380);
+  }, 4600);
+}
+
 async function finalizeAttendance() {
   const time  = nowT();
   const today = td();
@@ -1402,6 +1301,7 @@ async function finalizeAttendance() {
       ketishStatus: state._ketishStatus,
     };
     render();
+    showGreetToast(state.type);
     setTimeout(() => { state.step = 'done'; render(); }, 700);
   } catch(e) {
     state.fpState = 'idle';
