@@ -910,6 +910,9 @@ window.goBack = function() {
 window.resetState = function() {
   if (state._gpsTimerInterval) clearInterval(state._gpsTimerInterval);
   if (state._gpsAutoTimer) clearTimeout(state._gpsAutoTimer);
+  // Toast ni tozalaymiz
+  const gt = document.getElementById('greet-toast');
+  if (gt) gt.remove();
   state = {
     step:'type', type:null, pin:'',
     staffId:null, staffName:'', staffPos:'',
@@ -1253,7 +1256,7 @@ function showGreetToast(type) {
   const isIn = type === 'in';
   const emoji = isIn ? '☀️' : '🌙';
   const text  = isIn ? 'Xayrli kun, charchamang!' : 'Halol mehnatingiz uchun rahmat!';
-  const sub   = isIn ? 'Bugungi kuningiz samarali o\'tsin' : 'Uyga omon-eson boring';
+  const sub   = isIn ? 'Bugungi kuningiz samarali o\'tsin' : 'Uyga eson-omon boring';
   const barColor = isIn ? 'var(--g)' : 'var(--b)';
 
   // Eski toast bo'lsa olib tashlaymiz
@@ -1300,9 +1303,14 @@ async function finalizeAttendance() {
       kelishStatus: state._kelishStatus,
       ketishStatus: state._ketishStatus,
     };
+    const attendanceType = state.type; // render dan oldin saqlab olamiz
     render();
-    showGreetToast(state.type);
-    setTimeout(() => { state.step = 'done'; render(); }, 700);
+    setTimeout(() => {
+      state.step = 'done';
+      render();
+      // done sahifasi render bo'lgandan keyin toast chiqamiz
+      requestAnimationFrame(() => showGreetToast(attendanceType));
+    }, 700);
   } catch(e) {
     state.fpState = 'idle';
     state.error   = 'Saqlashda xato: ' + e.message;
