@@ -541,12 +541,25 @@ function renderTable(allRecs) {
     const ketish = r?.ketish || '<span style="color:var(--mu)">—</span>';
     const baho   = r?.kelish ? kelishBaho(r.kelish) : null;
     const ketSt  = r?.ketishStatus || '';
+    // Admin belgilagan izoh-status (kelmaganlar uchun)
+    const adminStatusMap = {
+      tatil:     { cls:'bw-b', lbl:"🏖️ Ta'tilda" },
+      kasallik:  { cls:'br-b', lbl:'🤒 Kasal' },
+      safari:    { cls:'bb-b', lbl:'✈️ Xizmat safari' },
+      masofaviy: { cls:'bp-b', lbl:'🏠 Masofaviy' },
+      sababsiz:  { cls:'br-b', lbl:'❌ Sababsiz' },
+    };
     let badge = '<span class="b br-b">Kelmadi</span>';
     if (r?.ketish) badge = '<span class="b bmu-b">Ketdi</span>';
     else if (r?.liveStatus === 'Javoblashgan') badge = '<span class="b bp-b">🏃 Javoblashgan</span>';
     else if (r?.lunchStatus === 'Tushlikda') badge = '<span class="b bo-b">🍽️ Tushlikda</span>';
     else if (r?.shiftStatus === 'Smenada') badge = '<span class="b bb-b">🔄 Smenada</span>';
     else if (r?.tripStatus === 'Xizmat safari') badge = '<span class="b bw-b">✈️ Safari</span>';
+    else if (r?.adminStatus && adminStatusMap[r.adminStatus]) {
+      const am = adminStatusMap[r.adminStatus];
+      const note = r.adminNote ? ` · ${r.adminNote.slice(0,18)}` : '';
+      badge = `<span class="b ${am.cls}">${am.lbl}${note}</span>`;
+    }
     else if (r?.kelish) badge = '<span class="b bg-b">Keldi ✓</span>';
     return `<tr>
       <td style="font-weight:500">${esc(e.name)}</td>
