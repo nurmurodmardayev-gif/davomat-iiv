@@ -553,21 +553,13 @@ async function buildDashboard() {
       const ketish  = r?.ketish  || '<span style="color:var(--mu)">—</span>';
       const ketSt   = r?.ketishStatus  || '';
       const baho    = r?.kelish ? kelishBaho(r.kelish) : null;
-      const hasActiveStatus = r?.liveStatus==='Javoblashgan' || r?.lunchStatus==='Tushlikda' || r?.shiftStatus==='Smenada' || r?.tripStatus==='Xizmat safari';
-      let badge = '<span class="b br-b">Kelmadi</span>';
-      if (r?.ketish) badge = '<span class="b bmu-b">Ketdi</span>';
-      else if (r?.liveStatus === 'Javoblashgan') badge = `<span class="b bp-b" style="cursor:pointer" onclick="adminClearStatus('${e.id}','leave')" title="O'chirish">🏃 Javoblashgan ✕</span>`;
-      else if (r?.lunchStatus === 'Tushlikda') badge = `<span class="b bo-b" style="cursor:pointer" onclick="adminClearStatus('${e.id}','lunch')" title="O'chirish">🍽️ Tushlikda ✕</span>`;
-      else if (r?.shiftStatus === 'Smenada') badge = `<span class="b bb-b" style="cursor:pointer" onclick="adminClearStatus('${e.id}','shift')" title="O'chirish">🔄 Smenada ✕</span>`;
-      else if (r?.tripStatus === 'Xizmat safari') badge = `<span class="b bw-b" style="cursor:pointer" onclick="adminClearStatus('${e.id}','trip')" title="O'chirish">✈️ Safari ✕</span>`;
-      else if (r?.kelish) badge = `<span class="b bg-b" style="cursor:pointer" onclick="adminSetStatusModal('${e.id}','${esc(e.name)}')" title="Status belgilash">Keldi ▾</span>`;
       return `<tr>
         <td>${esc(e.name)}</td>
         <td class="mono">${kelish}</td>
         <td>${baho ? `<span class="b ${baho.cls}">${baho.ball}</span>` : '—'}</td>
         <td class="mono">${ketish}</td>
         <td>${ketSt ? `<span class="b ${ketSt==='Erta ketdi'?'bw-b':'bb-b'}">${ketSt}</span>` : '—'}</td>
-        <td>${badge}</td>
+        <td>${buildBadgeCell(e.id, e.name, r)}</td>
       </tr>`;
     }).join('');
     // Metrikalar
@@ -595,20 +587,13 @@ async function buildDashboard() {
     const ketish = r?.ketish  || '<span style="color:var(--mu)">—</span>';
     const ketSt  = r?.ketishStatus || '';
     const baho   = r?.kelish ? kelishBaho(r.kelish) : null;
-    let badge = '<span class="b br-b">Kelmadi</span>';
-    if (r?.ketish) badge = '<span class="b bmu-b">Ketdi</span>';
-    else if (r?.liveStatus === 'Javoblashgan') badge = `<span class="b bp-b" style="cursor:pointer" onclick="adminClearStatus('${e.id}','leave')" title="O'chirish">🏃 Javoblashgan ✕</span>`;
-    else if (r?.lunchStatus === 'Tushlikda') badge = `<span class="b bo-b" style="cursor:pointer" onclick="adminClearStatus('${e.id}','lunch')" title="O'chirish">🍽️ Tushlikda ✕</span>`;
-    else if (r?.shiftStatus === 'Smenada') badge = `<span class="b bb-b" style="cursor:pointer" onclick="adminClearStatus('${e.id}','shift')" title="O'chirish">🔄 Smenada ✕</span>`;
-    else if (r?.tripStatus === 'Xizmat safari') badge = `<span class="b bw-b" style="cursor:pointer" onclick="adminClearStatus('${e.id}','trip')" title="O'chirish">✈️ Safari ✕</span>`;
-    else if (r?.kelish) badge = `<span class="b bg-b" style="cursor:pointer" onclick="adminSetStatusModal('${e.id}','${esc(e.name)}')" title="Status belgilash">Keldi ▾</span>`;
     return `<tr>
       <td>${esc(e.name)}</td>
       <td class="mono">${kelish}</td>
       <td>${baho ? `<span class="b ${baho.cls}">${baho.ball}</span>` : '—'}</td>
       <td class="mono">${ketish}</td>
       <td>${ketSt ? `<span class="b ${ketSt==='Erta ketdi'?'bw-b':'bb-b'}">${ketSt}</span>` : '—'}</td>
-      <td>${badge}</td>
+      <td>${buildBadgeCell(e.id, e.name, r)}</td>
     </tr>`;
   }).join('');
 
@@ -1293,6 +1278,43 @@ function esc(str) {
 }
 
 // ════════════════════════════════════════════════════
+//  BADGE CELL HELPER — kelgan va kelmaganlar uchun
+// ════════════════════════════════════════════════════
+function buildBadgeCell(empId, empName, r) {
+  const id = empId.replace(/'/g, "\\'");
+  const nm = esc(empName).replace(/'/g, "\\'");
+
+  // Ketgan
+  if (r?.ketish) return '<span class="b bmu-b">Ketdi</span>';
+
+  // Xodim o'zi belgilagan aktiv statuslar (kelganlar)
+  if (r?.liveStatus  === 'Javoblashgan')  return `<span class="b bp-b" style="cursor:pointer" onclick="adminClearStatus('${id}','leave')" title="O'chirish">🏃 Javoblashgan ✕</span>`;
+  if (r?.lunchStatus === 'Tushlikda')     return `<span class="b bo-b" style="cursor:pointer" onclick="adminClearStatus('${id}','lunch')" title="O'chirish">🍽️ Tushlikda ✕</span>`;
+  if (r?.shiftStatus === 'Smenada')       return `<span class="b bb-b" style="cursor:pointer" onclick="adminClearStatus('${id}','shift')" title="O'chirish">🔄 Smenada ✕</span>`;
+  if (r?.tripStatus  === 'Xizmat safari') return `<span class="b bw-b" style="cursor:pointer" onclick="adminClearStatus('${id}','trip')"  title="O'chirish">✈️ Safari ✕</span>`;
+
+  // Admin tomonidan belgilangan (asosan kelmaganlar)
+  const adminStatusMap = {
+    tatil:     { cls:'bw-b', lbl:"🏖️ Ta'tilda" },
+    kasallik:  { cls:'br-b', lbl:'🤒 Kasal' },
+    safari:    { cls:'bb-b', lbl:'✈️ Safari' },
+    masofaviy: { cls:'bp-b', lbl:'🏠 Masofaviy' },
+    sababsiz:  { cls:'br-b', lbl:'❌ Sababsiz' },
+  };
+  if (r?.adminStatus && adminStatusMap[r.adminStatus]) {
+    const m = adminStatusMap[r.adminStatus];
+    const note = r.adminNote ? ` · ${r.adminNote.slice(0,20)}` : '';
+    return `<span class="b ${m.cls}" style="cursor:pointer" onclick="adminSetStatusModal('${id}','${nm}',true)" title="O'zgartirish">${m.lbl}${note} ✎</span>`;
+  }
+
+  // Kelgan, hech qanday status yo'q
+  if (r?.kelish) return `<span class="b bg-b" style="cursor:pointer" onclick="adminSetStatusModal('${id}','${nm}',false)" title="Status belgilash">Keldi ▾</span>`;
+
+  // Kelmagan — status belgilash tugmasi
+  return `<span class="b br-b" style="cursor:pointer" onclick="adminSetStatusModal('${id}','${nm}',false)" title="Izoh belgilash">Kelmadi ▾</span>`;
+}
+
+// ════════════════════════════════════════════════════
 //  ADMIN STATUS BOSHQARUVI
 //  Admin dashboarddan xodimga status belgilash / o'chirish
 // ════════════════════════════════════════════════════
@@ -1300,37 +1322,82 @@ function esc(str) {
 // Attendance doc ID (staffId_YYYY-MM-DD)
 function todayDocId(staffId) { return `${staffId}_${td()}`; }
 
-// Admin status modal — 4 xil status tanlasin
-window.adminSetStatusModal = function(staffId, staffName) {
+// Admin status modal — kelgan va kelmaganlar uchun
+window.adminSetStatusModal = function(staffId, staffName, hasAdminStatus) {
+  // Kelganlar uchun: o'zining real-time statuslari (tushlik, javoblashgan va h.k.)
+  // Kelmaganlar uchun: admin izoh statuslari (ta'til, kasal, sababsiz va h.k.)
+  const absentOpts = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <button class="btn bo" style="flex-direction:column;padding:14px 10px;border-color:rgba(251,191,36,.4)"
+        onclick="adminApplyAbsentStatus('${staffId}','tatil')">
+        <span style="font-size:22px;margin-bottom:4px">🏖️</span>
+        <span style="color:var(--w)">Ta'tilda</span>
+      </button>
+      <button class="btn bo" style="flex-direction:column;padding:14px 10px;border-color:rgba(248,113,113,.4)"
+        onclick="adminApplyAbsentStatus('${staffId}','kasallik')">
+        <span style="font-size:22px;margin-bottom:4px">🤒</span>
+        <span style="color:var(--r)">Kasal</span>
+      </button>
+      <button class="btn bo" style="flex-direction:column;padding:14px 10px;border-color:rgba(96,165,250,.4)"
+        onclick="adminApplyAbsentStatus('${staffId}','safari')">
+        <span style="font-size:22px;margin-bottom:4px">✈️</span>
+        <span style="color:var(--b)">Xizmat safari</span>
+      </button>
+      <button class="btn bo" style="flex-direction:column;padding:14px 10px;border-color:rgba(167,139,250,.4)"
+        onclick="adminApplyAbsentStatus('${staffId}','masofaviy')">
+        <span style="font-size:22px;margin-bottom:4px">🏠</span>
+        <span style="color:#a78bfa">Masofaviy</span>
+      </button>
+      <button class="btn bo" style="flex-direction:column;padding:14px 10px;border-color:rgba(248,113,113,.4);grid-column:span 2"
+        onclick="adminApplyAbsentStatus('${staffId}','sababsiz')">
+        <span style="font-size:22px;margin-bottom:4px">❌</span>
+        <span style="color:var(--r)">Sababsiz</span>
+      </button>
+    </div>
+    <div class="fg" style="margin-bottom:12px">
+      <label class="fl">Qo'shimcha izoh (ixtiyoriy)</label>
+      <input id="admin-absent-note" placeholder="Masalan: vrach varaqasi bor..." autocomplete="off">
+    </div>
+    ${hasAdminStatus ? `<button class="btn br bfull" style="margin-bottom:8px" onclick="adminClearAbsentStatus('${staffId}')">🗑 Izohni o'chirish</button>` : ''}
+  `;
+
+  const presentOpts = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <button class="btn bo" style="flex-direction:column;padding:14px 10px;border-color:rgba(251,146,60,.4)"
+        onclick="adminApplyStatus('${staffId}','lunch','🍽️','Tushlikda')">
+        <span style="font-size:22px;margin-bottom:4px">🍽️</span>
+        <span style="color:#fb923c">Tushlikda</span>
+      </button>
+      <button class="btn bo" style="flex-direction:column;padding:14px 10px;border-color:rgba(167,139,250,.4)"
+        onclick="adminApplyStatus('${staffId}','leave','🏃','Javoblashgan')">
+        <span style="font-size:22px;margin-bottom:4px">🏃</span>
+        <span style="color:#a78bfa">Javoblashgan</span>
+      </button>
+      <button class="btn bo" style="flex-direction:column;padding:14px 10px;border-color:rgba(96,165,250,.4)"
+        onclick="adminApplyStatus('${staffId}','shift','🔄','Smenada')">
+        <span style="font-size:22px;margin-bottom:4px">🔄</span>
+        <span style="color:var(--b)">Smenada</span>
+      </button>
+      <button class="btn bo" style="flex-direction:column;padding:14px 10px;border-color:rgba(251,191,36,.4)"
+        onclick="adminApplyStatus('${staffId}','trip','✈️','Xizmat safari')">
+        <span style="font-size:22px;margin-bottom:4px">✈️</span>
+        <span style="color:var(--w)">Xizmat safari</span>
+      </button>
+    </div>
+  `;
+
   document.getElementById('modal-content').innerHTML = `
     <div class="row" style="margin-bottom:4px">
       <div class="modal-title">📋 Status belgilash</div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
-    <div class="modal-sub">${esc(staffName)} uchun joriy holat</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-      <button class="btn bo" style="flex-direction:column;padding:16px 10px;border-color:rgba(251,146,60,.4)"
-        onclick="adminApplyStatus('${staffId}','lunch','🍽️','Tushlikda')">
-        <span style="font-size:24px;margin-bottom:4px">🍽️</span>
-        <span style="color:#fb923c">Tushlikda</span>
-      </button>
-      <button class="btn bo" style="flex-direction:column;padding:16px 10px;border-color:rgba(167,139,250,.4)"
-        onclick="adminApplyStatus('${staffId}','leave','🏃','Javoblashgan')">
-        <span style="font-size:24px;margin-bottom:4px">🏃</span>
-        <span style="color:#a78bfa">Javoblashgan</span>
-      </button>
-      <button class="btn bo" style="flex-direction:column;padding:16px 10px;border-color:rgba(96,165,250,.4)"
-        onclick="adminApplyStatus('${staffId}','shift','🔄','Smenada')">
-        <span style="font-size:24px;margin-bottom:4px">🔄</span>
-        <span style="color:var(--b)">Smenada</span>
-      </button>
-      <button class="btn bo" style="flex-direction:column;padding:16px 10px;border-color:rgba(251,191,36,.4)"
-        onclick="adminApplyStatus('${staffId}','trip','✈️','Xizmat safari')">
-        <span style="font-size:24px;margin-bottom:4px">✈️</span>
-        <span style="color:var(--w)">Xizmat safari</span>
-      </button>
-    </div>
+    <div class="modal-sub">${esc(staffName)}</div>
+    ${absentOpts}
     <div id="admin-status-msg" style="display:none;margin-bottom:8px"></div>
+    <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:12px;margin-top:4px">
+      <div style="font-size:10px;color:var(--mu);margin-bottom:10px;letter-spacing:.05em;text-transform:uppercase">Kelgan bo'lsa — real-time status</div>
+      ${presentOpts}
+    </div>
   `;
   document.getElementById('modal').style.display = 'flex';
 };
@@ -1388,6 +1455,59 @@ window.adminClearStatus = async function(staffId, key) {
   }
 };
 
+// Kelmaganlar uchun admin izoh-status yozish
+window.adminApplyAbsentStatus = async function(staffId, statusKey) {
+  const note = document.getElementById('admin-absent-note')?.value.trim() || '';
+  const msgEl = document.getElementById('admin-status-msg');
+  try {
+    const docId = todayDocId(staffId);
+    const snap = await getDoc(doc(db, COL_ATTENDANCE, docId));
+    const fields = {
+      adminStatus: statusKey,
+      adminNote: note || null,
+      adminSetAt: new Date().toISOString(),
+      updatedAt: serverTimestamp(),
+    };
+    if (snap.exists()) {
+      await updateDoc(doc(db, COL_ATTENDANCE, docId), fields);
+    } else {
+      // Kelmaganlarga yangi doc yaratish
+      const staffSnap = await getDocs(query(collection(db, COL_STAFF), where('__name__', '==', staffId)));
+      const sData = staffSnap.docs[0]?.data() || {};
+      await setDoc(doc(db, COL_ATTENDANCE, docId), {
+        staffId,
+        staffName: sData.name || '',
+        staffPos: sData.position || sData.dept || '',
+        date: td(),
+        createdAt: serverTimestamp(),
+        ...fields,
+      });
+    }
+    closeModal();
+    const labelMap = { tatil:"Ta'tilda", kasallik:'Kasal', safari:'Safari', masofaviy:'Masofaviy', sababsiz:'Sababsiz' };
+    showToast(`✅ ${labelMap[statusKey]||statusKey} — belgilandi`);
+  } catch(e) {
+    if (msgEl) { msgEl.className = 'alert al-e'; msgEl.textContent = '❌ Xato: ' + e.message; msgEl.style.display = 'block'; }
+  }
+};
+
+// Kelmaganlar uchun admin izohni o'chirish
+window.adminClearAbsentStatus = async function(staffId) {
+  if (!confirm("Admin izohni o'chirasizmi?")) return;
+  try {
+    const docId = todayDocId(staffId);
+    await updateDoc(doc(db, COL_ATTENDANCE, docId), {
+      adminStatus: null,
+      adminNote: null,
+      adminSetAt: null,
+      updatedAt: serverTimestamp(),
+    });
+    closeModal();
+    showToast("✅ Izoh o'chirildi");
+  } catch(e) {
+    alert('Xato: ' + e.message);
+  }
+};
 function showToast(msg) {
   const el = document.createElement('div');
   el.className = 'alert al-s';
